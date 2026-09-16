@@ -8,7 +8,6 @@ import (
 	"database/sql"
 
 	"github.com/jmoiron/sqlx"
-
 	"github.com/simeonkorchev/binder/pkg/sqlxtx"
 )
 

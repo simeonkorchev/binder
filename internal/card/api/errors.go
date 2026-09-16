@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-
 	"github.com/simeonkorchev/binder/internal/card/service"
 )
 

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/simeonkorchev/binder/internal/binder/model"
 	"github.com/simeonkorchev/binder/internal/dataerror"
 	"github.com/simeonkorchev/binder/pkg/sqlxtx"

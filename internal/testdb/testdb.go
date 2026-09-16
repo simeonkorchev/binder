@@ -90,7 +90,6 @@ func exec(db *sqlx.DB, statement string, names ...string) error {
 	for _, name := range names {
 		quoted = append(quoted, pq.QuoteIdentifier(name))
 	}
-	//nolint:gosec // DDL identifiers, quoted above; CREATE DATABASE cannot take a bind parameter.
 	if _, err := db.ExecContext(context.Background(), fmt.Sprintf(statement, quoted...)); err != nil {
 		return fmt.Errorf("running %q: %w", statement, err)
 	}
@@ -205,7 +204,9 @@ func migrate(databaseURL string) error {
 	defer func() { _ = db.Close() }()
 
 	for _, file := range files {
-		statements, err := os.ReadFile(file) //nolint:gosec // path from Glob over this repository's own db/migrations.
+		// The path comes from the Glob above over this repository's own
+		// db/migrations, never from a request or a row.
+		statements, err := os.ReadFile(file)
 		if err != nil {
 			return fmt.Errorf("reading %s: %w", file, err)
 		}

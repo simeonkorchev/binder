@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5/pgconn"
-
 	"github.com/simeonkorchev/binder/internal/dataerror"
 )
 

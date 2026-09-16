@@ -1,10 +1,10 @@
 package model
 
 import (
-	cardmodel "github.com/simeonkorchev/binder/internal/card/model"
 	"time"
 
 	"github.com/google/uuid"
+	cardmodel "github.com/simeonkorchev/binder/internal/card/model"
 )
 
 // SlotsPerPage is the 3x3 grid of a physical binder page. Every page/slot

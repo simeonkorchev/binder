@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/simeonkorchev/binder/internal/binder/model"
 	cardmodel "github.com/simeonkorchev/binder/internal/card/model"
 	"github.com/simeonkorchev/binder/internal/dataerror"

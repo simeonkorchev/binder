@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-
 	"github.com/simeonkorchev/binder/internal/card/model"
 )
 
