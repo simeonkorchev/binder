@@ -19,6 +19,12 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	// Registers the "pgx" driver. A suite has to run on the same driver as
+	// production, or a store's translation of driver errors into
+	// internal/dataerror types is never the translation that ships: pgx returns
+	// *pgconn.PgError and lib/pq returns *pq.Error, and code matching one of
+	// them passes straight through the other.
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -36,6 +42,8 @@ const (
 	// migrationsDir is relative to the repository root, which findMigrations
 	// walks up to find: a test's working directory is its own package.
 	migrationsDir = "db/migrations"
+	// driverName is the driver cmd/ connects with; see the import comment.
+	driverName = "pgx"
 )
 
 // errNoMigrations means the repository's migrations could not be found, which
@@ -52,7 +60,7 @@ func New(t *testing.T) *sqlx.DB {
 		t.Skipf("%s is unset: run `eval \"$(tools/test-db-local.sh)\"`, or `make test` which does it", databaseURLEnv)
 	}
 
-	admin, err := sqlx.Connect("postgres", adminURL)
+	admin, err := sqlx.Connect(driverName, adminURL)
 	if err != nil {
 		t.Skipf("no database at %s: %v", databaseURLEnv, err)
 	}
@@ -72,7 +80,7 @@ func New(t *testing.T) *sqlx.DB {
 	if err != nil {
 		t.Fatalf("addressing the test database: %v", err)
 	}
-	db, err := sqlx.Connect("postgres", url)
+	db, err := sqlx.Connect(driverName, url)
 	if err != nil {
 		t.Fatalf("connecting to the test database: %v", err)
 	}
@@ -99,7 +107,7 @@ func exec(db *sqlx.DB, statement string, names ...string) error {
 func dropDatabase(t *testing.T, adminURL string, name string) {
 	t.Helper()
 
-	admin, err := sqlx.Connect("postgres", adminURL)
+	admin, err := sqlx.Connect(driverName, adminURL)
 	if err != nil {
 		t.Logf("dropping the test database %s: %v", name, err)
 		return
@@ -197,7 +205,7 @@ func migrate(databaseURL string) error {
 	}
 	sort.Strings(files)
 
-	db, err := sqlx.Connect("postgres", databaseURL)
+	db, err := sqlx.Connect(driverName, databaseURL)
 	if err != nil {
 		return fmt.Errorf("connecting to the template database: %w", err)
 	}
