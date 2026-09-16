@@ -14,6 +14,10 @@ brackets are what a session would search for, the slug is the anchor.
 - [reference] "no go files to analyze" (exit 5), "Found no test suites" on the empty skeleton; the Go lanes skip on purpose → go.md#empty-go-tree-fails-the-linter-and-ginkgo
 - [reference] golangci-lint install.sh answered 403 at the proxy; `/usr/local/bin` shadows the pinned binary; `make check-golangci-version` → go.md#golangci-lint-install-script-is-blocked-use-go-install
 - [project] applying `db/migrations`, `schema_migrations`, `make migrate` / `make migrate-test` → go.md#migrations-are-applied-by-tools-migrate-sh
+- [reference] `testdb.New` needs `*testing.T`; where a Ginkgo store suite takes its DB, `TRUNCATE ... CASCADE` per spec → go.md#store-suites-take-testdb-in-the-bootstrap-not-beforesuite
+- [reference] "is a global variable (gochecknoglobals)" in a `_test.go`; where Ginkgo spec fixtures go → go.md#gochecknoglobals-fires-in-test-files-too
+- [reference] `--- FAIL: TestX` under a green `SUCCESS! -- N Passed`; plain `testing` tests do run under `ginkgo run` → go.md#ginkgo-run-does-fail-on-plain-go-tests
+- [project] `eslog.LeveledErr` / `eslog.Error` do not exist here; demoting an expected error (a 404) below ERROR → go.md#no-pkg-eslog-here-demote-with-a-level-returning-method
 
 ## mobile.md — apps/mobile
 
