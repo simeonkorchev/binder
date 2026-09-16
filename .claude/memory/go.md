@@ -115,3 +115,46 @@ place, testable as a table. A 404 from the image host is the only WARN; every
 other reason is ERROR. If a second layer ever needs the same thing, that is the
 moment to port `pkg/eslog`, not before.
 Evidence: `cmd/cardimages/pipeline/failure.go` (`FailureReason.Level`) · since 2026-09-16 · verified 2026-09-16
+
+## Store and data
+
+### postgres-unique-is-not-deferrable-park-rows-to-reorder-positions
+`UNIQUE (binder_id, position)` is checked **as each row version enters the
+index**, not at the end of the statement, so there is no single UPDATE that
+shifts a dense run of positions. Even
+
+```sql
+UPDATE binder_slots SET "position" = "position" + 1 WHERE "position" >= 3
+```
+
+fails with `duplicate key value violates unique constraint
+"binder_slots_binder_position_key"`: the row going 3 -> 4 meets the row still at
+4. SQL gives no way to order the updates, and for a move there is no order that
+works anyway — every position in the window is occupied, so every intermediate
+step collides. A constraint declared with `CONSTRAINT ... UNIQUE` is not
+deferrable, so `SET CONSTRAINTS ... DEFERRED` is not available either.
+
+Do it in two statements inside one transaction: **park** the affected rows above
+`max(position)`, then bring them back at their final positions. The parked range
+is disjoint from the occupied one by construction and every landing position was
+vacated by the first statement, so no intermediate state holds two rows at one
+position. A move is the same shape with a `CASE` that sends the mover to its
+destination and closes the rest up behind it. `internal/binder/store/position.go`
+is the worked version, and its specs go red if the parking is removed.
+Evidence: `internal/binder/store/position.go` · since 2026-09-16 · verified 2026-09-16
+
+### store-suites-must-connect-with-pgx-or-error-translation-is-never-exercised
+`cmd/` connects with the **"pgx"** driver (`_ "github.com/jackc/pgx/v5/stdlib"`).
+A suite that connects with lib/pq (`sqlx.Connect("postgres", …)`) therefore runs
+a different driver than production, and a store that translates driver errors
+into `internal/dataerror` types silently translates nothing: the translator
+matches `*pgconn.PgError` and lib/pq returns `*pq.Error`, so `errors.As` misses
+and the raw error passes straight through. `internal/binder/store` shipped that
+way — its conflict and invalid-reference paths were unreachable until three
+specs asserted them and failed.
+
+`internal/testdb` connects with "pgx" for this reason. pgx's stdlib driver does
+apply the multi-statement migration files (no bind parameters, so the simple
+protocol is used); verified from a dropped `binder_test_template`. `pq` is still
+imported there for `pq.QuoteIdentifier`, which is a pure string function.
+Evidence: `internal/testdb/testdb.go` · since 2026-09-16 · verified 2026-09-16

@@ -14,6 +14,8 @@ brackets are what a session would search for, the slug is the anchor.
 - [reference] "no go files to analyze" (exit 5), "Found no test suites" on the empty skeleton; the Go lanes skip on purpose → go.md#empty-go-tree-fails-the-linter-and-ginkgo
 - [reference] golangci-lint install.sh answered 403 at the proxy; `/usr/local/bin` shadows the pinned binary; `make check-golangci-version` → go.md#golangci-lint-install-script-is-blocked-use-go-install
 - [project] applying `db/migrations`, `schema_migrations`, `make migrate` / `make migrate-test` → go.md#migrations-are-applied-by-tools-migrate-sh
+- [reference] "duplicate key value violates unique constraint" on a reorder; positions dense; UNIQUE is not deferrable → go.md#postgres-unique-is-not-deferrable-park-rows-to-reorder-positions
+- [reference] dataerror translation never fires; `*pq.Error` vs `*pgconn.PgError`; which driver a suite connects with → go.md#store-suites-must-connect-with-pgx-or-error-translation-is-never-exercised
 - [reference] `testdb.New` needs `*testing.T`; where a Ginkgo store suite takes its DB, `TRUNCATE ... CASCADE` per spec → go.md#store-suites-take-testdb-in-the-bootstrap-not-beforesuite
 - [reference] "is a global variable (gochecknoglobals)" in a `_test.go`; where Ginkgo spec fixtures go → go.md#gochecknoglobals-fires-in-test-files-too
 - [reference] `--- FAIL: TestX` under a green `SUCCESS! -- N Passed`; plain `testing` tests do run under `ginkgo run` → go.md#ginkgo-run-does-fail-on-plain-go-tests
@@ -27,7 +29,9 @@ brackets are what a session would search for, the slug is the anchor.
 
 ## decisions.md — binding
 
-- [project] which linters `.golangci.yml` enables, and why `exhaustruct` and `wrapcheck` are off → decisions.md#2026-09-16-linter-set-omits-exhaustruct-and-wrapcheck
+- [project] which linters `.golangci.yml` enables; `exhaustruct` include list; why `wrapcheck` is off → decisions.md#2026-09-16-linter-set-omits-exhaustruct-and-wrapcheck
+- [project] where a handler gets the signed-in user before W7; `ActorFunc`; 401 → decisions.md#2026-09-16-binder-api-takes-an-actorfunc-until-w7-lands
+- [project] which huma adapter; no Echo dependency; `humago` → decisions.md#2026-09-16-huma-adapter-is-humago
 - [project] no golang-migrate or goose; `tools/migrate.sh` plus `schema_migrations` → decisions.md#2026-09-16-no-migration-runner-binary
 - [project] why `react-native-vision-camera` is not installed yet, and what the dev build already carries → decisions.md#2026-09-16-vision-camera-is-not-a-dependency-until-w9
 
