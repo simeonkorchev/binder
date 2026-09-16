@@ -8,22 +8,13 @@ Postgres card database, organise it into 3×3 binder pages, list it for sale.
 
 ## Status: toolchain and schema in, domains not yet
 
-The gate, the Expo skeleton and `db/migrations/` exist. `internal/`, `pkg/`,
+The gate, the Expo dev-build skeleton (`apps/mobile`) and the schema
+(`db/migrations/`, applied by `tools/migrate.sh`) exist. `internal/`, `pkg/`,
 `cmd/` and `packages/` are still empty — the Go lanes of the gate say so and
-skip rather than failing, and start doing real work the moment a package lands.
+skip rather than failing, and start working the moment a package lands.
 
-```
-binder/
-├── apps/mobile/       # Expo + React Native dev build (scanner + binder UI)
-├── packages/          # shared workspaces — empty until the OpenAPI types land
-├── internal/          # Go backend, clean architecture, one dir per domain
-├── cmd/               # Go CLI entry points (incl. the card-import pipeline)
-├── pkg/               # Shared Go packages
-└── db/migrations/     # Forward-only SQL, applied by tools/migrate.sh
-```
-
-Go domain layout, per domain: `api/` → `service/` → `store/` → `model/`.
-Data flows one direction. Never import upward. (`.claude/rules/001-architecture.md`)
+Layout and the per-domain `api/` → `service/` → `store/` → `model/` shape:
+`.claude/rules/001-architecture.md`. Data flows one direction, never upward.
 
 ## Rules by layer
 
@@ -88,10 +79,7 @@ Leave code cleaner than found. Fix pre-existing lint/TS errors in files you touc
 For features touching ≥2 layers, DB migrations, or new endpoints — use
 `/spec-feature` → `/spec-plan` → `/spec-tasks` → `/spec-review` +
 `/spec-analyze` → `/spec-implement`. Skip for: bug fixes, translations, dep
-bumps, renames, test-only changes. Active specs live in `specs/`.
-
-`specs/001-binder-mvp/` is the live one: scanning, card matching and the binder
-model are all ≥2 layers, so every slice of it goes through the pipeline.
+bumps, renames, test-only changes. `specs/001-binder-mvp/` is the live spec.
 
 ## Skills
 
