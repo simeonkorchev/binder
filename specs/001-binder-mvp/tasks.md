@@ -27,9 +27,9 @@ until the gate exists, so this is one agent, alone.
 
 ## Wave 2 — ingestion and core domains (all parallel)
 
-- [ ] T020 [P] **W2** Verify the YGOPRODeck contract live (shape, rate limit, image policy); amend `plan.md` if it differs — `pkg/ygoprodeck/`
-- [ ] T021 [P] **W2** Client + fixtures + full-dump importer — `cmd/cardimport/`
-- [ ] T022 [P] **W3** Rate-limited, resumable image pipeline → object storage — `cmd/cardimages/`
+- [ ] T020 [P] **W2** Verify the YGOPRODeck contract live (shape, rate limit, image policy); amend `plan.md` if it differs — `pkg/ygoprodeck/`. **Still open: needs a machine with egress** — the exact curl commands and what to change per outcome are in `VERIFY-YGOPRODECK.md`
+- [x] T021 [P] **W2** Client + fixtures + full-dump importer — `cmd/cardimport/`
+- [x] T022 [P] **W3** Rate-limited, resumable image pipeline → object storage — `cmd/cardimages/`
 - [ ] T023 [P] **W4** [US2][US3] Card model + store lookups per ladder rung — `internal/card/{model,store}/`
 - [ ] T024 [P] **W4** [US2][US3] The match ladder + `SetResolution` — `internal/card/service/match.go`
 - [ ] T025 [P] **W4** `POST /scans/resolve`, `GET /cards` — `internal/card/api/`
