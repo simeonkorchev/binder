@@ -48,3 +48,113 @@ no `IF NOT EXISTS` on tables, so re-running one is an error on purpose.
 `TEST_DATABASE_URL` is unset) are the entry points; `migrate-test` is part of
 `gate-go` because CI runs it before the suites.
 Evidence: `tools/migrate.sh` · since 2026-09-16 · verified 2026-09-16
+
+## Suites and fakes
+
+### store-suites-take-testdb-in-the-bootstrap-not-beforesuite
+`testdb.New(t)` takes a `*testing.T` — it registers cleanup on it and calls
+`t.Skipf` when no Postgres is reachable — so a Ginkgo store suite cannot call it
+from `BeforeSuite`, where no `*testing.T` exists. Take the handle in the suite
+bootstrap, **before** `RunSpecs`, into a package-level var:
+
+```go
+//nolint:gochecknoglobals // shared test DB handle for the suite (002 section 9).
+var testDB *sqlx.DB
+
+func TestStore(t *testing.T) {
+	testDB = testdb.New(t)
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "…")
+}
+```
+
+The skip then skips the whole suite (`t.Skipf` calls `runtime.Goexit`, so
+`RunSpecs` never runs), which is what you want on a machine with no database.
+Each spec gets its own isolation from a `TRUNCATE <tables> CASCADE` in
+`BeforeEach` — the database is already private to the suite, cloned from the
+migrated template, so truncation is cheaper than a tx-per-spec and survives the
+store opening its own transactions.
+Evidence: `cmd/cardimport/store/store_suite_test.go` · since 2026-09-16 · verified 2026-09-16
+
+### gochecknoglobals-fires-in-test-files-too
+`.golangci.yml` excludes only `forcetypeassert`, `goconst` and `ireturn` from
+`_test.go`, so **`gochecknoglobals` applies to specs**. The package-level
+"static (inline init)" fixture block that `002` section 9 shows is therefore a
+lint error here unless it is an `error` value (the linter exempts those, which
+is why a package-level `errDB = errors.New(…)` passes and a
+`fixtureBatch = model.Batch{…}` does not).
+
+Declare spec fixtures **inside the `Describe` closure** instead — Ginkgo builds
+the tree once, so `blueEyes := model.CardRow{…}` above the `var (…)` block of
+dynamic vars behaves identically and needs no suppression. Reserve the
+`//nolint:gochecknoglobals` for the suite-shared DB handle, where there is no
+closure to hold it.
+Evidence: `cmd/cardimport/store/store_test.go` · since 2026-09-16 · verified 2026-09-16
+
+### ginkgo-run-does-fail-on-plain-go-tests
+`make test` is `ginkgo run`, which reports specs — but it compiles the package's
+whole test binary, so a plain `func TestX(t *testing.T)` in an
+`<name>_internal_test.go` **does** run and **does** fail the gate
+(`--- FAIL: TestObjectKey…` then `Test Suite Failed`), even while the spec
+summary above it says `SUCCESS! -- 37 Passed`. Verified by breaking one on
+purpose. The `002` section 9 licence to use plain `testing` for pure helpers and
+mapper-completeness tables is therefore real coverage here, not a test that
+silently never runs. Read the tail of the output, not the spec line.
+Evidence: `cmd/cardimages/pipeline/objectkey_internal_test.go` · since 2026-09-16 · verified 2026-09-16
+
+### no-pkg-eslog-here-demote-with-a-level-returning-method
+`002` section 4a tells you to demote an expected error with
+`eslog.LeveledErr(slog.LevelWarn, err)` and attach errors with `eslog.Error(err)`.
+**`pkg/eslog` does not exist in this repository** — the rules are spotter's and
+name a package that was not ported. Do not invent one for a single call site.
+
+The shape in use instead: the closed set of failure reasons is a named type with
+a `Level() slog.Level` method, and the one place that logs a per-item failure
+calls `slog.LogAttrs(ctx, reason.Level(), …)`. One decision per reason, in one
+place, testable as a table. A 404 from the image host is the only WARN; every
+other reason is ERROR. If a second layer ever needs the same thing, that is the
+moment to port `pkg/eslog`, not before.
+Evidence: `cmd/cardimages/pipeline/failure.go` (`FailureReason.Level`) · since 2026-09-16 · verified 2026-09-16
+
+## Store and data
+
+### postgres-unique-is-not-deferrable-park-rows-to-reorder-positions
+`UNIQUE (binder_id, position)` is checked **as each row version enters the
+index**, not at the end of the statement, so there is no single UPDATE that
+shifts a dense run of positions. Even
+
+```sql
+UPDATE binder_slots SET "position" = "position" + 1 WHERE "position" >= 3
+```
+
+fails with `duplicate key value violates unique constraint
+"binder_slots_binder_position_key"`: the row going 3 -> 4 meets the row still at
+4. SQL gives no way to order the updates, and for a move there is no order that
+works anyway — every position in the window is occupied, so every intermediate
+step collides. A constraint declared with `CONSTRAINT ... UNIQUE` is not
+deferrable, so `SET CONSTRAINTS ... DEFERRED` is not available either.
+
+Do it in two statements inside one transaction: **park** the affected rows above
+`max(position)`, then bring them back at their final positions. The parked range
+is disjoint from the occupied one by construction and every landing position was
+vacated by the first statement, so no intermediate state holds two rows at one
+position. A move is the same shape with a `CASE` that sends the mover to its
+destination and closes the rest up behind it. `internal/binder/store/position.go`
+is the worked version, and its specs go red if the parking is removed.
+Evidence: `internal/binder/store/position.go` · since 2026-09-16 · verified 2026-09-16
+
+### store-suites-must-connect-with-pgx-or-error-translation-is-never-exercised
+`cmd/` connects with the **"pgx"** driver (`_ "github.com/jackc/pgx/v5/stdlib"`).
+A suite that connects with lib/pq (`sqlx.Connect("postgres", …)`) therefore runs
+a different driver than production, and a store that translates driver errors
+into `internal/dataerror` types silently translates nothing: the translator
+matches `*pgconn.PgError` and lib/pq returns `*pq.Error`, so `errors.As` misses
+and the raw error passes straight through. `internal/binder/store` shipped that
+way — its conflict and invalid-reference paths were unreachable until three
+specs asserted them and failed.
+
+`internal/testdb` connects with "pgx" for this reason. pgx's stdlib driver does
+apply the multi-statement migration files (no bind parameters, so the simple
+protocol is used); verified from a dropped `binder_test_template`. `pq` is still
+imported there for `pq.QuoteIdentifier`, which is a pure string function.
+Evidence: `internal/testdb/testdb.go` · since 2026-09-16 · verified 2026-09-16

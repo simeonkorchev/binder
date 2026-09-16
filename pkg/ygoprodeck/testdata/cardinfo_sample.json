@@ -1,0 +1,133 @@
+{
+  "data": [
+    {
+      "id": 89631139,
+      "name": "Blue-Eyes White Dragon",
+      "card_sets": [
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-EN001",
+          "set_rarity": "Ultra Rare"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-EN001",
+          "set_rarity": "Secret Rare"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-EN001",
+          "set_rarity": "Ultra Rare"
+        },
+        {
+          "set_name": "Starter Deck: Kaiba",
+          "set_code": "SDK-EN-A01",
+          "set_rarity": "Common"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 89631139,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631139.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631139.jpg"
+        },
+        {
+          "id": 89631140,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631140.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631140.jpg"
+        }
+      ]
+    },
+    {
+      "id": 46986414,
+      "name": "Dark Magician",
+      "card_sets": [
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-EN005",
+          "set_rarity": "Ultra Rare"
+        },
+        {
+          "set_name": "Starter Deck: Yugi",
+          "set_code": "sdy-en006",
+          "set_rarity": "Common"
+        },
+        {
+          "set_name": "Tournament Pack",
+          "set_code": "PROMO",
+          "set_rarity": "Ultra Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 46986414,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46986414.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986414.jpg"
+        }
+      ]
+    },
+    {
+      "id": 44095762,
+      "name": "Mirror Force",
+      "card_sets": [
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-EN138",
+          "set_rarity": "Ultra Rare"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "-EN139",
+          "set_rarity": "Rare"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-",
+          "set_rarity": "Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 44095762,
+          "image_url": "https://images.ygoprodeck.com/images/cards/44095762.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/44095762.jpg"
+        }
+      ]
+    },
+    {
+      "id": 10000000,
+      "name": "Obelisk the Tormentor",
+      "card_sets": [],
+      "card_images": [
+        {
+          "id": 10000000,
+          "image_url": "https://images.ygoprodeck.com/images/cards/10000000.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/10000000.jpg"
+        }
+      ]
+    },
+    {
+      "id": 40640057,
+      "name": "Kuriboh",
+      "card_sets": [
+        {
+          "set_name": "Legend of Blue Eyes White Dragon: Reprint",
+          "set_code": "LOB-EN071",
+          "set_rarity": "Rare"
+        },
+        {
+          "set_name": "Shonen Jump Promo",
+          "set_code": "JMP-EN001",
+          "set_rarity": ""
+        }
+      ],
+      "card_images": [
+        {
+          "id": 40640057,
+          "image_url": "https://images.ygoprodeck.com/images/cards/40640057.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/40640057.jpg"
+        }
+      ]
+    }
+  ]
+}

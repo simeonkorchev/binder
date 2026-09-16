@@ -29,6 +29,7 @@ linters:
     - errname
     - errorlint
     - exhaustive
+    - exhaustruct
     - forcetypeassert
     - funlen
     - ginkgolinter
@@ -71,6 +72,28 @@ linters:
     - whitespace
 
   settings:
+    exhaustruct:
+      # 002-go-conventions.md section 8a: scoped to the structs a DB row or a
+      # match result is assembled into, where leaving a field out is a silent
+      # data drop rather than a legitimate partial construction. A field a
+      # constructor deliberately omits is set to its zero value *with a
+      # comment* — that is the point: the omission becomes a decision on the
+      # page instead of an absence nobody can see.
+      #
+      # Deliberately NOT listed: model.AddSlotInput and model.MoveSlotInput
+      # (a slot's printing and position are genuinely optional per request, so
+      # guarding them produces explicit-zero noise that hides the real signal)
+      # and model.Page (built in one place, from three values that are all
+      # always present).
+      include:
+        - 'github\.com/simeonkorchev/binder/internal/card/model\.Card$'
+        - 'github\.com/simeonkorchev/binder/internal/card/model\.CardPrinting$'
+        - 'github\.com/simeonkorchev/binder/internal/card/model\.PrintedCard$'
+        - 'github\.com/simeonkorchev/binder/internal/card/model\.NameMatch$'
+        - 'github\.com/simeonkorchev/binder/internal/card/model\.MatchResult$'
+        - 'github\.com/simeonkorchev/binder/internal/card/model\.Candidate$'
+        - 'github\.com/simeonkorchev/binder/internal/binder/model\.Binder$'
+        - 'github\.com/simeonkorchev/binder/internal/binder/model\.Slot$'
     lll:
       # 002-go-conventions.md section 1.1: long signatures break one parameter
       # per line rather than carrying a suppression.
@@ -108,6 +131,7 @@ linters:
       # Test files build throwaway values and assert on them: a partial literal,
       # a concrete return and a repeated string are the point, not a smell.
       - linters:
+          - exhaustruct
           - forcetypeassert
           - goconst
           - ireturn
@@ -137,12 +161,6 @@ formatters:
 
 # Deliberately NOT enabled, so the next session does not re-derive the reason:
 #
-#   exhaustruct  — 002-go-conventions.md section 8a wants it, but only scoped to
-#                  the row -> model structs, through settings.exhaustruct.include.
-#                  Unscoped it checks every struct literal in the repo, which is
-#                  the opposite of the rule. There are no model packages yet, so
-#                  the wave that adds the first one (card/binder/listing model)
-#                  turns it on together with its include list.
 #   wrapcheck    — 002 section 4.2 requires %w at every layer boundary, but this is
 #                  the linter 000-principles.md section 8a names as the cautionary
 #                  tale: 38 suppressions for a check that was never on. Turning it

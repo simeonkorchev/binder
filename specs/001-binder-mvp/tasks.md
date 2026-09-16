@@ -22,18 +22,18 @@ until the gate exists, so this is one agent, alone.
 ## Wave 1 — data and identity
 
 - [ ] T010 **W1** Migrations 001–004 per `plan.md` — `db/migrations/`
-- [ ] T011 **W1** Store integration test harness on real Postgres — `internal/testdb/`
+- [x] T011 **W1** Store integration test harness on real Postgres — `internal/testdb/`
 - [ ] T012 [P] **W7** Auth: sign-in, session JWT, middleware — `internal/user/**`
 
 ## Wave 2 — ingestion and core domains (all parallel)
 
-- [ ] T020 [P] **W2** Verify the YGOPRODeck contract live (shape, rate limit, image policy); amend `plan.md` if it differs — `pkg/ygoprodeck/`
-- [ ] T021 [P] **W2** Client + fixtures + full-dump importer — `cmd/cardimport/`
-- [ ] T022 [P] **W3** Rate-limited, resumable image pipeline → object storage — `cmd/cardimages/`
-- [ ] T023 [P] **W4** [US2][US3] Card model + store lookups per ladder rung — `internal/card/{model,store}/`
-- [ ] T024 [P] **W4** [US2][US3] The match ladder + `SetResolution` — `internal/card/service/match.go`
-- [ ] T025 [P] **W4** `POST /scans/resolve`, `GET /cards` — `internal/card/api/`
-- [ ] T026 [P] **W5** [US4][US5] Binder model, store, paged read, bulk reorder in one tx — `internal/binder/**`
+- [ ] T020 [P] **W2** Verify the YGOPRODeck contract live (shape, rate limit, image policy); amend `plan.md` if it differs — `pkg/ygoprodeck/`. **Still open: needs a machine with egress** — the exact curl commands and what to change per outcome are in `VERIFY-YGOPRODECK.md`
+- [x] T021 [P] **W2** Client + fixtures + full-dump importer — `cmd/cardimport/`
+- [x] T022 [P] **W3** Rate-limited, resumable image pipeline → object storage — `cmd/cardimages/`
+- [x] T023 [P] **W4** [US2][US3] Card model + store lookups per ladder rung — `internal/card/{model,store}/`
+- [x] T024 [P] **W4** [US2][US3] The match ladder + `SetResolution` — `internal/card/service/match.go`
+- [x] T025 [P] **W4** `POST /scans/resolve`, `GET /cards` — `internal/card/api/`
+- [x] T026 [P] **W5** [US4][US5] Binder model, store, paged read, bulk reorder in one tx — `internal/binder/**`. The reorder is one bulk statement over the affected window; positions get past the non-deferrable `UNIQUE (binder_id, position)` by parking above `max(position)` and returning (`internal/binder/store/position.go`)
 
 ## Wave 3 — listings and the contract
 
