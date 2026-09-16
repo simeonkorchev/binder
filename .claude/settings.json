@@ -1,0 +1,86 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(make:*)",
+      "Bash(go:*)",
+      "Bash(ginkgo:*)",
+      "Bash(golangci-lint:*)",
+      "Bash(docker info)",
+      "Bash(.claude/skills/fe-refactor/scripts/diff-budget.sh:*)",
+      "Bash(.claude/skills/go-quality-sweep/scripts/diff-budget.sh:*)",
+      "Bash(.claude/skills/sql-optimize/scripts/diff-budget.sh:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(sed -n:*)",
+      "Bash(awk:*)",
+      "Bash(wc:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(cut:*)",
+      "Bash(tr:*)",
+      "Bash(diff:*)",
+      "Bash(find . :*)",
+      "Bash(find apps:*)",
+      "Bash(find internal:*)",
+      "Bash(find pkg:*)",
+      "Bash(xargs:*)",
+      "Bash(echo:*)",
+      "Bash(printf:*)",
+      "Bash(cd:*)",
+      "Bash(mkdir:*)",
+      "Bash(test:*)",
+      "Bash(which:*)",
+      "Bash(date:*)",
+      "Bash(python3:*)",
+      "Bash(node:*)",
+      "Bash(jq:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-pretool.py\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\""
+          }
+        ]
+      }
+    ]
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "caveman@caveman": true,
+    "superpowers@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true
+  },
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "autoContinueAtUsageLimit": true
+}

@@ -1,0 +1,32 @@
+# Go
+/bin/
+*.test
+*.out
+coverage.*
+
+# Node / Expo
+node_modules/
+dist/
+build/
+.expo/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+
+# Env & secrets — never commit (.claude/rules/004-security.md)
+.env
+.env.*
+!.env.example
+*.pem
+
+# Generated — regenerate, never hand-edit
+.claude/memory/generated/
+.claude/guard-warnings.log
+
+# Card image pipeline output (large binaries; stored in object storage)
+/data/card-images/
+
+# OS / editor
+.DS_Store
+.idea/
+*.swp

@@ -1,0 +1,163 @@
+---
+name: golang-modernize
+description: "Modernize Golang code to use recent language features, standard library improvements, and idiomatic patterns. Trigger proactively when writing or reviewing Go code and old-style patterns are detected, or when encountering a deprecation warning. Also use when the user explicitly asks for modernization, a Go version upgrade, or a CI/tooling refresh. Not for structural refactors, extracting functions, or moving code between packages (→ See `.claude/skills/golang-refactoring/SKILL.md`)."
+user-invocable: true
+license: MIT
+compatibility: Designed for Claude Code, Codex or similar harness, and for projects using Golang.
+metadata:
+  author: samber
+  version: "1.4.1"
+  openclaw:
+    emoji: "🔄"
+    homepage: https://github.com/samber/cc-skills-golang
+    requires:
+      bins:
+        - go
+    install: []
+allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Agent WebFetch WebSearch AskUserQuestion EnterWorktree ExitWorktree
+paths:
+  - "**/*.go"
+---
+
+<!-- markdownlint-disable ol-prefix -->
+
+**Persona:** You are a Go modernization engineer. You keep codebases current with the latest Go idioms and standard library improvements — you prioritize safety and correctness fixes first, then readability, then gradual improvements.
+
+**Modes:**
+
+- **Inline mode** (developer is actively coding): suggest only modernizations relevant to the current file or feature. A broad rewrite started during someone else's task buries their change under unrelated churn and makes the diff unreviewable — so record the other opportunities as a note, with the quality gain each would bring, and let the developer schedule them.
+- **Full-scan mode** (explicit `/golang-modernize` invocation): scan the categories one at a time in this session — deprecated packages, language features, standard library upgrades, testing patterns, tooling — consolidate by the migration priority guide, and apply on a branch. A Routine never spawns sub-agents. Go is `1.25.6` (`go.mod`): nothing gated on 1.26+ applies yet.
+
+**Questions:** In Inline mode, this skill triggers contextually while the developer is working on something else — ask via the environment's question tool, once, whether to suggest the modernization opportunities noticed or skip for now. If the user skips, stop immediately and do not raise modernization again for the rest of the session.
+
+# Go Code Modernization Guide
+
+This skill helps you continuously modernize Go codebases by replacing outdated patterns with their modern equivalents.
+
+**Scope**: This skill covers the last 3 years of Go modernization (Go 1.21 through Go 1.27, released 2023-2026). While this skill can be used for projects targeting Go 1.20 or older, modernization suggestions may be limited for those versions. For best results, consider upgrading the Go version first. Some older modernizations (e.g., `any` instead of `interface{}`, `errors.Is`/`errors.As`, `strings.Cut`) are included because they are still commonly missed, but many pre-1.21 improvements are intentionally omitted because they should have been adopted long ago and are considered baseline Go practices by now.
+
+## Workflow
+
+When invoked:
+
+1. **Check the project's `go.mod` or `go.work`** to determine the current Go version (`go` directive)
+2. **Check the latest Go version** using the Go Version Changelogs table below and suggest upgrading if the project's `go.mod` is behind
+3. **Read `.modernize`** in the project root — this file contains previously ignored suggestions; do NOT re-suggest anything listed there
+4. **Scan the codebase** for modernization opportunities based on the target Go version
+5. **Run `golangci-lint`** with the `modernize` linter if available
+6. **Suggest improvements contextually**:
+   - If the developer is actively coding, **only suggest improvements related to the code they are currently working on**. Do not refactor unrelated files. Instead, mention opportunities you noticed and explain why the change would be beneficial — but let the developer decide.
+   - If invoked explicitly via `/golang-modernize` or in CI, scan and suggest across the entire codebase.
+7. **For large codebases**, scan one category at a time and record the rest as notes; apply changes on a branch. A Routine never spawns sub-agents.
+8. **Before suggesting a dependency update**, run `go mod tidy` and the test suite to verify compatibility. Ask the developer to review the dependency's changelog and release notes for breaking changes before proceeding.
+9. **If the developer explicitly ignores a suggestion**, write a short memo to `.modernize` in the project root so it is not suggested again. Format: one line per ignored suggestion, with a short description.
+
+When applying a modernization that renames an identifier or replaces a deprecated API (e.g. `reflect.PtrTo` → `PointerTo`, `math/rand` → `math/rand/v2`), → See `gopls` (optional tooling; the gate is `make lint && make test`) — safe rename updates every call site and refuses a rename that would break interface satisfaction, and post-edit diagnostics catch compile errors across the rewritten files that a blind Edit or grep/sed sweep would leave broken.
+
+### `.modernize` file format
+
+```
+# Ignored modernization suggestions
+# Format: <date> <category> <description>
+2026-09-09 errors-astype go.mod is 1.25.6; revisit after the toolchain bump
+2026-02-01 math-rand-v2 Legacy module requires math/rand compatibility
+```
+
+## Go Version Changelogs
+
+Reference the relevant changelog when suggesting a modernization:
+
+| Version | Release       | Changelog                   |
+| ------- | ------------- | --------------------------- |
+| Go 1.21 | August 2023   | <https://go.dev/doc/go1.21> |
+| Go 1.22 | February 2024 | <https://go.dev/doc/go1.22> |
+| Go 1.23 | August 2024   | <https://go.dev/doc/go1.23> |
+| Go 1.24 | February 2025 | <https://go.dev/doc/go1.24> |
+| Go 1.25 | August 2025   | <https://go.dev/doc/go1.25> |
+| Go 1.26 | February 2026 | <https://go.dev/doc/go1.26> |
+| Go 1.27 | August 2026   | <https://go.dev/doc/go1.27> |
+
+For versions newer than Go 1.27, consult the official Go release notes.
+
+When the project's `go.mod` targets an older version, suggest upgrading and explain the benefits they'd unlock.
+
+## Using the modernize linter
+
+The `modernize` linter (available since **golangci-lint v2.6.0**) automatically detects code that can be rewritten using newer Go features. It originates from `golang.org/x/tools/go/analysis/passes/modernize`; `gopls` and Go 1.26's rewritten `go fix` cover overlapping modernization checks, but exact coverage differs by tool version. Go 1.27 adds the `atomictypes`, `embedlit`, `slicesbackward`, and `unsafefuncs` modernizers to `go fix` (and renames `waitgroup` to `waitgroupgo`). See `.golangci.yml` (the pinned linter set; `make lint`) for configuration.
+
+## Version-specific modernizations
+
+For detailed before/after examples for each Go version (1.21–1.27) and general modernizations, see [Go version modernizations](./references/versions.md).
+
+## Tooling modernization
+
+For CI tooling, govulncheck, PGO, golangci-lint v2, and AI-powered modernization pipelines, see [Tooling modernization](./references/tooling.md).
+
+## Deprecated Packages Migration
+
+| Deprecated | Replacement | Since |
+| --- | --- | --- |
+| `math/rand` | `math/rand/v2` | Go 1.22 |
+| `crypto/elliptic` (most functions) | `crypto/ecdh` | Go 1.21 |
+| `reflect.SliceHeader`, `StringHeader` | `unsafe.Slice`, `unsafe.String` | Go 1.21 |
+| `reflect.PtrTo` | `reflect.PointerTo` | Go 1.22 |
+| `runtime.GOROOT()` | `go env GOROOT` | Go 1.24 |
+| `runtime.SetFinalizer` | `runtime.AddCleanup` | Go 1.24 |
+| `crypto/cipher.NewOFB`, `NewCFB*` | AEAD modes or `NewCTR` | Go 1.24 |
+| `golang.org/x/crypto/sha3` | `crypto/sha3` | Go 1.24 |
+| `golang.org/x/crypto/hkdf` | `crypto/hkdf` | Go 1.24 |
+| `golang.org/x/crypto/pbkdf2` | `crypto/pbkdf2` | Go 1.24 |
+| `testing/synctest.Run` | `testing/synctest.Test` | Go 1.25 |
+| `crypto/rsa.EncryptPKCS1v15` for new encryption use | RSA-OAEP (`rsa.EncryptOAEP` / `rsa.EncryptOAEPWithOptions`) or HPKE/KEM design | Go 1.26 |
+| `net/http/httputil.ReverseProxy.Director` | `ReverseProxy.Rewrite` | Go 1.26 |
+| `crypto/tls.Config.Rand` | `testing/cryptotest.SetGlobalRandom` for deterministic testing | Go 1.27 |
+| `github.com/google/uuid` | `uuid` (stdlib) | Go 1.27 |
+
+## Migration Priority Guide
+
+When modernizing a codebase, prioritize changes by impact:
+
+### High priority (safety and correctness)
+
+1. Remove loop variable shadow copies _(Go 1.22+)_ — prevents subtle bugs
+2. Replace `math/rand` with `math/rand/v2` _(Go 1.22+)_ — remove `rand.Seed` calls
+3. Use `os.Root` for user-supplied file paths _(Go 1.24+)_ — prevents path traversal
+4. Run `govulncheck` _(Go 1.22+)_ — catch known vulnerabilities
+5. Use `errors.Is`/`errors.As` instead of direct comparison _(Go 1.13+)_
+6. Migrate deprecated crypto packages _(Go 1.24+)_ — security critical
+
+### Medium priority (readability and maintainability)
+
+7. Replace `interface{}` with `any` _(Go 1.18+)_
+8. Use `min`/`max` builtins _(Go 1.21+)_
+9. Use `range` over int _(Go 1.22+)_
+10. Use `slices` and `maps` packages _(Go 1.21+)_
+11. Use `cmp.Or` for default values _(Go 1.22+)_
+12. Use `sync.OnceValue`/`sync.OnceFunc` _(Go 1.21+)_
+13. Use `sync.WaitGroup.Go` _(Go 1.25+)_
+14. Use `t.Context()` in tests _(Go 1.24+)_
+15. Use `b.Loop()` in benchmarks _(Go 1.24+)_
+
+### Lower priority (gradual improvement)
+
+16. Migrate to `slog` from third-party loggers _(Go 1.21+)_
+17. Adopt iterators where they simplify code _(Go 1.23+)_
+18. Replace `sort.Slice` with `slices.SortFunc` _(Go 1.21+)_
+19. Use `strings.SplitSeq` and iterator variants _(Go 1.24+)_
+20. Move tool deps to `go.mod` tool directives _(Go 1.24+)_
+21. Enable PGO for production builds _(Go 1.21+)_
+22. Upgrade to golangci-lint v2 with modernize linter _(golangci-lint v2.6.0+)_
+23. Add `govulncheck` to CI pipeline
+24. Set up monthly modernization CI pipeline
+25. Evaluate migrating to `encoding/json/v2` — stable since Go 1.27 (experimental via `GOEXPERIMENT=jsonv2` in Go 1.25–1.26); v1 remains supported and is now backed by the v2 implementation
+26. Set up AI-driven code review in CI — loads these skills to guide review per area; see `.github/workflows/quality-gate.yml`
+27. Replace `github.com/google/uuid` with the stdlib `uuid` package _(Go 1.27+)_ — drops a third-party dependency
+28. Use generic methods for package-level generic helpers tied to one type _(Go 1.27+)_ — but not for operations that must satisfy an interface
+29. Use `strings.CutLast`/`bytes.CutLast` for last-separator splits _(Go 1.27+)_
+30. Run `go fix ./...` after a toolchain upgrade — Go 1.27 adds `atomictypes`, `embedlit`, `slicesbackward`, `unsafefuncs` modernizers _(Go 1.27+)_
+
+## Related Skills
+
+See `.claude/rules/002-go-conventions.md` §5 (concurrency & context, `pkg/appctrl`), `.claude/rules/006-testing.md` and `002-go-conventions.md` §9 (Ginkgo/Gomega), `.claude/rules/002-go-conventions.md` §4a (logging & tracing: `slog`, `eslog`, `otelecho`), `.claude/skills/golang-error-handling/SKILL.md`, `.golangci.yml` (the pinned linter set; `make lint`), `.github/workflows/quality-gate.yml`s.
+
+- → See `.claude/skills/golang-refactoring/SKILL.md` for staging a large modernization sweep as small human-reviewed PRs instead of one big worktree sweep.
