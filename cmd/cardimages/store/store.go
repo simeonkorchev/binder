@@ -9,11 +9,10 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 	// Registers the "pgx" driver used by Connect. Importing it here keeps the
 	// driver choice in one place instead of in every binary and suite.
 	_ "github.com/jackc/pgx/v5/stdlib"
-
+	"github.com/jmoiron/sqlx"
 	"github.com/simeonkorchev/binder/cmd/cardimages/model"
 )
 

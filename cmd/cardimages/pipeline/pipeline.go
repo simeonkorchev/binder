@@ -16,9 +16,8 @@ import (
 	"log/slog"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/simeonkorchev/binder/cmd/cardimages/model"
+	"golang.org/x/sync/errgroup"
 )
 
 var (

@@ -22,7 +22,6 @@ import (
 
 	"github.com/caarlos0/env/v11"
 	"github.com/jmoiron/sqlx"
-
 	"github.com/simeonkorchev/binder/cmd/cardimages/imagefetch"
 	"github.com/simeonkorchev/binder/cmd/cardimages/pipeline"
 	"github.com/simeonkorchev/binder/cmd/cardimages/store"
@@ -68,9 +67,13 @@ func main() {
 	// SIGTERM and Ctrl-C cancel the run instead of killing it: in-flight
 	// writes finish, and everything else is already resumable.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
+	// Released before the exit below rather than deferred: os.Exit runs no
+	// deferred function, so a `defer stop()` here would be dead on the one
+	// path that matters.
+	err := run(ctx)
+	stop()
 
-	if err := run(ctx); err != nil {
+	if err != nil {
 		slog.ErrorContext(ctx, "card image run failed", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
@@ -125,6 +128,8 @@ func run(ctx context.Context) error {
 
 // openStorage returns the configured destination and the function that
 // releases it, so run() does not branch on which one it got.
+//
+//nolint:ireturn // a factory returning the interface its one consumer (pipeline.Config.Storage) declares.
 func openStorage(ctx context.Context, cfg config) (pipeline.Storage, func(), error) {
 	if cfg.Dir != "" {
 		dir, err := objectstore.NewDir(cfg.Dir)
