@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/simeonkorchev/binder/internal/binder/model"
 	"github.com/simeonkorchev/binder/internal/dataerror"
 )
 
@@ -23,13 +24,9 @@ const (
 	constraintSlotPrintingFK     = "binder_slots_printing_belongs_to_card"
 )
 
-// The subjects and references the constraints above translate into. These are
-// the vocabulary the service matches on.
-const (
-	referenceCard         = "card"
-	referenceCardPrinting = "card printing"
-	subjectSlotPosition   = "binder slot position"
-)
+// subjectSlotPosition names what a position conflict is a conflict over. The
+// two reference names live in model/, because the service matches on them too.
+const subjectSlotPosition = "binder slot position"
 
 // translateSlotWriteError turns a driver error from a binder_slots write into
 // the typed error the service branches on, and returns err unchanged when it is
@@ -54,9 +51,9 @@ func translateSlotWriteError(err error) error {
 	case pgForeignKeyViolation:
 		switch pgErr.ConstraintName {
 		case constraintSlotCardFK:
-			return dataerror.WrapInvalidReferenceError(referenceCard, err)
+			return dataerror.WrapInvalidReferenceError(model.ReferenceCard, err)
 		case constraintSlotPrintingFK:
-			return dataerror.WrapInvalidReferenceError(referenceCardPrinting, err)
+			return dataerror.WrapInvalidReferenceError(model.ReferenceCardPrinting, err)
 		}
 	}
 

@@ -28,3 +28,13 @@ type MoveSlotInput struct {
 	SlotID     uuid.UUID
 	ToPosition int
 }
+
+// ReferenceCard and ReferenceCardPrinting name the rows a slot points at, in
+// the vocabulary a dataerror.InvalidReferenceError carries. The store produces
+// them when a foreign key rejects a write and the service matches on them to
+// decide which sentinel the caller gets, so they are one fact here rather than
+// two string literals in two layers that can drift apart.
+const (
+	ReferenceCard         = "card"
+	ReferenceCardPrinting = "card printing"
+)

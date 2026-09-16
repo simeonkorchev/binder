@@ -25,6 +25,21 @@ type rungOutcome struct {
 	decided bool
 }
 
+// undecided is the outcome of a rung that matched nothing. Its match is an
+// explicitly empty result — nothing was concluded, so there is nothing to put
+// in it, and decided: false is what tells the ladder to carry on down.
+func undecided() rungOutcome {
+	return rungOutcome{
+		match: model.MatchResult{
+			Resolution: model.SetResolutionUnset,
+			Card:       nil,
+			Printing:   nil,
+			Candidates: nil,
+		},
+		decided: false,
+	}
+}
+
 // ResolveScan walks the match ladder for one scanned card:
 //
 //  1. the whole printed code,
@@ -61,7 +76,7 @@ func (s *Service) ResolveScan(ctx context.Context, scan model.ScanInput) (model.
 // one that can: there is nothing for a later rung to add.
 func (s *Service) matchByCode(ctx context.Context, code scanCode) (rungOutcome, error) {
 	if code.number == "" {
-		return rungOutcome{match: model.MatchResult{}, decided: false}, nil
+		return undecided(), nil
 	}
 
 	if code.prefix != "" {
@@ -93,7 +108,7 @@ func (s *Service) matchByCode(ctx context.Context, code scanCode) (rungOutcome, 
 func decideCodeRung(printings []model.PrintedCard, resolution model.SetResolution) rungOutcome {
 	switch len(printings) {
 	case 0:
-		return rungOutcome{match: model.MatchResult{}, decided: false}
+		return undecided()
 	case 1:
 		return rungOutcome{match: model.MatchResult{
 			Resolution: resolution,
