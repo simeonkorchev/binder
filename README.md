@@ -26,9 +26,9 @@ pipeline.
 
 ## Status
 
-Bootstrapping. The repo currently holds engineering guardrails only — no
-application code yet. See `CLAUDE.md` for the layout, the rules, and what is
-deliberately absent.
+Bootstrapping. The toolchain, the quality gate, the Expo app skeleton and the
+database schema are in; the Go domains and the app's features are not. See
+`CLAUDE.md` for the layout, the rules, and how to run the gate.
 
 ## Stack
 

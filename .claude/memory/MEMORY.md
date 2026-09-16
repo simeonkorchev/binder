@@ -8,22 +8,30 @@ brackets are what a session would search for, the slug is the anchor.
 .claude/rules/ win over anything here. Format, placement table and rules:
 .claude/memory/README.md -->
 
-<!-- EMPTY ON PURPOSE. This repo was seeded from simeonkorchev/spotter with its
-rules, skills, agents and commands, but deliberately WITHOUT spotter's memory
-units — none of them describe this codebase. The format below is the one from
-spotter; the entries are yours to write as you learn this repo.
+## go.md — Go backend
 
-Topic files are created on first write. Suggested starting set, matching the
-placement table in README.md:
+- [reference] `golangci-lint run ./...` or `ginkgo ./...` lints and tests `node_modules/flatted/golang`; use GO_ROOTS → go.md#go-list-dot-dot-dot-picks-up-node-modules
+- [reference] "no go files to analyze" (exit 5), "Found no test suites" on the empty skeleton; the Go lanes skip on purpose → go.md#empty-go-tree-fails-the-linter-and-ginkgo
+- [reference] golangci-lint install.sh answered 403 at the proxy; `/usr/local/bin` shadows the pinned binary; `make check-golangci-version` → go.md#golangci-lint-install-script-is-blocked-use-go-install
+- [project] applying `db/migrations`, `schema_migrations`, `make migrate` / `make migrate-test` → go.md#migrations-are-applied-by-tools-migrate-sh
 
-    go.md            Go backend facts the rules do not state
-    mobile.md        React Native / Expo facts
-    decisions.md     Choices taken or declined — binding
-    feedback.md      Maintainer corrections not yet promoted to a rule
-    flaky-tests.md   Red gates and their causes
+## mobile.md — apps/mobile
 
-Delete this comment once the first real memory lands. -->
+- [reference] `npx expo install` → "HTTP Proxy Network Error: Forbidden"; pin versions from `bundledNativeModules.json` → mobile.md#expo-install-cannot-resolve-versions-here
+- [reference] "render function has not been called" from RNTL's `screen`; v14 render is async and needs `test-renderer` → mobile.md#rntl-14-render-is-async-and-needs-test-renderer
+- [reference] knip "Unlisted dependencies: expo-updates / expo-system-ui" comes from `app.config.ts` → mobile.md#knip-infers-expo-dependencies-from-app-config
 
-## Derived (regenerated each session by the SessionStart hook; `make memory-gen` once a Makefile exists)
+## decisions.md — binding
+
+- [project] which linters `.golangci.yml` enables, and why `exhaustruct` and `wrapcheck` are off → decisions.md#2026-09-16-linter-set-omits-exhaustruct-and-wrapcheck
+- [project] no golang-migrate or goose; `tools/migrate.sh` plus `schema_migrations` → decisions.md#2026-09-16-no-migration-runner-binary
+- [project] why `react-native-vision-camera` is not installed yet, and what the dev build already carries → decisions.md#2026-09-16-vision-camera-is-not-a-dependency-until-w9
+
+## deploy.md — infrastructure and CI
+
+- [reference] `docker pull postgres:16` → "production.cloudfront.docker.com: Forbidden"; use `tools/test-db-local.sh` → deploy.md#docker-image-pulls-are-blocked-postgres-comes-from-the-image
+- [reference] local gate vs CI drift, `go_re` / `shared_re` byte-identical, `make check-ci-parity` → deploy.md#ci-and-the-local-gate-share-one-classifier
+
+## Derived (regenerated each session by the SessionStart hook)
 
 _Nothing yet — `tools/memory-gen.sh` has not been ported into this repo._

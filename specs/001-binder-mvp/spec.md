@@ -78,6 +78,7 @@ New tables: `cards`, `card_sets`, `card_printings`, `users`, `binders`,
 | D2 | OCR | **react-native-vision-camera frame processor + ML Kit** text recognition, on-device | Cross-platform. **Requires an Expo dev build — the app will not run in Expo Go.** |
 | D3 | Card images | **GCS**, matching spotter's stack | Reuses spotter's client wrapper and credential pattern. |
 | D4 | Seller contact | **Contact button** revealing opted-in email/phone. No chat in MVP | `listings` keeps a nullable `cardmarket_listing_id` so phase 2 is additive. |
+| D5 | Card **detection** | **Fixed guide frame + stable-read auto-capture.** No edge detection | D2 chose how text is *read*; it did not say how the card is *found*, and ML Kit has no rectangle detector. Cards in a binder are flat and already in a grid, so a guide frame plus "same code on N consecutive reads" delivers the continuous sweep with the least native surface. True quad detection and perspective correction (OpenCV / `VNDetectRectangles`) is a phase-2 refinement for loose, angled cards. |
 
 ## Risks
 

@@ -6,23 +6,20 @@ Postgres card database, organise it into 3×3 binder pages, list it for sale.
 > **Keep this file under 120 lines.** Move detail into layer-specific
 > CLAUDE.md files or `.claude/rules/`.
 
-## Status: seeded, not yet built
+## Status: toolchain and schema in, domains not yet
 
-**No application code exists yet.** This repo currently contains only the
-engineering guardrails, copied from `simeonkorchev/spotter` (see
-*Provenance* at the bottom). The first implementation session creates the
-tree. Until then, treat every path below as *planned*, not present.
-
-Planned layout — confirm or change it in the spec before building:
+The gate, the Expo skeleton and `db/migrations/` exist. `internal/`, `pkg/`,
+`cmd/` and `packages/` are still empty — the Go lanes of the gate say so and
+skip rather than failing, and start doing real work the moment a package lands.
 
 ```
 binder/
-├── apps/mobile/       # Expo + React Native (the scanner + the binder UI)
-├── packages/types/    # Auto-generated OpenAPI TS types (never hand-edit)
+├── apps/mobile/       # Expo + React Native dev build (scanner + binder UI)
+├── packages/          # shared workspaces — empty until the OpenAPI types land
 ├── internal/          # Go backend, clean architecture, one dir per domain
 ├── cmd/               # Go CLI entry points (incl. the card-import pipeline)
 ├── pkg/               # Shared Go packages
-└── db/                # Migrations & seed data
+└── db/migrations/     # Forward-only SQL, applied by tools/migrate.sh
 ```
 
 Go domain layout, per domain: `api/` → `service/` → `store/` → `model/`.
@@ -42,31 +39,45 @@ Rules live in `.claude/rules/` and load automatically — `000`, `001`, `004`,
 | Cross-cutting | `.claude/rules/001-architecture.md` |
 | Testing (all layers) | `.claude/rules/006-testing.md` |
 
-**The rules still cite spotter's tree** — `apps/trainer-web`, `internal/nutrition`,
-`packages/intl`. Those are *worked examples of the principle*, not paths here.
-Read them for the rule; translate the path. Rewrite a rule's examples only
-when this repo has a real equivalent to point at, and say so in the commit.
+**The rules still cite spotter's tree** (`apps/trainer-web`, `internal/nutrition`):
+worked examples of the principle, not paths here. Read them for the rule and
+translate the path; rewrite a rule's examples only when this repo has a real
+equivalent, and say so in the commit.
 
-## Quality gate — does not exist yet
+## Quality gate
 
-Spotter's four-command gate (`make bootstrap` / `verify` / `check-changed` /
-`check`) is **not** in this repo: it is wired to spotter's Makefile, its
-change classifier and its CI. Standing up the equivalent here is part of the
-first implementation slice, and the shape to copy is documented in
-[spotter MR #665](https://github.com/simeonkorchev/spotter/pull/665).
+`make` on its own prints the map. Four commands:
 
-Until it exists, run the underlying tools directly (`go test ./...`,
-`golangci-lint run`, the app's own `npm test`) and say in the PR what you ran.
-**Do not claim a gate passed that is not there.**
+```bash
+make bootstrap       # once, fresh container: npm deps, pinned linters, `make warm`
+make verify          # while you work: scoped lint+test for what changed, in parallel
+make check-changed   # before done: the FULL gate, only for the layers you touched
+make check           # everything, serial (CI equivalent)
+```
+
+`verify` and `check-changed` scope by layer — `go`, `mobile`, `packages` —
+so a mobile task never pays for the Go suite; **anything under `packages/`
+counts as the mobile app too.** `BASE=<ref>` compares against another ref.
+The classifier is copied verbatim from CI's `changes` job and
+`make check-ci-parity` fails the gate if the two ever drift.
+
+After `bootstrap`, put the Go bin dir **first** on PATH in the same shell as
+the gate — `export PATH="$(go env GOPATH)/bin:$PATH"` — or an older
+`golangci-lint` from the image shadows the pinned one. The store suites get
+their Postgres from `tools/test-db-local.sh` (Docker image pulls are blocked
+here); every test target calls it when `TEST_DATABASE_URL` is unset, and
+`make migrate-test` applies `db/migrations/`. The egress traps behind both are
+in memory (`deploy.md`, `go.md`). **Do not claim a gate passed that you did
+not run.**
 
 ## Memory — use it before re-deriving anything
 
 `.claude/memory/` is a git-tracked index you **grep by symptom**; the
-SessionStart hook prints the map, not the contents. It is **empty on purpose** —
-spotter's 145 units describe spotter, not this codebase. Write yours as you
-learn: what the next session would re-derive goes in before done. Format and
-the placement table: `.claude/memory/README.md`. Precedence:
-`.claude/rules/` > memory > your own inference; `decisions.md` is binding.
+SessionStart hook prints the map, not the contents. It carries only what this
+repo has taught a session, never spotter's units. Keep writing yours: what the
+next session would re-derive goes in before done. Format and placement table:
+`.claude/memory/README.md`. Precedence: `.claude/rules/` > memory > your own
+inference; `decisions.md` is binding.
 
 ## Boy-scout rule
 
@@ -79,8 +90,8 @@ For features touching ≥2 layers, DB migrations, or new endpoints — use
 `/spec-analyze` → `/spec-implement`. Skip for: bug fixes, translations, dep
 bumps, renames, test-only changes. Active specs live in `specs/`.
 
-Given the repo is empty, **the first real feature should go through the full
-pipeline** — scanning, card matching and the binder model are all ≥2 layers.
+`specs/001-binder-mvp/` is the live one: scanning, card matching and the binder
+model are all ≥2 layers, so every slice of it goes through the pipeline.
 
 ## Skills
 
@@ -103,15 +114,16 @@ Project skills live in `.claude/skills/`. Prefer them over generic approaches.
 | Reanimated / Gesture Handler / SVG technique | `react-native-best-practices` |
 | Open-ended design exploration | `superpowers:brainstorming` → feed back into `/spec-feature` |
 
-Several skills (`/render-triage`, and the Routine cadences in the sweep
-skills) assume infrastructure this repo does not have yet — a Render
-deployment, a findings backlog, a cron fleet. They are here so the shape
-survives; wire them up when the thing they watch exists.
+Several skills (`/render-triage`, the Routine cadences in the sweeps,
+`/memory-dream`'s `tools/memory-check.sh`) assume infrastructure this repo does
+not have yet. They are here so the shape survives; wire them up when the thing
+they watch exists.
 
 ## Provenance
 
 Seeded from `simeonkorchev/spotter` @ MR #665. Verbatim: `.claude/rules/`,
 `.claude/skills/`, `.claude/agents/`, `.claude/commands/`. Adapted: this file,
 `.claude/settings.json`, `.claude/hooks/`, `.claude/memory/README.md`.
-Deliberately excluded: spotter's memory units, its Makefile and `tools/`,
-its CI, and all application code.
+Deliberately excluded: spotter's memory units and all application code.
+The Makefile, `tools/` and CI were ported in W0, adapted to this repo's
+layers (there is no trainer-web; the app is `apps/mobile`).

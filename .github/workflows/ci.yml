@@ -1,0 +1,157 @@
+name: Quality Gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  # Work out which layers a change actually touches so we only pay for the gates
+  # that can possibly fail. Jobs skipped by an `if` report as "skipped", which
+  # GitHub counts as passing for required status checks — so branch protection
+  # keeps working without listing a different set of checks per PR.
+  changes:
+    name: Detect changed areas
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+      packages: ${{ steps.filter.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Classify changed files
+        id: filter
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+
+          # base.sha can be stale if main moved on; the merge base is what the
+          # change is really diffed against.
+          base=$(git merge-base "$BASE_SHA" "$HEAD_SHA" 2>/dev/null || echo "$BASE_SHA")
+          changed=$(git diff --name-only "$base" "$HEAD_SHA")
+          echo "Changed files:"
+          echo "$changed" | sed 's/^/  /'
+
+          matches() { echo "$changed" | grep -Eq "$1"; }
+
+          # Editing this workflow re-runs everything — otherwise a broken gate
+          # could merge itself by only touching CI.
+          if matches '^\.github/workflows/ci\.yml$'; then
+            echo "ci.yml changed — running every job."
+            for f in backend mobile packages; do
+              echo "$f=true" >> "$GITHUB_OUTPUT"
+            done
+            exit 0
+          fi
+
+          # Go sources plus everything that changes how they build, lint or test.
+          go_re='(^|/)[^/]+\.go$|^go\.(mod|sum)$|^db/|^vendor/|^tools/|^tests/|^\.golangci(\.yml|-version)$|^Makefile$'
+          # Anything shared by every app: workspace packages and the root
+          # manifest/lockfile that pins their dependency tree.
+          shared_re='^packages/|^package\.json$|^package-lock\.json$'
+
+          set_output() {
+            if matches "$2"; then echo "$1=true" >> "$GITHUB_OUTPUT"; else echo "$1=false" >> "$GITHUB_OUTPUT"; fi
+          }
+
+          set_output backend  "$go_re"
+          set_output mobile   "^apps/mobile/|$shared_re"
+          set_output packages "$shared_re"
+
+          cat "$GITHUB_OUTPUT"
+
+  file-size:
+    name: Go files within the size cap
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      # .claude/rules/002-go-conventions.md section 2: target 400 lines, hard cap 500.
+      # Generated fakes and test files are exempt, per that rule's exceptions.
+      - name: Check Go file line counts
+        run: |
+          over=$(find internal pkg cmd -name '*.go' \
+                   ! -name '*_test.go' ! -path '*fakes*' ! -name '*.gen.go' \
+                   -exec wc -l {} + \
+                 | awk '$1 > 500 && $2 != "total" { print $1" "$2 }')
+          if [ -n "$over" ]; then
+            echo "ERROR: these Go files exceed the 500-line hard cap:"
+            echo "$over"
+            echo "Split by domain concern - see .claude/rules/002-go-conventions.md section 2."
+            exit 1
+          fi
+          echo "All Go files are within the 500-line cap."
+
+  backend:
+    name: Go lint + migrations + test
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    env:
+      TEST_DATABASE_URL: postgres://binder:binder@localhost:5432/binder_test?sslmode=disable
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: binder
+          POSTGRES_PASSWORD: binder
+          POSTGRES_DB: binder_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      # One copy of the pinned versions, in the Makefile, used by both sides.
+      - run: make install-go-tools
+      - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - run: make lint
+      - run: make migrate-test
+      - run: make test
+
+  mobile:
+    name: mobile lint + typecheck + test + knip
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        working-directory: .
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:run
+      - run: npm run knip
+
+  packages:
+    name: shared workspaces
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.packages == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: make gate-packages

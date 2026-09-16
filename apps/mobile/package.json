@@ -1,0 +1,37 @@
+{
+  "name": "@binder/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "jest --watch",
+    "test:run": "jest",
+    "knip": "knip"
+  },
+  "dependencies": {
+    "expo": "~57.0.23",
+    "expo-build-properties": "~57.0.18",
+    "expo-dev-client": "~57.0.19",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.4",
+    "react": "^19.2.3",
+    "react-native": "^0.86.3"
+  },
+  "devDependencies": {
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "^30.0.0",
+    "@types/react": "~19.2.0",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.2",
+    "jest": "^30.5.1",
+    "jest-expo": "~57.0.5",
+    "knip": "^6.36.0",
+    "test-renderer": "^1.2.0",
+    "typescript": "~5.9.2"
+  }
+}

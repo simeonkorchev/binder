@@ -11,13 +11,13 @@ previous one is green.
 **W0 — toolchain, skeleton and the quality gate.** Nothing can be verified
 until the gate exists, so this is one agent, alone.
 
-- [ ] T001 `go.mod`, module layout, `internal/`/`pkg/`/`cmd/` skeleton
-- [ ] T002 `.golangci.yml` pinned, matching the linters `002-go-conventions.md` assumes
-- [ ] T003 `Makefile` — port the four-command gate (`bootstrap`/`verify`/`check-changed`/`check`) from spotter MR #665, with its change classifier
-- [ ] T004 `docker-compose.yml` for Postgres + `tools/test-db-local.sh`
-- [ ] T005 Expo app skeleton at `apps/mobile`, TS strict, lint + typecheck + test scripts
-- [ ] T006 `.github/workflows/ci.yml` running the same gate as `make check`
-- [ ] T007 `make check-ci-parity` so local green means CI green
+- [x] T001 `go.mod`, module layout, `internal/`/`pkg/`/`cmd/` skeleton
+- [x] T002 `.golangci.yml` pinned, matching the linters `002-go-conventions.md` assumes
+- [x] T003 `Makefile` — port the four-command gate (`bootstrap`/`verify`/`check-changed`/`check`) from spotter MR #665, with its change classifier
+- [x] T004 `docker-compose.yml` for Postgres + `tools/test-db-local.sh`
+- [x] T005 Expo app skeleton at `apps/mobile`, TS strict, lint + typecheck + test scripts
+- [x] T006 `.github/workflows/ci.yml` running the same gate as `make check`
+- [x] T007 `make check-ci-parity` so local green means CI green
 
 ## Wave 1 — data and identity
 
@@ -43,18 +43,42 @@ until the gate exists, so this is one agent, alone.
 
 ## Wave 4 — mobile (all parallel)
 
-- [ ] T040 [P] **W9** [US1] Camera + continuous frame-processor OCR — `apps/mobile/src/features/scan/`
-- [ ] T041 [P] **W9** [US2][US3] Code parsing, `useResolveScan`, review sheet for flagged matches — same feature
-- [ ] T042 [P] **W10** [US4][US5] 3×3 page grid, paging, drag-to-reorder, add/remove — `apps/mobile/src/features/binder/`
-- [ ] T043 [P] **W11** [US6][US7] Listing browse + seller contact sheet — `apps/mobile/src/features/market/`
+### W9 — the scan experience [US1][US2][US3]
+
+The product differentiator. A continuous sweep: the user moves the phone across
+a binder page and cards land in the session without a single tap. **The scan
+loop never blocks on the network** — resolution is fired async and its result
+catches up.
+
+- [ ] T040 VisionCamera setup, camera permission flow, Expo config plugin for the **dev build** — `apps/mobile/src/features/scan/`
+- [ ] T041 Card-shaped guide-frame overlay, with the code line's expected position hinted (the printed code sits *below* the art) — `components/ScanGuideFrame.tsx`
+- [ ] T042 ML Kit text-recognition frame processor, **throttled** — running every frame burns battery for no extra reads — `useTextFrames.ts`
+- [ ] T043 `{CODE}-{ID}` parser: pure function, OCR-noise tolerant (`0`/`O`, `1`/`I`/`l`, stray punctuation, case). **Completeness test per `000-principles.md` §9** — `lib/parseCardCode.ts`
+- [ ] T044 Stable-read debounce + in-session dedupe: accept only after N consecutive identical reads; a re-read while the code stays in frame is the *same* card, a re-read after it left is a second copy. Pure and unit-tested — `lib/useStableRead.ts`
+- [ ] T045 `useResolveScan` — async, queued, non-blocking; survives a dropped connection and resolves later — `api/useResolveScan.ts`
+- [ ] T046 Capture feedback: haptic tick, running count, captured-card strip. `react-native-best-practices` skill governs any Reanimated used here
+- [ ] T047 Review sheet for flagged matches — `unresolved` and `by_name` slots surfaced for confirm/correct. **US3 is only satisfied here**, not by the scan loop
+- [ ] T048 Commit the reviewed session into the binder — one call, one transaction
+
+### W10 — the binder [US4][US5]
+
+- [ ] T050 3×3 page grid, swipe paging, page indicator — `apps/mobile/src/features/binder/`
+- [ ] T051 Drag-to-reorder across slots and across page boundaries; bulk position update in one call
+- [ ] T052 Add and remove cards; translated empty state for an empty binder
+
+### W11 — the marketplace [US6][US7]
+
+- [ ] T060 Mark a slot for sale / unlist — `apps/mobile/src/features/market/`
+- [ ] T061 Browse listings, filters, translated empty state
+- [ ] T062 Seller contact sheet — reveals only opted-in fields, and renders the "no contact shared" case
 
 ## Wave 5 — done means done
 
-- [ ] T050 Quality gate — `make check`
-- [ ] T051 Quality gate — `cd apps/mobile && npm run lint && npm run typecheck && npm run test:run && npm run knip`
-- [ ] T052 UI screenshots of every new screen in BOTH themes
-- [ ] T053 Clean-code checklist — `.claude/rules/007-clean-code-checklist.md` walked over every touched file
-- [ ] T054 Memory written: what the next session would re-derive — `.claude/memory/`
+- [ ] T070 Quality gate — `make check`
+- [ ] T071 Quality gate — `cd apps/mobile && npm run lint && npm run typecheck && npm run test:run && npm run knip`
+- [ ] T072 UI screenshots of every new screen in BOTH themes (`CLAUDE.md` requires this before any UI change is done)
+- [ ] T073 Clean-code checklist — `.claude/rules/007-clean-code-checklist.md` walked over every touched file
+- [ ] T074 Memory written: what the next session would re-derive — `.claude/memory/`
 
 ---
 

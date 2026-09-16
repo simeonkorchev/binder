@@ -8,7 +8,7 @@ paths:
 
 # Go Conventions
 
-Everything below is enforced by `make lint` where a linter exists for it (`.golangci.yml`, 57 explicitly enabled linters, `default: none`). Where it is not, this file is the rule. A `//nolint` is a recorded decision and must name the linter and the reason (`000-principles.md` §8a).
+Everything below is enforced by `make lint` where a linter exists for it (`.golangci.yml`, 58 explicitly enabled linters plus 3 formatters, `default: none`). Four that spotter enabled are deliberately off here, each with its reason written at the bottom of `.golangci.yml` — `exhaustruct` until the first `model/` package exists to scope it to (§8a), and `wrapcheck`, `grouper`, `importas`. Where it is not, this file is the rule. A `//nolint` is a recorded decision and must name the linter and the reason (`000-principles.md` §8a).
 
 This file **is what the `golang-*` skills** in `.claude/skills/` were edited to agree with; it wins wherever they overlap (they say so themselves); use them for technique, use this file for the target shape.
 
@@ -105,7 +105,7 @@ Target 400 lines, hard cap 500. Above cap almost always signals mixed responsibi
 
 **Exceptions** (do not split): auto-generated files, test files.
 
-**Enforced in CI** by the `file-size` job in `.github/workflows/quality-gate.yml`. The 400-line target is advice; the 500-line cap fails the build. Before this job existed the cap was documentation only, and `store/food.go` sat at 600 lines with a green gate.
+**Enforced in CI** by the `file-size` job in `.github/workflows/ci.yml`. The 400-line target is advice; the 500-line cap fails the build. Before this job existed the cap was documentation only, and `store/food.go` sat at 600 lines with a green gate.
 
 ## 3. Interfaces & DI
 
@@ -287,9 +287,12 @@ When a DB column maps to a struct field, wire it through **every** layer: SQL
 `SELECT` → row struct (`db:` tag) → the row→model converter → response struct.
 Forgetting a field silently ships a zero value to the client (e.g. a missing
 `short_video_url` hid the exercise's second video). To make this a **lint
-error** instead of a silent bug, `exhaustruct` is enabled for the row→model
+error** instead of a silent bug, `exhaustruct` is scoped to the row→model
 structs (`.golangci.yml` → `settings.exhaustruct.include`; test literals are
-excluded). Every field of those structs must be set at construction — set it to
+excluded). **It is not enabled in this repo yet**: there is no `model/` package
+to scope it to, and unscoped it would check every struct literal in the tree —
+the opposite of this rule. The wave that adds the first row→model struct enables
+it and lists that struct. Every field of those structs must be set at construction — set it to
 its zero value *explicitly, with a comment* when a query deliberately omits it,
 never by leaving it out. When you add a column, extend the `include` list if the
 new struct should be guarded, and update all converters **and** their tests.

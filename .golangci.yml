@@ -1,0 +1,153 @@
+version: "2"
+
+run:
+  go: "1.25"
+  timeout: 5m
+
+# `default: none` then an explicit list: a linter is on because a rule in
+# .claude/rules/ asks for it, and the list is the record of that. The set below
+# is spotter's, minus three that would be noise here and are called out at the
+# bottom of this file.
+linters:
+  default: none
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - containedctx
+    - contextcheck
+    - copyloopvar
+    - cyclop
+    - decorder
+    - dogsled
+    - dupl
+    - durationcheck
+    - err113
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - forcetypeassert
+    - funlen
+    - ginkgolinter
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - goprintffuncname
+    - gosec
+    - govet
+    - ineffassign
+    - interfacebloat
+    - ireturn
+    - lll
+    - maintidx
+    - misspell
+    - mnd
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
+    - nolintlint
+    - nosprintfhostport
+    - prealloc
+    - predeclared
+    - reassign
+    - revive
+    - staticcheck
+    - testableexamples
+    - testpackage
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - usetesting
+    - whitespace
+
+  settings:
+    lll:
+      # 002-go-conventions.md section 1.1: long signatures break one parameter
+      # per line rather than carrying a suppression.
+      line-length: 120
+    nolintlint:
+      # A //nolint directive is a decision, so it must name the linter it
+      # silences and say why (000-principles.md section 8a). allow-unused
+      # deletes directives that no longer suppress anything — spotter carried 38
+      # //nolint:wrapcheck for a linter that was never enabled, and nothing
+      # flagged them.
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+    revive:
+      rules:
+        - name: argument-limit
+          arguments:
+            - 5
+          severity: warning
+          disabled: false
+        - name: function-result-limit
+          arguments:
+            - 3
+          severity: warning
+          disabled: false
+
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      # Test files build throwaway values and assert on them: a partial literal,
+      # a concrete return and a repeated string are the point, not a smell.
+      - linters:
+          - forcetypeassert
+          - goconst
+          - ireturn
+        path: _test\.go
+      # nolintlint demands a written reason for every suppression, which is what
+      # makes a //nolint a recorded decision rather than a shrug. It is waived
+      # for //nolint:lll alone: the reason for suppressing a line-length check is
+      # visible in the line itself, so demanding prose there produces filler, not
+      # information (000-principles.md section 8a).
+      - linters:
+          - nolintlint
+        text: 'directive `//nolint:lll` should provide explanation'
+    paths:
+      - .*fakes
+      - node_modules
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - .*fakes
+      - node_modules
+
+# Deliberately NOT enabled, so the next session does not re-derive the reason:
+#
+#   exhaustruct  — 002-go-conventions.md section 8a wants it, but only scoped to
+#                  the row -> model structs, through settings.exhaustruct.include.
+#                  Unscoped it checks every struct literal in the repo, which is
+#                  the opposite of the rule. There are no model packages yet, so
+#                  the wave that adds the first one (card/binder/listing model)
+#                  turns it on together with its include list.
+#   wrapcheck    — 002 section 4.2 requires %w at every layer boundary, but this is
+#                  the linter 000-principles.md section 8a names as the cautionary
+#                  tale: 38 suppressions for a check that was never on. Turning it
+#                  on is a decision for a reviewer to take with real code in front
+#                  of them, not a default to inherit.
+#   grouper,     — both are no-ops without settings, and neither rule they could
+#   importas       enforce is written down here yet. A linter that checks nothing
+#                  reads as coverage that does not exist.
