@@ -23,13 +23,13 @@ until the gate exists, so this is one agent, alone.
 
 - [ ] T010 **W1** Migrations 001–004 per `plan.md` — `db/migrations/`
 - [ ] T011 **W1** Store integration test harness on real Postgres — `internal/testdb/`
-- [ ] T012 [P] **W7** Auth: sign-in, session JWT, middleware — `internal/user/**` *(blocked on D1)*
+- [ ] T012 [P] **W7** Auth: sign-in, session JWT, middleware — `internal/user/**`
 
 ## Wave 2 — ingestion and core domains (all parallel)
 
 - [ ] T020 [P] **W2** Verify the YGOPRODeck contract live (shape, rate limit, image policy); amend `plan.md` if it differs — `pkg/ygoprodeck/`
 - [ ] T021 [P] **W2** Client + fixtures + full-dump importer — `cmd/cardimport/`
-- [ ] T022 [P] **W3** Rate-limited, resumable image pipeline → object storage — `cmd/cardimages/` *(blocked on D3)*
+- [ ] T022 [P] **W3** Rate-limited, resumable image pipeline → object storage — `cmd/cardimages/`
 - [ ] T023 [P] **W4** [US2][US3] Card model + store lookups per ladder rung — `internal/card/{model,store}/`
 - [ ] T024 [P] **W4** [US2][US3] The match ladder + `SetResolution` — `internal/card/service/match.go`
 - [ ] T025 [P] **W4** `POST /scans/resolve`, `GET /cards` — `internal/card/api/`
@@ -37,13 +37,13 @@ until the gate exists, so this is one agent, alone.
 
 ## Wave 3 — listings and the contract
 
-- [ ] T030 **W6** [US6][US7] Listings domain + seller contact — `internal/listing/**` *(blocked on D4)*
+- [ ] T030 **W6** [US6][US7] Listings domain + seller contact — `internal/listing/**`
 - [ ] T031 [REGEN] **W8** OpenAPI spec generated from the Go source — `make gen-spec`
 - [ ] T032 [REGEN] **W8** `packages/types` regenerated; `make check-contract` green
 
 ## Wave 4 — mobile (all parallel)
 
-- [ ] T040 [P] **W9** [US1] Camera + continuous frame-processor OCR — `apps/mobile/src/features/scan/` *(blocked on D2)*
+- [ ] T040 [P] **W9** [US1] Camera + continuous frame-processor OCR — `apps/mobile/src/features/scan/`
 - [ ] T041 [P] **W9** [US2][US3] Code parsing, `useResolveScan`, review sheet for flagged matches — same feature
 - [ ] T042 [P] **W10** [US4][US5] 3×3 page grid, paging, drag-to-reorder, add/remove — `apps/mobile/src/features/binder/`
 - [ ] T043 [P] **W11** [US6][US7] Listing browse + seller contact sheet — `apps/mobile/src/features/market/`
@@ -63,11 +63,11 @@ until the gate exists, so this is one agent, alone.
 | Wave | Agents in parallel | Blocked on |
 |------|--------------------|------------|
 | 0 | W0 | — |
-| 1 | W1, W7 | W0; W7 also on **D1** |
-| 2 | W2, W3, W4, W5 | W1; W3 also on **D3** |
-| 3 | W6, W8 | W4, W5; W6 also on **D4** |
-| 4 | W9, W10, W11 | W8; W9 also on **D2** |
+| 1 | W1, W7 | W0 |
+| 2 | W2, W3, W4, W5 | W1 |
+| 3 | W6, W8 | W4, W5 |
+| 4 | W9, W10, W11 | W8 |
 | 5 | single | all |
 
-**D1–D4 are in `spec.md` and are unanswered.** W7, W3, W6 and W9 do not start
-until their decision lands. Waves 0–2 minus W3 are unblocked today.
+D1–D4 are decided (see `spec.md`). Every wave is unblocked; each starts when
+the previous one is green.

@@ -1,6 +1,6 @@
 # 001 — Binder MVP: scan, match, organise, sell
 
-## Status: Review
+## Status: Approved (2026-09-16)
 
 ## Problem
 
@@ -70,14 +70,14 @@ GET    /sellers/{id}/contact -> {email, phone} (owner-consented fields only)
 New tables: `cards`, `card_sets`, `card_printings`, `users`, `binders`,
 `binder_slots`, `listings`. Full DDL and the reasoning for each in `plan.md`.
 
-## Open decisions — these need your call before implementation
+## Decisions (approved 2026-09-16)
 
-| # | Decision | Recommendation |
-|---|----------|----------------|
-| D1 | Auth provider | Apple + Google sign-in via Expo AuthSession, Go-issued session JWT. WorkOS (spotter's choice) is built for B2B orgs; this is a consumer app. |
-| D2 | OCR engine | `react-native-vision-camera` frame processor + ML Kit text recognition. Cross-platform and on-device. Apple's `DataScannerViewController` feels closer to the brief's "Apple document-like" but is iOS-only. **Either way this needs an Expo dev build — it will not run in Expo Go.** |
-| D3 | Object storage for card images | GCS, matching spotter's stack. S3 if you'd rather not add a second cloud. |
-| D4 | Seller contact | Contact button revealing email/phone the seller opted in to share. No chat in MVP (see Out). |
+| # | Decision | Chosen | Consequence |
+|---|----------|--------|-------------|
+| D1 | Auth | **Apple + Google sign-in** via Expo AuthSession, Go-issued session JWT | No third-party identity vendor. Apple sign-in is mandatory on the App Store once Google is offered. |
+| D2 | OCR | **react-native-vision-camera frame processor + ML Kit** text recognition, on-device | Cross-platform. **Requires an Expo dev build — the app will not run in Expo Go.** |
+| D3 | Card images | **GCS**, matching spotter's stack | Reuses spotter's client wrapper and credential pattern. |
+| D4 | Seller contact | **Contact button** revealing opted-in email/phone. No chat in MVP | `listings` keeps a nullable `cardmarket_listing_id` so phase 2 is additive. |
 
 ## Risks
 
