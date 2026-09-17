@@ -3,10 +3,10 @@ package store
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/simeonkorchev/binder/internal/card/model"
+	"github.com/simeonkorchev/binder/pkg/sqllike"
 )
 
 // The `%` operator is what uses cards_name_trgm_idx (001_cards.sql); the
@@ -93,7 +93,7 @@ func (s *Store) SearchCards(ctx context.Context, search model.CardSearch) ([]mod
 		ctx,
 		&rows,
 		searchCardsQuery,
-		escapeLikePattern(search.Query),
+		sqllike.EscapePattern(search.Query),
 		search.SetPrefix,
 		search.PageSize,
 		offset,
@@ -107,12 +107,4 @@ func (s *Store) SearchCards(ctx context.Context, search model.CardSearch) ([]mod
 		cards = append(cards, row.toModel())
 	}
 	return cards, nil
-}
-
-// escapeLikePattern neutralises the LIKE metacharacters in a user-supplied
-// search term. The term travels as a bound parameter, so this is not about
-// injection — it is that a user typing "100%" means the three characters, not
-// "anything after 100". Backslash first: it is LIKE's own escape character.
-func escapeLikePattern(term string) string {
-	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(term)
 }

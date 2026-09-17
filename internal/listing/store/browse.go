@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	cardmodel "github.com/simeonkorchev/binder/internal/card/model"
 	"github.com/simeonkorchev/binder/internal/listing/model"
+	"github.com/simeonkorchev/binder/pkg/sqllike"
 	"github.com/simeonkorchev/binder/pkg/sqlxtx"
 )
 
@@ -76,7 +77,7 @@ func (s *Store) BrowseListings(ctx context.Context, search model.ListingSearch) 
 	err := s.InTx(ctx, func(ctx context.Context) error {
 		tx := sqlxtx.MustGetTx(ctx)
 		return tx.SelectContext(ctx, &rows, browseListingsQuery,
-			escapeLikePattern(search.Query), search.SetPrefix, search.Limit)
+			sqllike.EscapePattern(search.Query), search.SetPrefix, search.Limit)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("browsing listings: %w", err)
