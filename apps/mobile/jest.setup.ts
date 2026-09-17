@@ -42,3 +42,24 @@ jest.mock('expo-haptics', () => ({
   impactAsync: () => Promise.resolve(),
   performAndroidHapticsAsync: () => Promise.resolve(),
 }))
+
+// SecureStore is a native module: under jest there is no keychain, and an
+// unmocked call rejects before any assertion runs. This is a keychain in a Map,
+// shared by every test in a file — a test that wants a signed-in app calls
+// `rememberSession` (the production path) rather than writing this directly, and
+// a test that wants a cold launch calls `forgetSession`.
+jest.mock('expo-secure-store', () => {
+  const keychain = new Map<string, string>()
+  return {
+    getItemAsync: (key: string): Promise<string | null> =>
+      Promise.resolve(keychain.get(key) ?? null),
+    setItemAsync: (key: string, value: string): Promise<void> => {
+      keychain.set(key, value)
+      return Promise.resolve()
+    },
+    deleteItemAsync: (key: string): Promise<void> => {
+      keychain.delete(key)
+      return Promise.resolve()
+    },
+  }
+})
