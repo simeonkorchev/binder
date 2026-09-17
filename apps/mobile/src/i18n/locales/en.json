@@ -142,5 +142,47 @@
       "addLabel": "Add {{name}} to the binder",
       "searching": "Searching…"
     }
+  },
+  "market": {
+    "browse": {
+      "searchLabel": "Search cards for sale by name",
+      "searchPlaceholder": "Card name",
+      "setLabel": "Set code",
+      "setPlaceholder": "LOB",
+      "search": "Search",
+      "clear": "Clear the filters",
+      "loading": "Loading what is for sale…",
+      "loadError": "The listings could not be loaded.",
+      "retry": "Try again",
+      "empty": "Nothing is for sale yet. Mark a card in one of your binders and it shows up here.",
+      "emptyFiltered": "No card for sale matches that search. Try a shorter name, or another set.",
+      "unknownSet": "Set unknown",
+      "openSeller": "Contact the seller of {{name}}"
+    },
+    "sell": {
+      "list": "Mark this card for sale",
+      "unlist": "Take this card off sale",
+      "saving": "Saving…",
+      "listed": "This card is for sale. Buyers find it in the Market tab.",
+      "unlisted": "This card is no longer for sale.",
+      "alreadyListed": "This card is already for sale, so nothing changed.",
+      "listFailed": "The card could not be put up for sale.",
+      "unlistFailed": "The card could not be taken off sale."
+    },
+    "contact": {
+      "loading": "Loading the seller's details…",
+      "loadError": "The seller's details could not be loaded.",
+      "retry": "Try again",
+      "none": "This seller has not shared any contact details.",
+      "email": "Email",
+      "phone": "Phone",
+      "openEmail": "Write to {{value}}",
+      "openPhone": "Call {{value}}",
+      "copyEmail": "Copy the email address {{value}}",
+      "copyPhone": "Copy the phone number {{value}}",
+      "copy": "Copy",
+      "copied": "Copied to the clipboard.",
+      "openFailed": "This phone could not open that."
+    }
   }
 }
