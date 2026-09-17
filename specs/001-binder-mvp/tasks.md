@@ -37,7 +37,7 @@ until the gate exists, so this is one agent, alone.
 
 ## Wave 3 — listings and the contract
 
-- [ ] T030 **W6** [US6][US7] Listings domain + seller contact — `internal/listing/**`
+- [x] T030 **W6** [US6][US7] Listings domain + seller contact — `internal/listing/**`. Four endpoints; the seller is reached by joining `binder_slots → binders`, and their contact details through a consumer-side `SellerContacts` interface the user domain satisfies at wiring time. Someone else's slot or listing is 404, never 403; a double-list is the UNIQUE constraint translated to 409, proven against the real schema, as is the cascade that takes a listing away with its card
 - [ ] T031 [REGEN] **W8** OpenAPI spec generated from the Go source — `make gen-spec`
 - [ ] T032 [REGEN] **W8** `packages/types` regenerated; `make check-contract` green
 
