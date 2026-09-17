@@ -20,13 +20,23 @@ import { useRunOnJS } from 'react-native-worklets-core'
 export const scanFramesPerSecond = 4
 
 /**
- * Runs ML Kit text recognition over the camera's frames and hands the
- * recognised text to `onText` on the JS thread.
+ * Runs ML Kit text recognition over the camera's frames and hands the result of
+ * every processed frame to `onFrameText` on the JS thread.
+ *
+ * `onFrameText` fires **once per frame the recognition pass actually ran on**,
+ * with `null` when ML Kit found no text in it. Reporting the empty frames is
+ * not a detail: `lib/useStableRead.ts` decides that a card has left the guide
+ * frame by counting the reads that did *not* carry its code, so a card, a blank
+ * wall, and then the same card again is one capture instead of two — the
+ * collector's second copy — unless the blank frames are reported too. The
+ * throttle is what makes this hook the only place that can report them: a frame
+ * `runAtTargetFps` skipped was never read and must not count as an absent read,
+ * and nothing downstream can tell the two apart.
  *
  * The returned value goes straight to `<Camera frameProcessor={...} />`.
  */
 export const useTextFrames = (
-  onText: (text: string) => void,
+  onFrameText: (text: string | null) => void,
 ): ReadonlyFrameProcessor => {
   const { scanText } = useTextRecognition()
 
@@ -34,13 +44,13 @@ export const useTextFrames = (
   // processor identity changes, so the worklet must not close over a callback
   // that is a new function on every render. It calls the ref instead, and the
   // ref is what changes.
-  const latestOnText = useRef(onText)
+  const latestOnFrameText = useRef(onFrameText)
   useEffect(() => {
-    latestOnText.current = onText
-  }, [onText])
+    latestOnFrameText.current = onFrameText
+  }, [onFrameText])
 
-  const forwardText = useRunOnJS((text: string) => {
-    latestOnText.current(text)
+  const forwardText = useRunOnJS((text: string | null) => {
+    latestOnFrameText.current(text)
   }, [])
 
   return useFrameProcessor(
@@ -49,8 +59,7 @@ export const useTextFrames = (
       runAtTargetFps(scanFramesPerSecond, () => {
         'worklet'
         const { resultText } = scanText(frame)
-        if (resultText.length === 0) return
-        void forwardText(resultText)
+        void forwardText(resultText.length === 0 ? null : resultText)
       })
     },
     [forwardText, scanText],

@@ -19,7 +19,7 @@ jest.mock('react-native-vision-camera-text-recognition', () => ({
 }))
 
 jest.mock('react-native-worklets-core', () => ({
-  useRunOnJS: (callback: (text: string) => void) => callback,
+  useRunOnJS: (callback: (text: string | null) => void) => callback,
 }))
 
 const testFrame = (): Frame => ({
@@ -50,12 +50,12 @@ describe('useTextFrames', () => {
   })
 
   it('forwards the text ML Kit recognised in a frame', async () => {
-    const onText = jest.fn<void, [string]>()
-    const { result } = await renderHook(() => useTextFrames(onText))
+    const onFrameText = jest.fn<void, [string | null]>()
+    const { result } = await renderHook(() => useTextFrames(onFrameText))
 
     result.current.frameProcessor(testFrame())
 
-    expect(onText).toHaveBeenCalledWith('Blue-Eyes White Dragon\nLOB-EN001')
+    expect(onFrameText).toHaveBeenCalledWith('Blue-Eyes White Dragon\nLOB-EN001')
   })
 
   it('asks the camera to run the recognition pass at the throttled rate', async () => {
@@ -66,32 +66,43 @@ describe('useTextFrames', () => {
     expect(mockRunAtTargetFps).toHaveBeenCalledWith(scanFramesPerSecond, expect.any(Function))
   })
 
-  it('does not run the recognition pass on a frame the throttle rejected', async () => {
+  it('reports nothing for a frame the throttle rejected: it was never read', async () => {
     mockRunAtTargetFps.mockImplementation(() => undefined)
-    const onText = jest.fn<void, [string]>()
-    const { result } = await renderHook(() => useTextFrames(onText))
+    const onFrameText = jest.fn<void, [string | null]>()
+    const { result } = await renderHook(() => useTextFrames(onFrameText))
 
     result.current.frameProcessor(testFrame())
 
     expect(mockScanText).not.toHaveBeenCalled()
-    expect(onText).not.toHaveBeenCalled()
+    expect(onFrameText).not.toHaveBeenCalled()
   })
 
-  it('ignores a frame ML Kit found no text in', async () => {
+  it('reports a processed frame ML Kit found no text in as an absent read', async () => {
     mockScanText.mockReturnValue({ resultText: '' })
-    const onText = jest.fn<void, [string]>()
-    const { result } = await renderHook(() => useTextFrames(onText))
+    const onFrameText = jest.fn<void, [string | null]>()
+    const { result } = await renderHook(() => useTextFrames(onFrameText))
 
     result.current.frameProcessor(testFrame())
 
-    expect(onText).not.toHaveBeenCalled()
+    expect(onFrameText).toHaveBeenCalledWith(null)
+  })
+
+  it('reports exactly once per processed frame', async () => {
+    const onFrameText = jest.fn<void, [string | null]>()
+    const { result } = await renderHook(() => useTextFrames(onFrameText))
+
+    result.current.frameProcessor(testFrame())
+    mockScanText.mockReturnValue({ resultText: '' })
+    result.current.frameProcessor(testFrame())
+
+    expect(onFrameText.mock.calls).toEqual([['Blue-Eyes White Dragon\nLOB-EN001'], [null]])
   })
 
   it('forwards to the newest callback without the camera rebuilding the processor', async () => {
-    const firstCallback = jest.fn<void, [string]>()
-    const secondCallback = jest.fn<void, [string]>()
+    const firstCallback = jest.fn<void, [string | null]>()
+    const secondCallback = jest.fn<void, [string | null]>()
     const { result, rerender } = await renderHook(
-      ({ onText }: { onText: (text: string) => void }) => useTextFrames(onText),
+      ({ onText }: { onText: (text: string | null) => void }) => useTextFrames(onText),
       { initialProps: { onText: firstCallback } },
     )
     const processorFromFirstRender = result.current.frameProcessor
