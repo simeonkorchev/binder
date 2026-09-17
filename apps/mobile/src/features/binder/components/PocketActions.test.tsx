@@ -171,6 +171,31 @@ describe('PocketActions, marking the card for sale', () => {
     expect(screen.queryByText(/409/)).not.toBeOnTheScreen()
   })
 
+  it('takes the card back off sale from the same button', async () => {
+    const user = userEvent.setup()
+    await render(<PocketActions slot={slot()} shape={shape()} {...props} />)
+    await user.press(screen.getByRole('button', { name: 'Mark this card for sale' }))
+
+    mockFetch.mockImplementation(() => Promise.resolve(new Response(null, { status: 204 })))
+    await user.press(await screen.findByRole('button', { name: 'Take this card off sale' }))
+
+    expect(await screen.findByText('This card is no longer for sale.')).toBeOnTheScreen()
+  })
+
+  it('cannot be pressed twice while the first press is still in flight', async () => {
+    // The answer is held back deliberately: "saving" is the state between the
+    // press and the answer, and a mock that resolves at once has no between.
+    mockFetch.mockImplementation(() => new Promise<Response>(() => {}))
+    const user = userEvent.setup()
+    await render(<PocketActions slot={slot()} shape={shape()} {...props} />)
+
+    await user.press(screen.getByRole('button', { name: 'Mark this card for sale' }))
+
+    expect(await screen.findByText('Saving…')).toBeOnTheScreen()
+    expect(screen.getByRole('button', { name: 'Mark this card for sale' })).toBeDisabled()
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
+
   // Somebody else's slot is a 404 rather than a 403 so a stranger cannot learn
   // it exists; the sentence the seller reads must not give that back.
   it('says no more about a card that is not theirs than about any other failure', async () => {

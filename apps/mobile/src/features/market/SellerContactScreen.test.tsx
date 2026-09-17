@@ -21,13 +21,14 @@ const listed: ListedCard = {
 }
 
 /** The feed answers every browse; the seller's details answer their own path. */
-const serverWhere = (contact: () => Response): typeof fetch =>
-  ((input: RequestInfo | URL) =>
+const serverWhere =
+  (contact: () => Response) =>
+  (input: RequestInfo | URL): Promise<Response> =>
     Promise.resolve(
       String(input).includes('/sellers/')
         ? contact()
         : new Response(JSON.stringify({ listings: [listed] }), { status: 200 }),
-    )) as typeof fetch
+    )
 
 const shares = (contact: SellerContactBody): Response =>
   new Response(JSON.stringify(contact), { status: 200 })
