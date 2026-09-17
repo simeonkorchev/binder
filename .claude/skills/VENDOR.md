@@ -2,7 +2,6 @@
 
 These skills were copied from other projects and then **edited to this
 repo's rules**. They are ours now: never refreshed from upstream, no
-override layer, no text that disagrees with `.claude/rules/`. `tools/memory-check.sh`
 fails CI if an upstream-only phrase creeps back in.
 
 ## `golang-*` (Go backend)

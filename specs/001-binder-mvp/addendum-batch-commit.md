@@ -50,7 +50,6 @@ test over every shape the ladder can produce.
 
 ## 2. A user-picked printing is recorded as `manual`, not `exact`
 
-`.claude/memory/decisions.md#2026-09-17-a-user-picked-printing-is-recorded-as-exact`
 recorded, under protest, that the review sheet has to file a printing the *user*
 chose as `exact` because the enum has no rung for "a person decided". That
 entry explicitly left the door open for the batch endpoint to do better.

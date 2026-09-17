@@ -26,7 +26,6 @@ first. In interactive work every row is simply the standard.
 | Nothing speculative: no pass-through function, one-field wrapper, boolean flag parameter, parameter every caller passes identically, or interface method nothing calls | `000` §8, `002` §1a, `003` §1c | preserving |
 | No work thrown away: a sort repeated, a map built only to be ranged back, a 1:1 mapper between identical shapes | `002` §1a, `003` §9 | preserving |
 | Dead code is deleted (with the zero-reference proof), never commented out or kept "in case" | `000` §5, `002` §1a; `knip` on FE | preserving |
-| What the next session would re-derive is written to memory before done: a layer fact to the file `.claude/memory/README.md` → *Where a memory goes* names, a choice taken to `decisions.md`, a maintainer correction to `feedback.md` (Routines: one `inbox/` file); nothing the tree already says, nothing already there | `CLAUDE.md` Memory, `.claude/memory/README.md` rule 6 | — |
 | Deep nesting, else-after-return, a branch a type or constructor already rules out, identical switch arms, nested ternaries → early returns and named predicates | `002` §1, `003` §9 | preserving |
 | Every suppression (`//nolint`, `eslint-disable`) names the linter and a reason; a suppression that hides a smell is a smell | `000` §8a | preserving |
 | Mapping at a boundary is total — no dropped fields; a completeness test proves it | `000` §9, `002` §8a, `006` "Mapper completeness" | changing |

@@ -31,7 +31,6 @@ are the strictest.
    with `severity` (`ERROR`, `CRITICAL`, …), `msg`, `error`, and a `@type`
    marker on every ERROR; echo's recover middleware writes `[PANIC RECOVER]`
    lines through its own logger.
-5. Memory: `.claude/memory/MEMORY.md` (auto-loaded; `cat` it if it is not
    in your context), then `routines.md`, `decisions.md`, `deploy.md`, `flaky-tests.md`
    and `generated/repo-layout.md` from the same directory. A decision
    recorded there is binding — never re-propose it; a target it lists as
@@ -245,8 +244,6 @@ Walk `.claude/rules/007-clean-code-checklist.md` (Both layers + Go + Tests) over
 
 Before the final message: if this run learned something the next run would
 otherwise re-derive, write it as one unit in waiting,
-`.claude/memory/inbox/<yyyy-mm-dd>-<slug>.md` in the inbox format of
-`.claude/memory/README.md`: front-matter naming the topic `file:` and
 `section:` from *Where a memory goes*, then the finished `### slug` unit with
 its Evidence line, so the dream only moves it. One fact per entry, stated as
 "X happens when Y", never a narrative of the run. Committed on the same
@@ -262,11 +259,5 @@ an exclusion set, "no target this run", a stalled CI queue — the next run
 recomputes each of those in seconds, so they go in your final message
 and nowhere else (2026-09-10: six memory-only PRs in twelve hours said
 "back-pressure stop"; every one was noise). Before writing, grep
-`.claude/memory/` for the fact; already there means write nothing.
 
-A run that opens no code PR may open a memory-only PR from
-`chore/memory-<yyyymmdd-HHMM>` **only** for an entry that passes the test
-above. Never edit `MEMORY.md` or a topic file in a routine run —
-`/memory-dream` folds the inbox in nightly. Nothing learned: write
-nothing, open nothing.
 

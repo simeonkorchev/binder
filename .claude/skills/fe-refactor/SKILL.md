@@ -55,7 +55,6 @@ Never, in this routine:
 - Weaken, skip, or delete a test, or edit a test to make it pass anywhere
   but a RED commit. Never trim pin tests for budget.
 - Touch files outside the chosen slice, or reformat files you did not
-  otherwise change. `.ai/findings/open/` and `.claude/memory/inbox/` are the
   only exceptions.
 - Bootstrap an e2e harness, fetch or clone anything, or ask a question.
 - Run a command that needs a human's approval. The run is unattended; a
@@ -81,7 +80,6 @@ Never, in this routine:
    (PanResponder to Gesture Handler, an animation curve) is a product
    decision: log it.
 
-5. Memory: `.claude/memory/MEMORY.md` (auto-loaded; `cat` it if it is not
    in your context), then `routines.md`, `decisions.md`, `flaky-tests.md`
    and `generated/repo-layout.md` from the same directory. A decision
    recorded there is binding — never re-propose it; a target it lists as
@@ -306,8 +304,6 @@ report what was found. A findings-only PR is fine.
 
 Before the final message: if this run learned something the next run would
 otherwise re-derive, write it as one unit in waiting,
-`.claude/memory/inbox/<yyyy-mm-dd>-<slug>.md` in the inbox format of
-`.claude/memory/README.md`: front-matter naming the topic `file:` and
 `section:` from *Where a memory goes*, then the finished `### slug` unit with
 its Evidence line, so the dream only moves it. One fact per entry, stated as
 "X happens when Y", never a narrative of the run. Committed on the same
@@ -323,13 +319,7 @@ an exclusion set, "no target this run", a stalled CI queue — the next run
 recomputes each of those in seconds, so they go in your final message
 and nowhere else (2026-09-10: six memory-only PRs in twelve hours said
 "back-pressure stop"; every one was noise). Before writing, grep
-`.claude/memory/` for the fact; already there means write nothing.
 
-A run that opens no code PR may open a memory-only PR from
-`chore/memory-<yyyymmdd-HHMM>` **only** for an entry that passes the test
-above. Never edit `MEMORY.md` or a topic file in a routine run —
-`/memory-dream` folds the inbox in nightly. Nothing learned: write
-nothing, open nothing.
 
 Work end to end without asking questions. The PR is the only output that
 matters.

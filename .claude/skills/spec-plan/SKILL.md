@@ -48,7 +48,6 @@ Backend → regen fakes → regen types → frontend hooks → UI → translatio
 
 ## Rules
 
-- Read `.claude/memory/decisions.md` and the layer files for the layers the
   plan touches; a constraint recorded there (a library's behavior, a store
   contract) goes into the plan's Risks, not into a task that rediscovers it
 - Backend changes always before dependent frontend changes

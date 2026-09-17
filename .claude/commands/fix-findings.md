@@ -53,9 +53,7 @@ Every open finding is fixed in one of two modes; **both are eligible**:
    Mode A starting from its *Drafted RED test* (verify the draft fails for
    the stated reason before trusting it; rewrite it if it does not). One
    with **Leave it** ticked is resolved without code: delete the file and
-   write `.claude/memory/inbox/<yyyy-mm-dd>-decision-<slug>.md`
    (`type: project`) carrying the decision, the finding's title and who
-   decided, for `/memory-dream` to fold into `decisions.md`.
 2. Then read every other file under `.ai/findings/open/`, **highest `Severity` first**
    (`high` → `medium` → `low`; a file without the line is `medium`). Within a
    severity, prefer items that:
@@ -123,7 +121,6 @@ A changed line with an uncovered branch is **not done**.
 ## Constraints
 - Respect all `.claude/rules/` for the layer you touch (always `000-principles.md`,
   `004-security.md`, `006-testing.md` + the layer file). Read them first.
-- Read memory first: `.claude/memory/MEMORY.md` (auto-loaded; `cat` it if
   it is not in your context), then `routines.md`, `decisions.md` and
   `flaky-tests.md`. A decision recorded there is binding — a finding whose
   fix was declined there is deferred, not fixed. `.claude/rules/` win over memory.
@@ -174,10 +171,6 @@ stays on `main` and remains open; nothing to reconcile.
    that cannot be fixed as written and why, an environment quirk, a gate
    red on main that `flaky-tests.md` lacks). A stop condition — an open PR
    already fixing the finding, nothing eligible — is never memory; it goes
-   in your final message only. Grep `.claude/memory/` first; already there
    means write nothing. Otherwise ONE unit in waiting,
-   `.claude/memory/inbox/<yyyy-mm-dd>-<slug>.md` in the inbox format of
-   `.claude/memory/README.md` (`file:` and `section:` from *Where a memory
    goes*, the finished `### slug` unit, its Evidence line; one fact, no
    narrative), committed on the same branch. Never edit
-   `MEMORY.md` or a topic file in a routine run.

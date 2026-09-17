@@ -70,8 +70,8 @@ echo "== scope: apps touched (must be exactly one)"
 apps=$( { names; echo "${untracked}"; } | grep -oE "${apps_re}" | sort -u | sed 's#^apps/##; s#/$##' || true)
 if [ -n "${apps}" ]; then echo "${apps}" | sed 's/^/  /'; else echo "  none"; fi
 
-echo "== scope: files outside apps/<app>/, packages/intl/locales/ (additive only), .ai/findings/open/ and .claude/memory/inbox/ (must be empty)"
-outside=$( { names; echo "${untracked}"; } | grep -v '^$' | grep -vE "${apps_re}|^\.ai/findings/open/|^\.claude/memory/inbox/|^packages/intl/locales/" || true)
+echo "== scope: files outside apps/<app>/, packages/intl/locales/ (additive only) and .ai/findings/open/ (must be empty)"
+outside=$( { names; echo "${untracked}"; } | grep -v '^$' | grep -vE "${apps_re}|^\.ai/findings/open/|^packages/intl/locales/" || true)
 if [ -n "${outside}" ]; then echo "${outside}" | sed 's/^/  /'; else echo "  none"; fi
 
 echo "== exported TS declarations removed or changed in production code (justify each in the PR, or revert)"

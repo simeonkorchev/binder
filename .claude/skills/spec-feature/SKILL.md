@@ -45,7 +45,6 @@ Create a feature spec for a new user story or capability.
 
 ## Rules
 
-- Read `.claude/memory/decisions.md` first: a declined item is not re-specified, a
   settled one is cited in the spec, not re-derived. Read the layer files
   (`go.md`, `frontend.md`, the app's) for constraints the rules do not say.
 - Slug must be kebab-case, all lowercase

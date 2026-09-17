@@ -61,9 +61,8 @@ Decided by: <name>, <yyyy-mm-dd>. Notes:
 The maintainer ticks exactly one box and commits. `/fix-findings` ignores a
 `domain` finding with no box ticked, takes a ticked A or B **first**
 (regardless of severity — a human already spent the decision) starting from
-the drafted RED test, and on *Leave it* deletes the file and writes the
-decision to `.claude/memory/inbox/` for `/memory-dream` to fold into
-`decisions.md`. A sweep's older "product decision" finding on the same
+the drafted RED test, and on *Leave it* deletes the file,
+recording the decision in the finding's own closing note. A sweep's older "product decision" finding on the same
 contradiction is upgraded in place by the audit (category → `domain`, block
 appended), never duplicated.
 

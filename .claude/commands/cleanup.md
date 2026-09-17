@@ -19,7 +19,6 @@ improve code health WITHOUT changing observable behavior, then open an MR.
   - trainer-web: `apps/trainer-web/CLAUDE.md` + `.claude/rules/003-frontend.md`
   - client-mobile: `apps/client-mobile/CLAUDE.md` + `.claude/rules/003-frontend.md` + `005-mobile.md`
   - Always: `.claude/rules/004-security.md`, `.claude/rules/006-testing.md`
-- Read memory first: `.claude/memory/MEMORY.md` (auto-loaded; `cat` it if
   it is not in your context), then `routines.md`, `decisions.md` and
   `generated/repo-layout.md`. A decision recorded there is binding — never
   re-propose it. `.claude/rules/` win over memory on any conflict.
@@ -102,8 +101,4 @@ REVERT that change. Never weaken/skip a test to make the gate pass.
    rejected for a reason the code does not show, an environment quirk, a
    gate red on main that `flaky-tests.md` lacks). A stop condition —
    back-pressure, exclusion, no target — is never memory; it goes in your
-   final message only. Grep `.claude/memory/` first; already there means
-   write nothing. Otherwise ONE unit in waiting, `.claude/memory/inbox/<yyyy-mm-dd>-<slug>.md`
-   in the inbox format of `.claude/memory/README.md` (`file:` and `section:`
    from *Where a memory goes*, the finished `### slug` unit, its Evidence
-   line; one fact, no narrative), committed on the same branch. Never edit `MEMORY.md` or a topic file in a routine run.

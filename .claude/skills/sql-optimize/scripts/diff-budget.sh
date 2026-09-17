@@ -57,8 +57,8 @@ echo "== scope: store packages touched (must be exactly one)"
 pkgs=$( { names; echo "${untracked}"; } | grep -oE "${store_re}" | sort -u || true)
 if [ -n "${pkgs}" ]; then echo "${pkgs}" | sed 's/^/  /'; else echo "  none"; fi
 
-echo "== scope: files outside internal/<domain>/store/, .ai/findings/open/ and .claude/memory/inbox/ (must be empty)"
-outside=$( { names; echo "${untracked}"; } | grep -v '^$' | grep -vE "${store_re}|^\.ai/findings/open/|^\.claude/memory/inbox/" || true)
+echo "== scope: files outside internal/<domain>/store/ and .ai/findings/open/ (must be empty)"
+outside=$( { names; echo "${untracked}"; } | grep -v '^$' | grep -vE "${store_re}|^\.ai/findings/open/" || true)
 if [ -n "${outside}" ]; then echo "${outside}" | sed 's/^/  /'; else echo "  none"; fi
 
 echo "== exported Go declarations removed or changed (justify each in the PR, or revert)"

@@ -200,8 +200,6 @@ file /tmp/card.jpg
 3. If any shape changed, update `pkg/ygoprodeck/testdata/cardinfo_sample.json`
    **and** its `README.md` table in the same commit. Both suites run on that
    fixture; leaving it stale makes green tests that prove the wrong contract.
-4. Record what you learned in `.claude/memory/` so the next session does not
-   re-derive it — a binding choice (e.g. a rate limit different from the docs)
    goes in `decisions.md`.
 5. Mark **T020** done in `tasks.md`. It is not done until a human has seen a
    real response body; a green test suite here only proves the code agrees with

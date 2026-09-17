@@ -29,14 +29,12 @@ Never, in this routine:
 
 - Change application code, a test, a spec, a rule, a skill, a locale value,
   or a memory topic file. The PR contains finding files, at most one
-  `.claude/memory/inbox/` entry, nothing else.
 - Tick a Decision box, or word the options so only one is sane. The
   maintainer decides; you propose.
 - Flag from taste. A finding needs **two sources**: the spec, a rule, a doc
   comment, an OpenAPI description, a DB constraint or an i18n string on one
   side, and code on the other — or N−1 siblings against one. "This looks
   odd" is not a finding.
-- Flag what `.claude/memory/decisions.md` already settled, or what an open
   finding already describes (grep `.ai/findings/open/` for the path and the
   rule first). An open finding on the same contradiction that lacks a
   Decision block is **upgraded** — category set to `domain`, the block
@@ -56,7 +54,6 @@ Never, in this routine:
 2. `.claude/rules/000-principles.md` (§4 siblings, §8b empty, §9 mapping,
    §10 invariants) and `.claude/rules/007-clean-code-checklist.md` (the
    *changing* rows are the kinds of contradiction you are looking for).
-3. Memory: `.claude/memory/MEMORY.md` (auto-loaded; `cat` it if it is not
    in your context), then `routines.md`, `decisions.md` and
    `generated/repo-layout.md`. A decision recorded there is binding — never
    re-flag it. `.claude/rules/` win over memory on any conflict.
@@ -172,16 +169,12 @@ committing; `/fix-findings` picks decided `domain` findings first.
 ## 5. Remember
 
 Before the final message: one file
-`.claude/memory/inbox/<yyyy-mm-dd>-domain-audit-<concept-slug>.md` in the
-inbox format of `.claude/memory/README.md` (a unit in waiting: `file:`,
 `section:`, the `### slug` unit, its Evidence line), committed on the same branch as
 `chore(memory): remember <slug>`, when the run learned something the next
 audit of this concept would otherwise re-derive: the concept's source map
 (which spec sections and files define it — that is the expensive part), a
 candidate rejected because a source settled it, a concept found clean.
-A stop condition (back-pressure) is never memory. Grep `.claude/memory/`
 first; a fact already there is not written again.
-Never edit `MEMORY.md` or a topic file in a routine run; `/memory-dream`
 folds the inbox in nightly.
 
 Work end to end without asking questions. The findings and their decision

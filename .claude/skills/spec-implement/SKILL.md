@@ -30,8 +30,6 @@ Execute tasks from a spec task list, marking each complete as it's done.
 
 Write memory (the 007 checklist's memory row): anything this implementation
 learned that the next session would re-derive goes into the layer file
-`.claude/memory/README.md` names as a `###` unit with its evidence, indexed
-in `MEMORY.md`; a choice taken into `decisions.md`. Nothing the tree already
 says. `make check-memory` must pass.
 
 All tasks checked → report summary:

@@ -57,18 +57,8 @@ the gate — `export PATH="$(go env GOPATH)/bin:$PATH"` — or an older
 `golangci-lint` from the image shadows the pinned one. The store suites get
 their Postgres from `tools/test-db-local.sh` (Docker image pulls are blocked
 here); every test target calls it when `TEST_DATABASE_URL` is unset, and
-`make migrate-test` applies `db/migrations/`. The egress traps behind both are
-in memory (`deploy.md`, `go.md`). **Do not claim a gate passed that you did
-not run.**
-
-## Memory — use it before re-deriving anything
-
-`.claude/memory/` is a git-tracked index you **grep by symptom**; the
-SessionStart hook prints the map, not the contents. It carries only what this
-repo has taught a session, never spotter's units. Keep writing yours: what the
-next session would re-derive goes in before done. Format and placement table:
-`.claude/memory/README.md`. Precedence: `.claude/rules/` > memory > your own
-inference; `decisions.md` is binding.
+`make migrate-test` applies `db/migrations/`. **Do not claim a gate passed that
+you did not run.**
 
 ## Boy-scout rule
 
@@ -97,21 +87,21 @@ Project skills live in `.claude/skills/`. Prefer them over generic approaches.
 | Cross-layer audit of one domain concept | `/domain-audit` |
 | Behavior-preserving hygiene sweep, findings logged not fixed | `/cleanup` |
 | Test-first fix of 1–3 backlog findings | `/fix-findings` |
-| Nightly memory consolidation | `/memory-dream` |
 | Go technique reference | the `golang-*` skills — see `.claude/skills/VENDOR.md` |
 | Reanimated / Gesture Handler / SVG technique | `react-native-best-practices` |
 | Open-ended design exploration | `superpowers:brainstorming` → feed back into `/spec-feature` |
 
-Several skills (`/render-triage`, the Routine cadences in the sweeps,
-`/memory-dream`'s `tools/memory-check.sh`) assume infrastructure this repo does
-not have yet. They are here so the shape survives; wire them up when the thing
+Several skills (`/render-triage`, the Routine cadences in the sweeps) assume
+infrastructure this repo does not have yet. They are here so the shape survives; wire them up when the thing
 they watch exists.
 
 ## Provenance
 
 Seeded from `simeonkorchev/spotter` @ MR #665. Verbatim: `.claude/rules/`,
 `.claude/skills/`, `.claude/agents/`, `.claude/commands/`. Adapted: this file,
-`.claude/settings.json`, `.claude/hooks/`, `.claude/memory/README.md`.
-Deliberately excluded: spotter's memory units and all application code.
+`.claude/settings.json` and `.claude/hooks/`. Deliberately excluded: spotter's
+memory units and all application code. The git-tracked memory system was
+removed at the maintainer's request — sessions read the rules, the spec and
+the code, and nothing else claims to remember.
 The Makefile, `tools/` and CI were ported in W0, adapted to this repo's
 layers (there is no trainer-web; the app is `apps/mobile`).

@@ -2,7 +2,6 @@
 name: complexity-gatekeeper
 description: Uncompromising Principal Architect that audits a spec/plan/tasks for accidental complexity — YAGNI, over-engineering, premature abstraction, bloated task lists. Read-only, report-only. Use via /spec-review.
 model: opus
-memory: project
 tools:
   - Read
   - Glob
