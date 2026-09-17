@@ -37,7 +37,8 @@
               "by_prefix_and_number",
               "by_number",
               "by_name",
-              "unresolved"
+              "unresolved",
+              "manual"
             ],
             "type": "string"
           }
@@ -45,6 +46,56 @@
         "required": [
           "cardId",
           "setResolution"
+        ],
+        "type": "object"
+      },
+      "AddSlotsBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/AddSlotsBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "cards": {
+            "description": "The cards to append, in order. At most 450 — a longer commit is split by the client.",
+            "items": {
+              "$ref": "#/components/schemas/SlotCardBody"
+            },
+            "maxItems": 450,
+            "type": "array"
+          }
+        },
+        "required": [
+          "cards"
+        ],
+        "type": "object"
+      },
+      "AddSlotsResult": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/AddSlotsResult.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/SlotBody"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "slots"
         ],
         "type": "object"
       },
@@ -557,6 +608,16 @@
               }
             ]
           },
+          "outcome": {
+            "description": "What happened to this scan, and so what to do with it next. Read this rather than `resolution` to decide what to show: `resolution` answers `unresolved` both when several rows matched and when none did.",
+            "enum": [
+              "resolved",
+              "card_only",
+              "ambiguous",
+              "no_match"
+            ],
+            "type": "string"
+          },
           "printing": {
             "anyOf": [
               {
@@ -580,6 +641,7 @@
           }
         },
         "required": [
+          "outcome",
           "resolution",
           "card",
           "printing",
@@ -806,7 +868,8 @@
               "by_prefix_and_number",
               "by_number",
               "by_name",
-              "unresolved"
+              "unresolved",
+              "manual"
             ],
             "type": "string"
           },
@@ -822,6 +885,37 @@
           "slotOnPage",
           "cardId",
           "cardPrintingId",
+          "setResolution"
+        ],
+        "type": "object"
+      },
+      "SlotCardBody": {
+        "additionalProperties": false,
+        "properties": {
+          "cardId": {
+            "type": "string"
+          },
+          "cardPrintingId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "setResolution": {
+            "description": "How this card's set was determined when it was scanned.",
+            "enum": [
+              "exact",
+              "by_prefix_and_number",
+              "by_number",
+              "by_name",
+              "unresolved",
+              "manual"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "cardId",
           "setResolution"
         ],
         "type": "object"
@@ -1171,6 +1265,57 @@
           }
         },
         "summary": "Put a card into a binder.",
+        "tags": [
+          "binders"
+        ]
+      }
+    },
+    "/binders/{binderId}/slots/batch": {
+      "post": {
+        "operationId": "add-binder-slots",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "binderId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSlotsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddSlotsResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Append a reviewed scan session to a binder: every card, or none.",
         "tags": [
           "binders"
         ]

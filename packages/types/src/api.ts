@@ -75,6 +75,23 @@ export interface paths {
         patch: operations["move-binder-slot"];
         trace?: never;
     };
+    "/binders/{binderId}/slots/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Append a reviewed scan session to a binder: every card, or none. */
+        post: operations["add-binder-slots"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/binders/{binderId}/slots/{slotId}": {
         parameters: {
             query?: never;
@@ -248,7 +265,26 @@ export interface components {
              * @description How this card's set was determined when it was scanned.
              * @enum {string}
              */
-            setResolution: "exact" | "by_prefix_and_number" | "by_number" | "by_name" | "unresolved";
+            setResolution: "exact" | "by_prefix_and_number" | "by_number" | "by_name" | "unresolved" | "manual";
+        };
+        AddSlotsBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/AddSlotsBody.json
+             */
+            readonly $schema?: string;
+            /** @description The cards to append, in order. At most 450 — a longer commit is split by the client. */
+            cards: components["schemas"]["SlotCardBody"][];
+        };
+        AddSlotsResult: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/AddSlotsResult.json
+             */
+            readonly $schema?: string;
+            slots: components["schemas"]["SlotBody"][];
         };
         BinderBody: {
             /**
@@ -453,6 +489,11 @@ export interface components {
             readonly $schema?: string;
             candidates: components["schemas"]["ScanCandidate"][];
             card: components["schemas"]["ScanCard"] | null;
+            /**
+             * @description What happened to this scan, and so what to do with it next. Read this rather than `resolution` to decide what to show: `resolution` answers `unresolved` both when several rows matched and when none did.
+             * @enum {string}
+             */
+            outcome: "resolved" | "card_only" | "ambiguous" | "no_match";
             printing: components["schemas"]["ScanPrinting"] | null;
             /**
              * @description How the scanned card's set was determined.
@@ -546,9 +587,18 @@ export interface components {
              * @description How this card's set was determined when it was scanned.
              * @enum {string}
              */
-            setResolution: "exact" | "by_prefix_and_number" | "by_number" | "by_name" | "unresolved";
+            setResolution: "exact" | "by_prefix_and_number" | "by_number" | "by_name" | "unresolved" | "manual";
             /** Format: int64 */
             slotOnPage: number;
+        };
+        SlotCardBody: {
+            cardId: string;
+            cardPrintingId?: string | null;
+            /**
+             * @description How this card's set was determined when it was scanned.
+             * @enum {string}
+             */
+            setResolution: "exact" | "by_prefix_and_number" | "by_number" | "by_name" | "unresolved" | "manual";
         };
         UserBody: {
             /**
@@ -790,6 +840,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "add-binder-slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                binderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddSlotsBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddSlotsResult"];
+                };
             };
             /** @description Error */
             default: {
