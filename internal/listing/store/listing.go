@@ -115,11 +115,7 @@ WHERE s.id = $1`
 // is the one answer to "whose slot is this", and the service compares it with
 // the actor rather than the store deciding who may list what.
 func (s *Store) SlotSeller(ctx context.Context, binderSlotID uuid.UUID) (uuid.UUID, error) {
-	seller, err := s.sellerOf(ctx, slotSellerQuery, binderSlotID, entityBinderSlot)
-	if err != nil {
-		return uuid.Nil, err
-	}
-	return seller, nil
+	return s.sellerOf(ctx, slotSellerQuery, binderSlotID, entityBinderSlot)
 }
 
 const listingSellerQuery = `
@@ -132,11 +128,7 @@ WHERE l.id = $1`
 // ListingSeller is the user selling what a listing lists, reached the same way:
 // listing to slot to binder to owner.
 func (s *Store) ListingSeller(ctx context.Context, listingID uuid.UUID) (uuid.UUID, error) {
-	seller, err := s.sellerOf(ctx, listingSellerQuery, listingID, entityListing)
-	if err != nil {
-		return uuid.Nil, err
-	}
-	return seller, nil
+	return s.sellerOf(ctx, listingSellerQuery, listingID, entityListing)
 }
 
 // sellerOf runs one of the two owner lookups above. Both are a single uuid read
