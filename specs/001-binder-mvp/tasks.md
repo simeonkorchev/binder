@@ -62,8 +62,8 @@ catches up.
 - [x] T044 Stable-read debounce + in-session dedupe: accept only after N consecutive identical reads; a re-read while the code stays in frame is the *same* card, a re-read after it left is a second copy. Pure and unit-tested — `lib/useStableRead.ts`
 - [x] T045 `useResolveScan` — async, queued, non-blocking; survives a dropped connection and resolves later — `api/useResolveScan.ts`
 - [x] T046 Capture feedback: haptic tick, running count, captured-card strip — **code complete, screenshots not taken.** No Reanimated: the strip is a `FlatList` of fixed-width tiles and adding a native animation library to a dev build for it is a spec decision (`.claude/memory/decisions.md#2026-09-17-capture-feedback-is-a-tick-a-count-and-a-strip-with-no-reanimated`). `useScanSession` wires the loop, including the absent reads `useStableRead` needs to see a second copy. Unticked for the same reason as T038 — see T072
-- [ ] T047 Review sheet for flagged matches — `unresolved` and `by_name` slots surfaced for confirm/correct. **US3 is only satisfied here**, not by the scan loop
-- [ ] T048 Commit the reviewed session into the binder — one call, one transaction
+- [x] T047 Review sheet for flagged matches — `unresolved` and `by_name` slots surfaced for confirm/correct. **US3 is only satisfied here**, not by the scan loop — **code complete, screenshots not taken.** Four flags, read off the answer's *shape* because the ladder answers `unresolved` both for "several matched" and for "nothing matched" (`lib/flaggedScans.ts`): a card with no set, a code that matched nothing, a scan with candidates to choose between, and a scan the resolver refused. Every row ends in a press — a candidate, keeping the named card with its set open, a name search through `GET /cards?q=`, or leaving the card out — and every reason is a sentence, never a colour. A `Modal` over the scan tab rather than a route, because the session lives in the screen's hooks. Screenshots outstanding for the same reason as T038 — see T072
+- [ ] T048 Commit the reviewed session into the binder — one call, one transaction — **blocked: the contract publishes no endpoint that can do it.** Every binder write is single-row (`POST /binders` takes a name only, `POST /binders/{binderId}/slots` takes one `cardId`) and `service.AddSlot` opens its own `InTx` per call, so a 60-card sweep is 61 requests and a failure at card 40 leaves a binder holding 39 — after the user has put the cards away. Deliberately **not** built as a client-side loop. Needs a batch endpoint across `api → service → store`, which is `/spec-feature` work: see finding `2026-09-17-no-atomic-way-to-commit-a-scanned-session` and `.claude/memory/decisions.md#2026-09-17-a-user-picked-printing-is-recorded-as-exact` for the `set_resolution` each decision maps to
 
 ### W13 — mobile foundations (blocks every screen below)
 
@@ -93,7 +93,7 @@ no hardcoded colours**, and the app has five screens to move between.
 
 - [ ] T070 Quality gate — `make check`
 - [ ] T071 Quality gate — `cd apps/mobile && npm run lint && npm run typecheck && npm run test:run && npm run knip`
-- [ ] T072 UI screenshots of every new screen in BOTH themes (`CLAUDE.md` requires this before any UI change is done) — **still blocked in this container**: no emulator, no `adb`, no Android SDK, and the scanner is a dev build, so neither Expo Go nor a web preview can render it. Blocks ticking T038, T040, T041 and T046
+- [ ] T072 UI screenshots of every new screen in BOTH themes (`CLAUDE.md` requires this before any UI change is done) — **still blocked in this container**: no emulator, no `adb`, no Android SDK, and the scanner is a dev build, so neither Expo Go nor a web preview can render it. Blocks ticking T038, T040, T041, T046 and T047
 - [ ] T073 Clean-code checklist — `.claude/rules/007-clean-code-checklist.md` walked over every touched file
 - [ ] T074 Memory written: what the next session would re-derive — `.claude/memory/`
 

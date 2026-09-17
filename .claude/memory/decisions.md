@@ -222,3 +222,28 @@ Reanimated is then a spec decision, not a refactor, because it rebuilds the
 native app.
 Evidence: `apps/mobile/src/features/scan/components/CapturedStrip.tsx` (commit a315c50) · since 2026-09-17 · verified 2026-09-17
 
+
+### 2026-09-17-a-user-picked-printing-is-recorded-as-exact
+`set_resolution` has exactly five values and none of them is `manual`, so a set
+the *user* settled in the review sheet has to be filed under a rung the *ladder*
+owns. The pairing is not optional: `binder_slots_printing_matches_resolution`
+(003_binders.sql) and `card/model.RequiresPrinting` both state that a slot
+carries a printing **iff** the resolution is `exact`, `by_prefix_and_number` or
+`by_number`, and `service.validateResolution` rejects the request before the
+INSERT.
+
+So when T048 maps a `ReviewDecision` to `AddSlotBody`: a decision carrying a
+printing is written `exact`, and one carrying only a card is written `by_name`.
+`exact` overstates *how* the set was determined — the user read it off the card
+rather than the code matching — but it is the only one of the three
+printing-bearing rungs that does not claim a specific parse, and "the set is
+certain" is what every downstream reader of the field actually needs. The
+alternative, adding a `manual` rung, changes the Postgres enum, the Go
+constants and the contract, so it is a spec decision and not a mobile one.
+
+The client cannot do better than a guess here for a second reason worth
+knowing: when a code rung matches several printings the ladder answers
+`resolution: "unresolved"` and does not say **which** rung produced the
+candidates, so the printing the user picks cannot be filed under the rung that
+found it.
+Evidence: `db/migrations/003_binders.sql`, `internal/card/model/match.go`, `internal/card/service/match.go` · since 2026-09-17 · verified 2026-09-17

@@ -236,3 +236,58 @@ the user is in a binder. And `lib/capturedCards.ts` joins captures to answers
 **by code, first answer per code**, keyed `${index}:${code}` — the code is not
 unique, because capturing it twice is the collector's second copy.
 Evidence: `apps/mobile/src/features/scan/ScanScreen.tsx` (commit a315c50) · since 2026-09-17 · verified 2026-09-17
+
+## The review sheet
+
+### the-ladders-unresolved-means-two-different-things
+`ScanMatch.resolution` cannot be read as "why this scan is flagged", and a
+review UI that switches on it silently turns a one-tap choice into a search.
+`internal/card/service/match.go` answers `unresolved` for **two** unrelated
+outcomes: a code rung that matched *several* printings (`ambiguousPrintings` —
+candidates, plus the card itself when every candidate is a printing of one
+card), and a ladder that matched *nothing at all* (`unresolved(nil)`). The name
+rung's tie is the first kind too.
+
+`lib/flaggedScans.ts` therefore classifies on the answer's **shape**, in this
+order: non-empty `candidates` → the user picks; no `card` → nothing matched; no
+`printing` → the `by_name` case, a card whose set is unknown. Only after those
+three is a scan settled. A refused scan from `useResolveScan`'s `rejected` list
+is the fourth flag, and it is a row like any other — the queue keeps refusals
+precisely so a swept card is never silently gone, and a list nobody shows is
+the same as dropping it.
+
+The five shapes the ladder can actually produce are the fixtures at the top of
+`lib/flaggedScans.test.ts`; start there before changing the classifier.
+Evidence: `apps/mobile/src/features/scan/lib/flaggedScans.ts` (commit 4e45e80) · since 2026-09-17 · verified 2026-09-17
+
+### the-review-sheet-is-a-modal-over-the-scan-tab-not-a-route
+`components/ReviewSheet.tsx` is a React Native `Modal` the scan screen renders,
+not a `RootStackParamList` route. The session it reviews — the queue's answers
+and the user's decisions — lives in the hooks `ScanScreen` holds, so a pushed
+route would have to carry that state through navigation params and a live sweep
+would become a snapshot taken when the route opened. The screen owns only
+`isReviewOpen`; the sheet owns only which row is being searched, so exactly one
+`useCardSearch` is ever mounted.
+
+`useScanReview(resolved, rejected)` holds **only** the decisions and derives the
+flagged rows every render, because the queue can still be draining while the
+sheet is open. Decisions are keyed by **code**, matching the one-question-per-
+code rule `flaggedScans` and `capturedCards` both group on: one decision settles
+every copy of that card the sweep captured, and `copies` says how many.
+
+`GET /cards?q=` answers with cards and never printings (`SearchCardsBody.cards`
+is `ScanCard[]`), so a card corrected through the name search is filed with its
+set still unknown. That is the truthful outcome, and the one a binder slot with
+a null `card_printing_id` records.
+Evidence: `apps/mobile/src/features/scan/components/ReviewSheet.tsx` (commits f82fc88, 96d495c) · since 2026-09-17 · verified 2026-09-17
+
+### committing-a-scanned-session-has-no-atomic-endpoint
+Do not write a client-side loop over `POST /binders/{binderId}/slots` to put a
+sweep into a binder. Every binder write the contract publishes is single-row and
+`service.AddSlot` opens its own `InTx` per call, so a 60-card sweep is 61
+requests and a failure at card 40 leaves a binder holding 39 cards — after the
+user has put the cards away. T048 is blocked on a batch endpoint, which is a new
+operation across `api → service → store` and so a spec-pipeline change; the
+details and the decision mapping are in finding
+2026-09-17-no-atomic-way-to-commit-a-scanned-session.
+Evidence: `packages/types/openapi.json`, `internal/binder/service/slot.go` · since 2026-09-17 · verified 2026-09-17
