@@ -14,6 +14,12 @@ import (
 	"github.com/simeonkorchev/binder/internal/dataerror"
 )
 
+// errLaterStep stands for any step of a caller's work that fails after the
+// batch is written. The specs assert what the binder holds, never this error's
+// text. Package scope is what err113 asks for, and gochecknoglobals allows an
+// error variable.
+var errLaterStep = errors.New("a later step of the caller's work failed")
+
 var _ = Describe("InsertSlots", func() {
 	var ctx = context.Background()
 
@@ -122,7 +128,7 @@ var _ = Describe("InsertSlots", func() {
 
 		Context("because its printing is a printing of a different card", func() {
 			BeforeEach(func() {
-				otherPrinting := seedPrinting(seedCard("Blue-Eyes White Dragon"), "SDK-EN001", "Ultra Rare")
+				otherPrinting := seedPrinting(seedCard("Blue-Eyes White Dragon"), "SDK-EN001", "Secret Rare")
 				batch[2].CardPrintingID = &otherPrinting
 				batch[2].SetResolution = cardmodel.SetResolutionManual
 			})
@@ -169,11 +175,6 @@ var _ = Describe("InsertSlots", func() {
 // the second insert would collide on the positions the first took.
 var _ = Describe("InsertSlots inside a transaction the caller opened", func() {
 	var ctx = context.Background()
-
-	// errLaterStep stands for any step of the caller's work that fails after
-	// the batch is written. The specs assert what the binder holds, never this
-	// error's text.
-	var errLaterStep = errors.New("a later step of the caller's work failed")
 
 	var (
 		subject    *store.Store
