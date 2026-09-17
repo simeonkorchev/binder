@@ -1,6 +1,10 @@
 import { useTranslation } from 'react-i18next'
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
+// The marketplace owns what it looks like to sell a card, and this sheet is
+// where a card's actions live — the same arrangement as the add-card sheet
+// reaching for the scan feature's card search.
+import { SellCardActions } from '@/features/market/components/SellCardActions'
 import { useTheme } from '@/theme/useTheme'
 
 import { moveDestination, pocketOf, type MoveAction, type PageShape } from '../lib/positions'
@@ -85,6 +89,8 @@ export const PocketActions = ({
               </Pressable>
             )
           })}
+
+          <SellCardActions slotId={slot.id} />
 
           <Pressable
             onPress={onRemove}

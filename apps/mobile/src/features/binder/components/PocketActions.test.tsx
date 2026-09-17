@@ -105,3 +105,83 @@ describe('PocketActions', () => {
     expect(screen.getByText(/No set/)).toBeOnTheScreen()
   })
 })
+
+// Selling a card is one of the things that can be done to a card, so it is in
+// the sheet a card opens rather than behind an affordance of its own. What the
+// requests do is `useSlotListing`'s to prove; this is that a seller can reach
+// them, and that the server's refusal arrives as a sentence.
+describe('PocketActions, marking the card for sale', () => {
+  const mockFetch: jest.MockedFunction<typeof fetch> = jest.fn()
+
+  const listed = (): Response =>
+    new Response(
+      JSON.stringify({
+        id: 'listing-1',
+        binderSlotId: 'slot-3',
+        createdAt: '2026-09-17T10:00:00Z',
+        updatedAt: '2026-09-17T10:00:00Z',
+      }),
+      { status: 201 },
+    )
+
+  beforeEach(() => {
+    mockFetch.mockReset()
+    mockFetch.mockImplementation(() => Promise.resolve(listed()))
+    globalThis.fetch = mockFetch
+    process.env.EXPO_PUBLIC_API_URL = 'https://api.binder.test'
+  })
+
+  afterEach(() => {
+    delete process.env.EXPO_PUBLIC_API_URL
+  })
+
+  it('offers the card for sale from the same sheet that moves and removes it', async () => {
+    const user = userEvent.setup()
+    await render(<PocketActions slot={slot()} shape={shape()} {...props} />)
+
+    await user.press(screen.getByRole('button', { name: 'Mark this card for sale' }))
+
+    expect(
+      await screen.findByText('This card is for sale. Buyers find it in the Market tab.'),
+    ).toBeOnTheScreen()
+  })
+
+  it('offers to take the card back off sale once it is listed', async () => {
+    const user = userEvent.setup()
+    await render(<PocketActions slot={slot()} shape={shape()} {...props} />)
+    await user.press(screen.getByRole('button', { name: 'Mark this card for sale' }))
+
+    expect(
+      await screen.findByRole('button', { name: 'Take this card off sale' }),
+    ).toBeOnTheScreen()
+  })
+
+  // The 409 the server answers for a card that is already listed. A seller
+  // reads a sentence about their card, never `POST /listings answered 409`.
+  it('says a card is already for sale as a sentence, not as an error', async () => {
+    mockFetch.mockImplementation(() => Promise.resolve(new Response('{}', { status: 409 })))
+    const user = userEvent.setup()
+    await render(<PocketActions slot={slot()} shape={shape()} {...props} />)
+
+    await user.press(screen.getByRole('button', { name: 'Mark this card for sale' }))
+
+    expect(
+      await screen.findByText('This card is already for sale, so nothing changed.'),
+    ).toBeOnTheScreen()
+    expect(screen.queryByText(/409/)).not.toBeOnTheScreen()
+  })
+
+  // Somebody else's slot is a 404 rather than a 403 so a stranger cannot learn
+  // it exists; the sentence the seller reads must not give that back.
+  it('says no more about a card that is not theirs than about any other failure', async () => {
+    mockFetch.mockImplementation(() => Promise.resolve(new Response('{}', { status: 404 })))
+    const user = userEvent.setup()
+    await render(<PocketActions slot={slot()} shape={shape()} {...props} />)
+
+    await user.press(screen.getByRole('button', { name: 'Mark this card for sale' }))
+
+    expect(
+      await screen.findByText('The card could not be put up for sale.'),
+    ).toBeOnTheScreen()
+  })
+})
