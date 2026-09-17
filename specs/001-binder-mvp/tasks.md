@@ -38,13 +38,13 @@ until the gate exists, so this is one agent, alone.
 ## Wave 3 — listings and the contract
 
 - [x] T030 **W6** [US6][US7] Listings domain + seller contact — `internal/listing/**`. Four endpoints; the seller is reached by joining `binder_slots → binders`, and their contact details through a consumer-side `SellerContacts` interface the user domain satisfies at wiring time. Someone else's slot or listing is 404, never 403; a double-list is the UNIQUE constraint translated to 409, proven against the real schema, as is the cascade that takes a listing away with its card
-- [ ] T033 **W12** HTTP server bootstrap — `cmd/binderd/main.go`. **Nothing serves any endpoint today**: `binder`, `card`, `listing` and `user` all expose `RegisterEndpoints`, and only handler specs ever call them. This blocks T031, because `make gen-spec` generates the OpenAPI document from a registered `huma.API`, and it blocks every Wave 4 screen. Includes:
+- [x] T033 **W12** HTTP server bootstrap — `cmd/binderd/main.go`. **Nothing serves any endpoint today**: `binder`, `card`, `listing` and `user` all expose `RegisterEndpoints`, and only handler specs ever call them. This blocks T031, because `make gen-spec` generates the OpenAPI document from a registered `huma.API`, and it blocks every Wave 4 screen. Includes:
   - one `humago` API with all four domains registered, config from env validated at startup (exit if missing, per `004-security.md`)
   - **the contact seam adapter.** W6 declared `listing/service.SellerContacts.ContactFor(ctx, uuid) (listing/model.SellerContact, error)`; W7 landed `user/service.Service.SellerContact(ctx, uuid) (user/model.Contact, error)` — same two `*string` fields and the same documented contract, different name and type. Adapt here, at the wiring layer. **Do not change either domain to force a match** — that is what the consumer-side interface exists to avoid (`002` §3a).
   - W7's session middleware supplying the `ActorFunc` the binder and listing APIs take. Concretely: `session.LoadConfig()` → `session.New(cfg, nil)` (fails on an unset `SESSION_JWT_SECRET` and on one under 32 bytes — there is deliberately no fallback), `identity.LoadConfig()` → `identity.NewFromConfig(cfg, nil)` (needs `APPLE_CLIENT_IDS` and `GOOGLE_CLIENT_IDS`, comma-separated), then `userapi.Middleware(tokens)` wrapped around the mux and `userapi.ActorFromContext` passed to all three `RegisterEndpoints`. **Do not declare a context key anywhere else** — `internal/user/api/actor_test.go` already asserts at compile time that `ActorFromContext` satisfies both other domains' `ActorFunc`
   - a smoke test that the process starts, serves `/health`, and that every registered route answers (the first time anything is exercised over a real socket)
-- [ ] T031 [REGEN] **W8** OpenAPI spec generated from the Go source — `make gen-spec`
-- [ ] T032 [REGEN] **W8** `packages/types` regenerated; `make check-contract` green
+- [x] T031 [REGEN] **W8** OpenAPI spec generated from the Go source — `make gen-spec`
+- [x] T032 [REGEN] **W8** `packages/types` regenerated; `make check-contract` green
 
 ## Wave 4 — mobile (all parallel)
 
@@ -57,8 +57,8 @@ catches up.
 
 - [ ] T040 VisionCamera setup, camera permission flow, Expo config plugin for the **dev build** — `apps/mobile/src/features/scan/`
 - [ ] T041 Card-shaped guide-frame overlay, with the code line's expected position hinted (the printed code sits *below* the art) — `components/ScanGuideFrame.tsx`
-- [ ] T042 ML Kit text-recognition frame processor, **throttled** — running every frame burns battery for no extra reads — `useTextFrames.ts`
-- [ ] T043 `{CODE}-{ID}` parser: pure function, OCR-noise tolerant (`0`/`O`, `1`/`I`/`l`, stray punctuation, case). **Completeness test per `000-principles.md` §9** — `lib/parseCardCode.ts`
+- [x] T042 ML Kit text-recognition frame processor, **throttled** — running every frame burns battery for no extra reads — `useTextFrames.ts`
+- [x] T043 `{CODE}-{ID}` parser: pure function, OCR-noise tolerant (`0`/`O`, `1`/`I`/`l`, stray punctuation, case). **Completeness test per `000-principles.md` §9** — `lib/parseCardCode.ts`
 - [ ] T044 Stable-read debounce + in-session dedupe: accept only after N consecutive identical reads; a re-read while the code stays in frame is the *same* card, a re-read after it left is a second copy. Pure and unit-tested — `lib/useStableRead.ts`
 - [ ] T045 `useResolveScan` — async, queued, non-blocking; survives a dropped connection and resolves later — `api/useResolveScan.ts`
 - [ ] T046 Capture feedback: haptic tick, running count, captured-card strip. `react-native-best-practices` skill governs any Reanimated used here
