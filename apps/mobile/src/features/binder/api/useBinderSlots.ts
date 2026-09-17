@@ -1,8 +1,8 @@
 import { useState } from 'react'
 
-import type { SlotBody } from '../types'
+import { writeEmpty, writeJson } from '@/lib/apiRequest'
 
-import { writeEmpty, writeJson } from './binderRequest'
+import type { SlotBody } from '../types'
 
 /** Which write failed, so the screen can say which one rather than "something". */
 export type SlotAction = 'add' | 'move' | 'remove'

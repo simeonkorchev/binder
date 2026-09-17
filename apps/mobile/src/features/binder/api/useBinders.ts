@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-import type { Binder, BinderListBody } from '../types'
+import { readJson, writeJson } from '@/lib/apiRequest'
 
-import { readJson, writeJson } from './binderRequest'
+import type { Binder, BinderListBody } from '../types'
 
 type BinderListState =
   | { status: 'loading' }

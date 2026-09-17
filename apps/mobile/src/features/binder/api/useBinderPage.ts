@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 
+import { readJson } from '@/lib/apiRequest'
+
 import type { BinderPage, PageBody } from '../types'
 
-import { readJson } from './binderRequest'
 import { toBinderPage } from './toBinderPage'
 
 /**
