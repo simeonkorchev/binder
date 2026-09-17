@@ -89,6 +89,20 @@ no hardcoded colours**, and the app has five screens to move between.
 - [x] T061 Browse listings, filters, translated empty state
 - [x] T062 Seller contact sheet — reveals only opted-in fields, and renders the "no contact shared" case
 
+### W14 — mobile sign-in (the app cannot authenticate without it)
+
+`plan.md` line 62 lists `src/features/auth/` — "Sign-in flow, session storage in
+SecureStore" — and no task was ever written for it. T012 built the **backend**
+half only. The result: nothing in `apps/mobile` sends an `Authorization`
+header, so against a real server every endpoint except `GET /listings` answers
+401 and the product does not work end to end. This is the last thing between
+the MVP and a running app.
+
+- [ ] T080 **W14** [US1][US4][US6] Apple + Google sign-in (D1) via Expo AuthSession, exchanged at `POST /auth/sessions` for the session JWT the backend issues — `apps/mobile/src/features/auth/`
+- [ ] T081 **W14** Session stored in **SecureStore**, not AsyncStorage: it is a bearer credential. Restored on launch, cleared on sign-out and on a 401
+- [ ] T082 **W14** `lib/apiRequest.ts` attaches the bearer token, and a 401 sends the user back to sign-in rather than surfacing as a generic failure
+- [ ] T083 **W14** A signed-out user sees the sign-in screen; a signed-in one lands on their binders. `GET /listings` stays reachable signed-out (browse is public by design)
+
 ## Wave 5 — done means done
 
 - [ ] T070 Quality gate — `make check`
