@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/go-jose/go-jose/v4"
@@ -77,8 +78,12 @@ type Identity struct {
 
 // Config describes one provider.
 type Config struct {
-	// Issuer is the exact "iss" claim the provider puts in its tokens.
-	Issuer string
+	// Issuers are the exact "iss" claims the provider puts in its tokens. It is
+	// a list because a provider may spell its own issuer more than one way —
+	// Google issues both "https://accounts.google.com" and the bare
+	// "accounts.google.com" — and refusing one of them would refuse tokens at
+	// random.
+	Issuers []string
 	// Audiences are the client ids a token may be addressed to. It is a list
 	// because a provider issues one client id per platform — an iOS and an
 	// Android client are different audiences for the same account — and a
@@ -93,18 +98,18 @@ type Config struct {
 
 // Verifier checks tokens from one provider.
 type Verifier struct {
-	issuer    string
+	issuers   []string
 	audiences []string
 	keys      KeyLookup
 	now       func() time.Time
 }
 
 // NewVerifier returns a verifier for cfg, refusing a configuration that cannot
-// verify anything: an empty issuer or audience list would make
-// jwt.Expected.Validate skip that check entirely rather than fail it.
+// verify anything: an empty issuer or audience list would make the checks below
+// pass everything rather than fail everything.
 func NewVerifier(cfg Config) (*Verifier, error) {
 	switch {
-	case cfg.Issuer == "":
+	case len(cfg.Issuers) == 0:
 		return nil, errNoIssuer
 	case len(cfg.Audiences) == 0:
 		return nil, errNoAudience
@@ -118,7 +123,7 @@ func NewVerifier(cfg Config) (*Verifier, error) {
 	}
 
 	return &Verifier{
-		issuer:    cfg.Issuer,
+		issuers:   cfg.Issuers,
 		audiences: cfg.Audiences,
 		keys:      cfg.Keys,
 		now:       now,
@@ -202,9 +207,17 @@ func (v *Verifier) checkClaims(claims identityClaims, expectedNonce string) erro
 		return fmt.Errorf("%w: no expiry claim", ErrTokenRejected)
 	}
 
+	if !slices.Contains(v.issuers, claims.Issuer) {
+		return fmt.Errorf("%w: the token was not issued by this provider", ErrTokenRejected)
+	}
+
+	// Issuer is left out of jwt.Expected because it accepts only one and this
+	// provider may have several; it is checked above instead.
 	expected := jwt.Expected{
-		Issuer:      v.issuer,
+		Issuer:      "",
+		Subject:     "",
 		AnyAudience: jwt.Audience(v.audiences),
+		ID:          "",
 		Time:        v.now(),
 	}
 	if err := claims.ValidateWithLeeway(expected, clockSkew); err != nil {

@@ -48,7 +48,7 @@ var _ = Describe("Verifier", func() {
 	buildVerifier := func() {
 		var err error
 		verifier, err = oidc.NewVerifier(oidc.Config{
-			Issuer:    issuer,
+			Issuers:   []string{issuer, "provider.example"},
 			Audiences: []string{audience, "com.example.binder.android"},
 			Keys:      keys,
 			Now:       func() time.Time { return now },
@@ -79,6 +79,19 @@ var _ = Describe("Verifier", func() {
 			})
 
 			It("returns the provider's subject", func() {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(identity.Subject).To(Equal(subject))
+			})
+		})
+
+		When("the token names the provider's other issuer spelling", func() {
+			BeforeEach(func() {
+				other := valid
+				other.issuer = "provider.example"
+				rawToken = other.sign(provider)
+			})
+
+			It("accepts it: a provider may spell its own issuer more than one way", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(identity.Subject).To(Equal(subject))
 			})
@@ -327,12 +340,12 @@ var _ = Describe("Verifier", func() {
 				_, err := oidc.NewVerifier(cfg)
 				Expect(err).To(HaveOccurred())
 			},
-			Entry("no issuer, which makes go-jose skip the issuer check",
-				oidc.Config{Issuer: "", Audiences: []string{audience}, Keys: staticKeys{}, Now: nil}),
+			Entry("no issuer, which would accept a token from anybody",
+				oidc.Config{Issuers: nil, Audiences: []string{audience}, Keys: staticKeys{}, Now: nil}),
 			Entry("no audience, which makes go-jose skip the audience check",
-				oidc.Config{Issuer: issuer, Audiences: nil, Keys: staticKeys{}, Now: nil}),
+				oidc.Config{Issuers: []string{issuer}, Audiences: nil, Keys: staticKeys{}, Now: nil}),
 			Entry("no key lookup",
-				oidc.Config{Issuer: issuer, Audiences: []string{audience}, Keys: nil, Now: nil}),
+				oidc.Config{Issuers: []string{issuer}, Audiences: []string{audience}, Keys: nil, Now: nil}),
 		)
 	})
 })
