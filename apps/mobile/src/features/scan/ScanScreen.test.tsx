@@ -89,6 +89,23 @@ describe('ScanScreen', () => {
     expect(screen.getByText('Camera access is turned off')).toBeOnTheScreen()
   })
 
+  // US3 is satisfied in the review sheet, not in the sweep, so the sweep has to
+  // be able to reach it — and at zero flagged too, which is how a user confirms
+  // the page they just swept needs nothing fixed.
+  it('reaches the review sheet from the sweep, with nothing flagged yet', async () => {
+    const user = userEvent.setup()
+
+    await render(<ScanScreen />)
+
+    await user.press(screen.getByRole('button', { name: 'Review flagged cards: 0 still to check' }))
+
+    expect(
+      await screen.findByText(
+        'Nothing to check. Every card this sweep captured was matched to a set.',
+      ),
+    ).toBeOnTheScreen()
+  })
+
   it('offers another ask when the refusal left the dialog available', async () => {
     mockPermissionStatus = 'not-determined'
     mockRequestResult = 'denied'

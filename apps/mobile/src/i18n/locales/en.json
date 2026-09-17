@@ -38,7 +38,7 @@
       "retry": "Try again"
     },
     "review": {
-      "open": "Review",
+      "open": "Review ({{flagged}})",
       "openAccessible": "Review flagged cards: {{flagged}} still to check",
       "title": "Cards to check",
       "subtitle": "The scanner could not settle these. Fix them while the cards are still in front of you.",

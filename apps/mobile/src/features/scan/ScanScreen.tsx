@@ -1,4 +1,5 @@
 import { useIsFocused } from '@react-navigation/native'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 import { Camera, useCameraDevice } from 'react-native-vision-camera'
@@ -7,6 +8,7 @@ import { useTheme } from '@/theme/useTheme'
 
 import { CameraAccessNotice } from './components/CameraAccessNotice'
 import { CapturedStrip } from './components/CapturedStrip'
+import { ReviewSheet } from './components/ReviewSheet'
 import { ScanGuideFrame } from './components/ScanGuideFrame'
 import { useCameraAccess } from './useCameraAccess'
 import { useScanSession } from './useScanSession'
@@ -29,6 +31,8 @@ const ScanScreen = (): React.JSX.Element => {
   // The tab keeps its screens mounted, so without this the camera would keep
   // reading frames — and draining the battery — while the user is in a binder.
   const isFocused = useIsFocused()
+  // Whether the sheet is open is where the user is, not what the session knows.
+  const [isReviewOpen, setIsReviewOpen] = useState(false)
 
   if (access !== 'granted') {
     return <CameraAccessNotice access={access} onRequest={request} onOpenSettings={openSettings} />
@@ -57,6 +61,13 @@ const ScanScreen = (): React.JSX.Element => {
         cards={session.captured}
         isOffline={session.isOffline}
         onRetry={session.retryPending}
+        undecidedCount={session.review.undecidedCount}
+        onReview={() => setIsReviewOpen(true)}
+      />
+      <ReviewSheet
+        visible={isReviewOpen}
+        review={session.review}
+        onClose={() => setIsReviewOpen(false)}
       />
     </View>
   )

@@ -6,6 +6,7 @@ import { capturedCards, type CapturedCard } from './lib/capturedCards'
 import { captureTick } from './lib/captureTick'
 import { parseCardCode } from './lib/parseCardCode'
 import { useStableRead } from './lib/useStableRead'
+import { useScanReview, type ScanReview } from './useScanReview'
 import { useTextFrames } from './useTextFrames'
 
 export interface ScanSession {
@@ -22,6 +23,12 @@ export interface ScanSession {
   isOffline: boolean
   /** Sends the paused queue again after the connection came back. */
   retryPending: () => void
+  /**
+   * What the ladder could not settle, and what the user says about it. This is
+   * where US3 is satisfied: the sweep captures cards, the review is where a
+   * card with no set stops being a guess.
+   */
+  review: ScanReview
   /** Goes straight to `<Camera frameProcessor={...} />`. */
   frameProcessor: ReadonlyFrameProcessor
 }
@@ -46,6 +53,7 @@ export interface ScanSession {
 export const useScanSession = (): ScanSession => {
   const reader = useStableRead()
   const queue = useResolveScan()
+  const review = useScanReview(queue.resolved, queue.rejected)
   const [codes, setCodes] = useState<string[]>([])
 
   const frameProcessor = useTextFrames((text: string | null) => {
@@ -63,6 +71,7 @@ export const useScanSession = (): ScanSession => {
     pendingCount: queue.queuedCount,
     isOffline: queue.isOffline,
     retryPending: queue.retryQueued,
+    review,
     frameProcessor,
   }
 }

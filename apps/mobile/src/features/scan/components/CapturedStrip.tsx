@@ -31,6 +31,10 @@ interface CapturedStripProps {
   /** True when the resolver could not be reached — the captures are waiting, not lost. */
   isOffline: boolean
   onRetry: () => void
+  /** How many flagged cards the user has not settled yet. */
+  undecidedCount: number
+  /** Opens the review sheet. Offered even at zero, which is how the sweep is confirmed clean. */
+  onReview: () => void
 }
 
 /**
@@ -44,21 +48,36 @@ export const CapturedStrip = ({
   cards,
   isOffline,
   onRetry,
+  undecidedCount,
+  onReview,
 }: CapturedStripProps): React.JSX.Element => {
   const { t } = useTranslation()
   const { colors } = useTheme()
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-      <View
-        style={styles.header}
-        accessible
-        accessibilityLabel={t('scan.captured.countAccessible', { captured: cards.length })}
-      >
-        <Text style={[styles.count, { color: colors.textPrimary }]}>{cards.length}</Text>
-        <Text style={[styles.countLabel, { color: colors.textSecondary }]}>
-          {t('scan.captured.label')}
-        </Text>
+      <View style={styles.header}>
+        <View
+          style={styles.headerCount}
+          accessible
+          accessibilityLabel={t('scan.captured.countAccessible', { captured: cards.length })}
+        >
+          <Text style={[styles.count, { color: colors.textPrimary }]}>{cards.length}</Text>
+          <Text style={[styles.countLabel, { color: colors.textSecondary }]}>
+            {t('scan.captured.label')}
+          </Text>
+        </View>
+
+        <Pressable
+          onPress={onReview}
+          accessibilityRole="button"
+          accessibilityLabel={t('scan.review.openAccessible', { flagged: undecidedCount })}
+          style={[styles.review, { borderColor: colors.accent }]}
+        >
+          <Text style={[styles.reviewLabel, { color: colors.accent }]}>
+            {t('scan.review.open', { flagged: undecidedCount })}
+          </Text>
+        </Pressable>
       </View>
 
       {isOffline ? (
@@ -118,12 +137,20 @@ const styles = StyleSheet.create({
   count: { fontSize: 24, fontWeight: '700' },
   countLabel: { fontSize: 14, marginLeft: 8 },
   empty: { fontSize: 14, paddingHorizontal: 16, paddingVertical: 12, textAlign: 'center' },
-  header: { alignItems: 'baseline', flexDirection: 'row', paddingHorizontal: 16 },
+  header: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+  },
+  headerCount: { alignItems: 'baseline', flexDirection: 'row' },
   list: { gap: tileGap, paddingHorizontal: 16, paddingVertical: 12 },
   offline: { paddingHorizontal: 16, paddingTop: 8 },
   offlineMessage: { fontSize: 13, lineHeight: 18 },
   retry: { alignSelf: 'flex-start', borderRadius: 8, borderWidth: 1, marginTop: 8, paddingHorizontal: 14, paddingVertical: 8 },
   retryLabel: { fontSize: 14, fontWeight: '600' },
+  review: { borderRadius: 8, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 8 },
+  reviewLabel: { fontSize: 14, fontWeight: '600' },
   tile: { borderRadius: 10, borderWidth: 1, padding: 10, width: tileWidth },
   tileCode: { fontSize: 14, fontWeight: '600' },
   tileName: { fontSize: 12, marginTop: 4 },
