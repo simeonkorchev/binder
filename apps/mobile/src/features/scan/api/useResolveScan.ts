@@ -1,25 +1,10 @@
 import { useRef, useState } from 'react'
 
+import { apiUrl } from '@/lib/apiUrl'
+
 import type { RejectedScan, ResolvedScan, ScanMatchBody } from '../types'
 
 import { toResolvedScan } from './toResolvedScan'
-
-/**
- * Where the API lives. Read per request rather than at module load so a missing
- * value is a thrown error a developer sees on the first scan, not a URL built
- * out of an empty string.
- *
- * There is no app-wide API client to take this from yet, and one endpoint does
- * not make one (000-principles.md §6): the second screen that calls the API is
- * the one that extracts it.
- */
-const resolveScanUrl = (): string => {
-  const baseUrl = process.env.EXPO_PUBLIC_API_URL
-  if (baseUrl === undefined || baseUrl === '') {
-    throw new Error('EXPO_PUBLIC_API_URL is not set, so a scan cannot be resolved')
-  }
-  return `${baseUrl}/scans/resolve`
-}
 
 type ScanOutcome =
   | { kind: 'resolved'; scan: ResolvedScan }
@@ -35,7 +20,7 @@ type ScanOutcome =
  * retrying it forever would wedge the queue behind one bad read.
  */
 const requestScan = async (code: string): Promise<ScanOutcome> => {
-  const response = await fetch(resolveScanUrl(), {
+  const response = await fetch(apiUrl('/scans/resolve'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code }),

@@ -45,7 +45,7 @@
       "done": "Done",
       "empty": "Nothing to check. Every card this sweep captured was matched to a set.",
       "copies": "{{copies}} copies captured",
-      "codeAccessible": "Scanned code {{code}}",
+      "code": "Scanned code {{code}}",
       "reason": {
         "refused": "The server would not accept this read, so no card was looked up.",
         "unresolved": "No card matched this code.",
@@ -55,6 +55,7 @@
       "keep": "Keep {{name}}, set unknown",
       "choose": "{{name}} \u2014 {{set}}",
       "chooseNoSet": "{{name}} \u2014 set unknown",
+      "noSet": "Set unknown",
       "search": "Search by name",
       "discard": "Leave this card out",
       "kept": "Keeping {{name}}, set unknown",

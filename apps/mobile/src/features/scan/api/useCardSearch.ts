@@ -1,20 +1,8 @@
 import { useRef, useState } from 'react'
 
-import type { ScannedCard, SearchCardsBody } from '../types'
+import { apiUrl } from '@/lib/apiUrl'
 
-/**
- * Where the API lives. Read per request for the same reason `useResolveScan`
- * reads it per request: a missing value must be an error a developer sees, not
- * a URL built out of an empty string. The two hooks will share one client when
- * a third screen needs one — two endpoints do not make a data layer.
- */
-const searchCardsUrl = (query: string): string => {
-  const baseUrl = process.env.EXPO_PUBLIC_API_URL
-  if (baseUrl === undefined || baseUrl === '') {
-    throw new Error('EXPO_PUBLIC_API_URL is not set, so cards cannot be searched')
-  }
-  return `${baseUrl}/cards?q=${encodeURIComponent(query)}`
-}
+import type { ScannedCard, SearchCardsBody } from '../types'
 
 export interface CardSearch {
   /** What the last finished search found, in the order the server ranked them. */
@@ -50,7 +38,7 @@ export const useCardSearch = (): CardSearch => {
 
   const run = async (query: string, searchId: number): Promise<void> => {
     try {
-      const response = await fetch(searchCardsUrl(query))
+      const response = await fetch(apiUrl(`/cards?q=${encodeURIComponent(query)}`))
       if (!response.ok) throw new Error(`the card search answered ${response.status}`)
       const body: SearchCardsBody = await response.json()
       if (latestSearch.current !== searchId) return

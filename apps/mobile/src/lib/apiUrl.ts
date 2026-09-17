@@ -7,10 +7,8 @@
  * of an empty string. Throwing instead means a developer sees the missing
  * configuration on the first request rather than a 404 from `/binders`.
  *
- * `features/scan/api/useResolveScan.ts` still carries its own copy of this,
- * written when the scan queue was the only caller. It folds into this one the
- * next time that file is opened — it was left alone here only because W9 was
- * being finished in parallel.
+ * Every caller goes through here: the scan queue's own copy, written when it was
+ * the only caller, was folded in when the review sheet became the third.
  */
 export const apiUrl = (path: string): string => {
   const baseUrl = process.env.EXPO_PUBLIC_API_URL
