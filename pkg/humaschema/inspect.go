@@ -52,14 +52,16 @@ type Report struct {
 // independent check on Config's pass rather than a restatement of it.
 func Inspect(registry huma.Registry) (Report, error) {
 	report := Report{}
-	for _, name := range sortedNames(registry) {
+	for _, name := range sortedKeys(registry.Map()) {
 		schema := registry.Map()[name]
 		goType := registry.TypeFromRef(schemaRefPrefix + name)
 		if goType == nil || schema == nil {
 			continue
 		}
 
-		for jsonName, field := range wireFields(goType) {
+		fields := wireFields(goType)
+		for _, jsonName := range sortedKeys(fields) {
+			field := fields[jsonName]
 			property := schema.Properties[jsonName]
 			if property == nil {
 				report.MissingFromDoc = append(report.MissingFromDoc, name+"."+jsonName)
@@ -102,16 +104,16 @@ func (r *Report) inspect(schemaName, path string, goType reflect.Type, override 
 	}
 }
 
-// sortedNames keeps the report stable, so a failure names the same property in
-// the same order on every run.
-func sortedNames(registry huma.Registry) []string {
-	schemas := registry.Map()
-	names := make([]string, 0, len(schemas))
-	for name := range schemas {
-		names = append(names, name)
+// sortedKeys keeps the report stable, so a failure names the same properties in
+// the same order on every run — Go ranges both a registry and a field set in an
+// order it deliberately varies.
+func sortedKeys[V any](m map[string]V) []string {
+	keys := make([]string, 0, len(m))
+	for key := range m {
+		keys = append(keys, key)
 	}
-	sort.Strings(names)
-	return names
+	sort.Strings(keys)
+	return keys
 }
 
 // wireSchema is the part of a marshalled property schema this package reads
@@ -146,7 +148,7 @@ func (w wireSchema) admitsNull() bool {
 			return true
 		}
 	}
-	return unconstrained(w.single(), w.Ref, len(w.AnyOf)+len(w.OneOf)+len(w.AllOf))
+	return unconstrained(w.Type != nil, w.Ref, len(w.AnyOf)+len(w.OneOf)+len(w.AllOf))
 }
 
 // hasType reports whether the schema's `type` includes want. OpenAPI 3.1 allows
@@ -165,12 +167,6 @@ func (w wireSchema) hasType(want string) bool {
 	return false
 }
 
-// single is the schema's type when it has exactly one, and "" otherwise.
-func (w wireSchema) single() string {
-	name, _ := w.Type.(string)
-	return name
-}
-
 // describe is how the emitted schema reads in a failure message.
 func (w wireSchema) describe() string {
 	switch {
@@ -185,6 +181,6 @@ func (w wireSchema) describe() string {
 	case w.Type != nil:
 		return fmt.Sprintf("type %v", w.Type)
 	default:
-		return "nothing at all"
+		return "no type of its own"
 	}
 }

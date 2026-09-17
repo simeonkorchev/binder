@@ -20,9 +20,9 @@
 //
 // Config installs one rule over all of them — a Go pointer means null on the
 // wire and nothing else does — applied to every registered schema, so a DTO
-// added tomorrow inherits it without being touched. Disagreements is the same
-// rule read back off the emitted document, for the test that fails if the two
-// ever drift apart again.
+// added tomorrow inherits it without being touched. Inspect is the same rule
+// read back off the emitted document, for the test that fails if the two ever
+// drift apart again.
 package humaschema
 
 import (
@@ -35,8 +35,9 @@ import (
 const (
 	// schemaRefPrefix is where huma.DefaultConfig puts component schemas. It is
 	// needed to ask the registry which Go type a schema came from, and is
-	// mirrored here rather than read back because huma keeps it unexported.
-	// TestSchemasResolveBackToTheirGoTypes pins that the two still agree.
+	// mirrored here rather than read back because huma keeps it unexported. A
+	// prefix that stopped matching would resolve no type at all, which is what
+	// Report.Checked is carried to catch.
 	schemaRefPrefix = "#/components/schemas/"
 
 	// typeNull is JSON Schema's null type. huma has no constant for it: its own
@@ -149,13 +150,15 @@ func admitsNull(s *huma.Schema) bool {
 			return true
 		}
 	}
-	return unconstrained(s.Type, s.Ref, len(s.AnyOf)+len(s.OneOf)+len(s.AllOf))
+	return unconstrained(s.Type != "", s.Ref, len(s.AnyOf)+len(s.OneOf)+len(s.AllOf))
 }
 
-// unconstrained reports whether a schema with this type, this $ref and this many
-// composition branches says anything at all about the value's shape.
-func unconstrained(schemaType, ref string, branches int) bool {
-	return schemaType == "" && ref == "" && branches == 0
+// unconstrained reports whether a schema that says this much about its type,
+// its $ref and its composition branches says anything at all about the value —
+// which is what huma generates for an `any` field, and what therefore already
+// admits null.
+func unconstrained(hasType bool, ref string, branches int) bool {
+	return !hasType && ref == "" && branches == 0
 }
 
 // wireFields returns the fields of goType that huma turns into properties,
@@ -191,7 +194,7 @@ func wireName(field reflect.StructField) (string, bool) {
 			name = tagged
 		}
 	}
-	if name == "-" || name == "_" {
+	if name == "-" {
 		return "", false
 	}
 	return name, true
