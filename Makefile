@@ -142,9 +142,8 @@ test-mobile-changed: ## -> Jest for apps/mobile tests related to the change (BAS
 
 # ── Shared workspaces (packages/*) ───────────────────────────────────────────
 
-# packages/ is empty until W8 generates packages/types from the OpenAPI spec.
-# The loop is here now so that workspace arrives already inside the gate rather
-# than being remembered into it.
+# packages/types is the first workspace; it arrived already inside this loop,
+# which is what the loop was here for.
 #
 # The `: ;` closing the loop body is load-bearing: each step is a `guard && {...}`
 # whose guard exits 1 when the package has no such script, and without it that 1
@@ -159,10 +158,41 @@ gate-packages: ## -> Lint + tests + knip for every shared workspace (packages/*)
 	    && { echo "--- $$n lint"; npm -w $$n run lint || exit 1; }; \
 	  node -e "process.exit(require('./$$d/package.json').scripts?.['test:run']?0:1)" 2>/dev/null \
 	    && { echo "--- $$n test"; npm -w $$n run test:run || exit 1; }; \
+	  node -e "process.exit(require('./$$d/package.json').scripts?.typecheck?0:1)" 2>/dev/null \
+	    && { echo "--- $$n typecheck"; npm -w $$n run typecheck || exit 1; }; \
 	  node -e "process.exit(require('./$$d/package.json').scripts?.knip?0:1)" 2>/dev/null \
 	    && { echo "--- $$n knip"; npm -w $$n run knip || exit 1; }; \
 	  : ; \
 	done
+
+# ── API contract ─────────────────────────────────────────────────────────────
+
+# The document is rendered by the server binary itself, from the same route
+# registration it serves, so it cannot describe an API this backend does not
+# have. It needs no running server, no database and no configuration — which is
+# what lets the gate below run on a CI runner that has none of them
+# (.claude/rules/001-architecture.md step 8).
+.PHONY: gen-spec
+gen-spec: ## -> Regenerate packages/types/openapi.json from the Go source (no server needed)
+	go run ./cmd/binderd -openapi > packages/types/openapi.json
+
+.PHONY: check-spec
+check-spec: gen-spec ## -> Fail if openapi.json has drifted from the Go routes
+	@git diff --exit-code packages/types/openapi.json \
+	  || { echo "ERROR: packages/types/openapi.json is out of date. Run 'make gen-spec' and commit the result."; exit 1; }
+
+.PHONY: check-types
+check-types: ## -> Fail if packages/types/src/api.ts has drifted from openapi.json
+	npm -w @binder/types run generate
+	@git diff --exit-code packages/types/src/api.ts \
+	  || { echo "ERROR: packages/types/src/api.ts is out of date. Run 'make gen-spec check-types' and commit the result."; exit 1; }
+
+# NOT parallel-safe, and must never be given -j: check-spec rewrites
+# packages/types/openapi.json while check-types reads it to regenerate api.ts.
+.PHONY: check-contract
+check-contract: ## -> The app<->backend contract gate: Go routes -> openapi.json -> api.ts
+	@$(MAKE) check-spec
+	@$(MAKE) check-types
 
 # ── Database ─────────────────────────────────────────────────────────────────
 
@@ -230,10 +260,11 @@ check-changed: ## -> Full gate for the layers this change touched, in parallel (
 	  echo "check-changed: $$scopes -> $(MAKE)$$targets"; \
 	  $(MAKE) -j3 $$targets || exit 1; \
 	fi; \
+	if echo "$$scopes" | grep -qE '^(go|packages)$$'; then $(MAKE) check-contract || exit 1; fi; \
 	$(MAKE) check-ci-parity
 
 .PHONY: check
-check: gate-go gate-mobile gate-packages check-ci-parity ## -> Full quality gate: every layer, serial (what CI runs)
+check: gate-go gate-mobile gate-packages check-contract check-ci-parity ## -> Full quality gate: every layer, serial (what CI runs)
 
 .PHONY: check-ci-parity
 check-ci-parity: ## -> Fail if the local gate and the CI workflow have drifted apart

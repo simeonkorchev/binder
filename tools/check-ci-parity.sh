@@ -54,6 +54,7 @@ make lint|lint
 make migrate-test|migrate-test
 make test|test
 make gate-packages|gate-packages
+make check-contract|check-contract
 "
 while read -r cmd; do
   [ -n "$cmd" ] || continue
