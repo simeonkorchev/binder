@@ -5,13 +5,17 @@
 // image object key", so a restarted run re-fetches nothing it already
 // finished, and a card that failed is simply picked up next time.
 //
-//	CARD_IMAGES_BUCKET=binder-card-images \
+// The destination is one URL, and its scheme selects the backend:
+//
+//	CARD_IMAGES_BUCKET_URL=gs://binder-card-images                deployment (D3)
+//	CARD_IMAGES_BUCKET_URL=file:///var/lib/binder/cards?create_dir=true   local
+//
+//	CARD_IMAGES_BUCKET_URL=file:///tmp/cards?create_dir=true \
 //	DATABASE_URL=postgres://... go run ./cmd/cardimages
 package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -28,15 +32,14 @@ import (
 	"github.com/simeonkorchev/binder/pkg/objectstore"
 )
 
-var errStorageTarget = errors.New("set exactly one of CARD_IMAGES_BUCKET (GCS) and CARD_IMAGES_DIR (local directory)")
-
 type config struct {
 	DatabaseURL string `env:"DATABASE_URL,required"`
 
-	// Bucket selects GCS (D3). Dir selects a directory on disk, which is what
-	// makes the command runnable without cloud credentials. Exactly one.
-	Bucket string `env:"CARD_IMAGES_BUCKET"`
-	Dir    string `env:"CARD_IMAGES_DIR"`
+	// BucketURL names the destination; its scheme selects the backend
+	// (gs:// in deployment, file:// locally). Required, because there is no
+	// sensible default: writing 13k images somewhere nobody asked for is
+	// worse than refusing to start.
+	BucketURL string `env:"CARD_IMAGES_BUCKET_URL,required"`
 
 	// BaseURL is where images are fetched from. It is configuration rather
 	// than a constant because the host this points at is unreachable from the
@@ -52,15 +55,6 @@ type config struct {
 	Concurrency int           `env:"CARD_IMAGES_CONCURRENCY" envDefault:"4"`
 	BatchSize   int           `env:"CARD_IMAGES_BATCH_SIZE"  envDefault:"200"`
 	HTTPTimeout time.Duration `env:"CARD_IMAGES_HTTP_TIMEOUT" envDefault:"30s"`
-}
-
-// storageTarget enforces "exactly one destination" at the boundary it enters,
-// rather than letting a run that configured both silently prefer one.
-func (c config) storageTarget() error {
-	if (c.Bucket == "") == (c.Dir == "") {
-		return errStorageTarget
-	}
-	return nil
 }
 
 func main() {
@@ -83,9 +77,6 @@ func run(ctx context.Context) error {
 	cfg, err := env.ParseAs[config]()
 	if err != nil {
 		return fmt.Errorf("reading configuration: %w", err)
-	}
-	if err := cfg.storageTarget(); err != nil {
-		return err
 	}
 
 	db, err := store.Connect(ctx, cfg.DatabaseURL)
@@ -126,24 +117,15 @@ func run(ctx context.Context) error {
 	return err
 }
 
-// openStorage returns the configured destination and the function that
-// releases it, so run() does not branch on which one it got.
-//
-//nolint:ireturn // a factory returning the interface its one consumer (pipeline.Config.Storage) declares.
-func openStorage(ctx context.Context, cfg config) (pipeline.Storage, func(), error) {
-	if cfg.Dir != "" {
-		dir, err := objectstore.NewDir(cfg.Dir)
-		if err != nil {
-			return nil, nil, err
-		}
-		return dir, func() {}, nil
-	}
-
-	gcs, err := objectstore.NewGCS(ctx, cfg.Bucket)
+// openStorage opens the destination the URL names and returns the function
+// that releases it. One code path serves every backend — the scheme is the
+// only thing that differs — so there is nothing here to branch on.
+func openStorage(ctx context.Context, cfg config) (*objectstore.Bucket, func(), error) {
+	bucket, err := objectstore.Open(ctx, cfg.BucketURL)
 	if err != nil {
 		return nil, nil, err
 	}
-	return gcs, func() { closeQuietly(ctx, "gcs client", gcs) }, nil
+	return bucket, func() { closeQuietly(ctx, "object store", bucket) }, nil
 }
 
 // closeQuietly reports a close failure rather than returning it: the work is
