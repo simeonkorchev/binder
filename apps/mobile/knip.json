@@ -2,5 +2,16 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": ["src/**/*.test.{ts,tsx}"],
   "project": ["**/*.{ts,tsx,js,cjs}"],
-  "ignore": ["babel.config.js"]
+  "ignore": ["babel.config.js"],
+  // react-native-worklets-core/plugin (babel.config.js) calls these five Babel
+  // plugins to compile a `'worklet'` function and declares none of them, so
+  // nothing in this repo imports them by name. Dropping one breaks the
+  // scanner's frame processor at build time, not at lint time.
+  "ignoreDependencies": [
+    "@babel/plugin-proposal-nullish-coalescing-operator",
+    "@babel/plugin-proposal-optional-chaining",
+    "@babel/plugin-transform-arrow-functions",
+    "@babel/plugin-transform-shorthand-properties",
+    "@babel/plugin-transform-template-literals"
+  ]
 }

@@ -5,11 +5,12 @@ import type { ConfigContext, ExpoConfig } from 'expo/config'
 // ship, so this app is a **dev build** — `npx expo run:android` / `run:ios`, or
 // EAS. `expo start` without `--dev-client` will not load it.
 //
-// W9 owns the scanner. It adds `react-native-vision-camera` to `plugins` below
-// (its config plugin is what writes NSCameraUsageDescription and the Android
-// CAMERA permission) together with the ML Kit text-recognition frame processor.
-// Nothing here pre-declares those permissions: a permission string the app does
-// not yet use is one the store asks about and nobody can justify.
+// `react-native-vision-camera`'s config plugin (below) is what writes
+// NSCameraUsageDescription and the Android CAMERA permission; the ML Kit
+// text-recognition models are declared by
+// `react-native-vision-camera-text-recognition`'s own AndroidManifest
+// (`com.google.mlkit.vision.DEPENDENCIES`), so it needs no plugin entry.
+// The camera is the only permission the app asks for.
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'Binder',
@@ -39,6 +40,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         // directory — this project stays CNG (no committed native folders).
         android: { minSdkVersion: 26 },
         ios: { deploymentTarget: '16.0' },
+      },
+    ],
+    [
+      'react-native-vision-camera',
+      {
+        // Baked into the native manifests at prebuild, so it is the one
+        // user-facing string the app's `t()` catalogue cannot own. Localising
+        // it means `expo-localization`'s Info.plist strings — a later decision.
+        cameraPermissionText:
+          'Binder uses the camera to read the code printed on your cards.',
+        // The scanner reads text only: no audio, no location, and no QR/barcode
+        // model (~2.4 MB) the app would never call.
+        enableMicrophonePermission: false,
+        enableLocation: false,
+        enableCodeScanner: false,
       },
     ],
   ],

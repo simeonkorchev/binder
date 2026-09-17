@@ -20,9 +20,18 @@
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.4",
     "react": "^19.2.3",
-    "react-native": "^0.86.3"
+    "react-native": "^0.86.3",
+    "react-native-vision-camera": "~4.7.3",
+    "react-native-vision-camera-text-recognition": "~3.0.5",
+    "react-native-worklets-core": "~1.6.3"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.18.6",
+    "@babel/plugin-proposal-optional-chaining": "^7.21.0",
+    "@babel/plugin-transform-arrow-functions": "^7.29.7",
+    "@babel/plugin-transform-shorthand-properties": "^7.29.7",
+    "@babel/plugin-transform-template-literals": "^7.29.7",
+    "@react-native/jest-preset": "^0.86.3",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.2.0",
