@@ -73,9 +73,9 @@ has no i18n, no theme tokens and no navigation, but `003-frontend.md` and
 **both** locales, static styles in `StyleSheet.create` using **theme tokens with
 no hardcoded colours**, and the app has five screens to move between.
 
-- [ ] T036 i18n setup + `locales/{en,bg}.json`, and a test that fails when a key exists in one locale but not the other — a missing translation must break the build, not ship as a key
-- [ ] T037 Theme tokens, light **and** dark, with the `useTheme` seam screens consume. `CLAUDE.md` requires every UI change screenshotted in both themes; tokens are what make that meaningful
-- [ ] T038 Navigation (expo-router or react-navigation — pick one and say why), with the five routes the MVP needs: scan, binder, binder page, market, seller contact
+- [x] T036 i18n setup + `locales/{en,bg}.json`, and a test that fails when a key exists in one locale but not the other — i18next, language from the device preference list; `src/i18n/locales.test.ts` compares the flattened key sets both ways, and `i18next.d.ts` types `t()` against `en.json` so an unknown key does not compile
+- [x] T037 Theme tokens, light **and** dark — `src/theme/`, nine tokens named for the surface they sit on, `useTheme()` following the device appearance. `tokens.test.ts` is the gate: WCAG AA for every text pairing plus a separation floor between adjacent fills, in both palettes
+- [ ] T038 Navigation — **code complete, screenshots not taken.** React Navigation (not expo-router; reasons in `.claude/memory/decisions.md#2026-09-17-navigation-is-react-navigation-not-expo-router`), three tabs (Scan, Binders, Market) and two pushed routes (`BinderPage {binderId}`, `SellerContact {sellerId}`), titles and tab names through `t()`, chrome mapped from the theme tokens. Every route renders `PlaceholderScreen` until its wave lands. Left unticked because `CLAUDE.md` requires both-theme screenshots before a UI change is done and **this container has no emulator** (no `adb`, no Android SDK) — see T072
 
 ### W10 — the binder [US4][US5]
 

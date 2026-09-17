@@ -146,3 +146,25 @@ The return type is the other half of the decision: `model.Contact`, not
 `model.User`. The marketplace can reach a seller's published email and phone
 number and has no way to reach the provider subject or the timestamps.
 Evidence: `internal/user/service/contact.go` · since 2026-09-17 · verified 2026-09-17
+
+### 2026-09-17-navigation-is-react-navigation-not-expo-router
+`apps/mobile` navigates with React Navigation (`@react-navigation/native`,
+`native-stack`, `bottom-tabs`), not expo-router. Three reasons, in order of
+weight: `005-mobile.md` already states the house rule in React Navigation's
+vocabulary (route types in `AppNavigator.tsx` → `RootStackParamList`, a screen
+typed with `NativeStackScreenProps`), so expo-router would have meant rewriting
+a rule rather than following one; the entry point stays
+`registerRootComponent(App)` in `index.ts`, which is what this dev-build app
+(VisionCamera frame processors, `expo-dev-client`) is wired for, instead of
+`expo-router/entry` plus a babel plugin and an `app/` tree; and the MVP has five
+known routes, which a filesystem router's discovery buys nothing for.
+
+Declined, not overlooked: expo-router's deep links and typed routes are the
+reasons to revisit. If the marketplace ever needs a shareable link to a listing,
+React Navigation's `linking` config covers it without moving the tree.
+
+The five routes are three tabs (`Scan`, `Binders`, `Market`) and two routes
+pushed over them (`BinderPage` — `{ binderId }`, `SellerContact` —
+`{ sellerId }`). Neither choice requires Expo Go, which the app cannot use
+anyway.
+Evidence: `apps/mobile/src/navigation/AppNavigator.tsx` (commit 956ef3b) · since 2026-09-17 · verified 2026-09-17

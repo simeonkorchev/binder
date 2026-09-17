@@ -34,8 +34,12 @@ brackets are what a session would search for, the slug is the anchor.
 ## mobile.md — apps/mobile
 
 - [reference] `npx expo install` → "HTTP Proxy Network Error: Forbidden"; pin versions from `bundledNativeModules.json` → mobile.md#expo-install-cannot-resolve-versions-here
-- [reference] "render function has not been called" from RNTL's `screen`; v14 render is async and needs `test-renderer` → mobile.md#rntl-14-render-is-async-and-needs-test-renderer
+- [reference] "render function has not been called" from RNTL's `screen`, "Cannot read properties of undefined (reading 'current')" from `renderHook`; v14 render and renderHook are async and need `test-renderer` → mobile.md#rntl-14-render-is-async-and-needs-test-renderer
 - [reference] knip "Unlisted dependencies: expo-updates / expo-system-ui" comes from `app.config.ts` → mobile.md#knip-infers-expo-dependencies-from-app-config
+- [reference] a rendered tree that is only `<RNCSafeAreaProvider />`; `getByRole('header')` finds nothing under a navigator; how to assert which tab is open → mobile.md#rendering-anything-under-the-navigator-in-jest
+- [reference] "React Hook \"use\" cannot be called at the top level" from `i18next`; `import/no-named-as-default-member` on `i18n.use` → mobile.md#i18next-use-collides-with-react-19-use
+- [reference] knip "Unused exported types" for a type only its own file imports → mobile.md#knip-reports-an-exported-type-no-other-file-imports
+- [project] where the navigator, the locales and the theme tokens live; route names and params; why the param list is a type alias → mobile.md#where-the-app-shell-lives
 
 ## decisions.md — binding
 
@@ -50,6 +54,7 @@ brackets are what a session would search for, the slug is the anchor.
 - [project] `PUT` not `PATCH` on the contact; how an account opts back out → decisions.md#2026-09-17-contact-details-are-replaced-not-patched
 - [project] where Apple/Google issuers and client ids live; why `Issuers` is plural → decisions.md#2026-09-17-provider-facts-live-in-user-identity-not-in-pkg-oidc
 - [project] why `SellerContact` returns a `dataerror` rather than its own sentinel → decisions.md#2026-09-17-sellercontact-keeps-the-stores-missingentityerror
+- [project] expo-router vs react-navigation, and the five routes the MVP has → decisions.md#2026-09-17-navigation-is-react-navigation-not-expo-router
 
 ## deploy.md — infrastructure and CI
 
