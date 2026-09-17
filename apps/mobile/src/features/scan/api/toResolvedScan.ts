@@ -15,6 +15,7 @@ import type { ResolvedScan, ScanMatchBody } from '../types'
 export const toResolvedScan = (code: string, match: ScanMatchBody): ResolvedScan => ({
   code,
   resolution: match.resolution,
+  outcome: match.outcome,
   card: match.card,
   printing: match.printing,
   candidates: match.candidates,

@@ -39,22 +39,27 @@ export interface FlaggedScan {
 /**
  * Reads one answer's flag, or null when the ladder settled it.
  *
- * **The resolution field cannot be this discriminator**, and that is the trap
- * worth stating: `internal/card/service/match.go` returns `unresolved` for two
- * completely different outcomes — a rung that matched *several* printings
- * (candidates, and the card too when they are all printings of one card) and a
- * ladder that matched *nothing at all*. The user's next move differs entirely
- * between them: one is a choice, the other is a search. What separates them is
- * `candidates`, so that is what is read first.
+ * `outcome` is the discriminator, and `resolution` deliberately is not:
+ * `internal/card/service/match.go` answers `unresolved` both when several rows
+ * matched and when none did, which are opposite situations for the user — one
+ * is a choice, the other is a search. The API carries `outcome` to say which,
+ * and its own description says to read it rather than `resolution`.
  *
- * After that it is the shape, not the rung: no card is unresolved, and a card
- * with no printing is the `by_name` case.
+ * This used to infer the same thing from the response's shape. That worked,
+ * but it meant the rule lived in two places and only one of them was the
+ * contract.
  */
 const flagReason = (scan: ResolvedScan): FlagReason | null => {
-  if (scan.candidates.length > 0) return 'ambiguous'
-  if (scan.card === null) return 'unresolved'
-  if (scan.printing === null) return 'no_set'
-  return null
+  switch (scan.outcome) {
+    case 'resolved':
+      return null
+    case 'ambiguous':
+      return 'ambiguous'
+    case 'card_only':
+      return 'no_set'
+    case 'no_match':
+      return 'unresolved'
+  }
 }
 
 /**

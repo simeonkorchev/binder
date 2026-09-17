@@ -16,6 +16,7 @@ const printing = (id: string, cardId: string): ScannedPrinting => ({
 const byName = (code: string): ResolvedScan => ({
   code,
   resolution: 'by_name',
+  outcome: 'card_only',
   card: card('blue-eyes'),
   printing: null,
   candidates: [],
@@ -25,6 +26,7 @@ const byName = (code: string): ResolvedScan => ({
 const nothing = (code: string): ResolvedScan => ({
   code,
   resolution: 'unresolved',
+  outcome: 'no_match',
   card: null,
   printing: null,
   candidates: [],
@@ -34,6 +36,7 @@ const nothing = (code: string): ResolvedScan => ({
 const settled = (code: string): ResolvedScan => ({
   code,
   resolution: 'exact',
+  outcome: 'resolved',
   card: card('dark-magician'),
   printing: printing('lob-005', 'dark-magician'),
   candidates: [],

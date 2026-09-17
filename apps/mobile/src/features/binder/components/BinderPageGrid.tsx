@@ -1,14 +1,10 @@
 import { useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import {
   StyleSheet,
-  Text,
   View,
   type GestureResponderEvent,
   type LayoutChangeEvent,
 } from 'react-native'
-
-import { useTheme } from '@/theme/useTheme'
 
 import {
   columns,
@@ -21,6 +17,7 @@ import { addablePocket, pocketsPerPage, type PageShape } from '../lib/positions'
 import type { SlotBody } from '../types'
 
 import { BinderPocket } from './BinderPocket'
+import { PageEdgeStrip } from './PageEdgeStrip'
 
 /**
  * How long a finger has to rest on a card before moving it picks the card up.
@@ -224,7 +221,7 @@ export const BinderPageGrid = ({
 
   return (
     <View style={styles.stage}>
-      <EdgeStrip labelKey="binder.page.previous" isActive={drag?.edge === 'previous'} />
+      <PageEdgeStrip labelKey="binder.page.previous" isActive={drag?.edge === 'previous'} />
 
       <View
         ref={gridRef}
@@ -287,33 +284,7 @@ export const BinderPageGrid = ({
         ) : null}
       </View>
 
-      <EdgeStrip labelKey="binder.page.next" isActive={drag?.edge === 'next'} />
-    </View>
-  )
-}
-
-interface EdgeStripProps {
-  labelKey: 'binder.page.previous' | 'binder.page.next'
-  /** True while a dragged card is over the strip, so the drop reads as armed. */
-  isActive: boolean
-}
-
-/** The page boundary, made droppable: the only way a drag reaches a page the grid is not showing. */
-const EdgeStrip = ({ labelKey, isActive }: EdgeStripProps): React.JSX.Element => {
-  const { t } = useTranslation()
-  const { colors } = useTheme()
-
-  return (
-    <View
-      style={[styles.strip, { backgroundColor: isActive ? colors.accent : colors.surfaceMuted }]}
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-    >
-      {isActive ? (
-        <Text style={[styles.stripLabel, { color: colors.onAccent }]} numberOfLines={3}>
-          {t(labelKey)}
-        </Text>
-      ) : null}
+      <PageEdgeStrip labelKey="binder.page.next" isActive={drag?.edge === 'next'} />
     </View>
   )
 }
@@ -323,6 +294,4 @@ const styles = StyleSheet.create({
   grid: { flex: 1 },
   row: { flex: 1, flexDirection: 'row' },
   stage: { flex: 1, flexDirection: 'row' },
-  strip: { borderRadius: 6, justifyContent: 'center', marginVertical: 5, paddingHorizontal: 2, width: 24 },
-  stripLabel: { fontSize: 9, fontWeight: '700', textAlign: 'center' },
 })

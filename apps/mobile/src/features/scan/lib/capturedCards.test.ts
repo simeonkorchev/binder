@@ -6,6 +6,7 @@ import { capturedCards, type CapturedCard } from './capturedCards'
 const resolvedScan = (code: string, name: string): ResolvedScan => ({
   code,
   resolution: 'exact',
+  outcome: 'resolved',
   card: { id: `card-${code}`, name, imageObjectKey: `art/${code}.jpg` },
   printing: { id: `printing-${code}`, cardId: `card-${code}`, setCode: 'LOB', rarity: 'Ultra Rare' },
   candidates: [],
@@ -14,6 +15,7 @@ const resolvedScan = (code: string, name: string): ResolvedScan => ({
 const unmatchedScan = (code: string): ResolvedScan => ({
   code,
   resolution: 'unresolved',
+  outcome: 'no_match',
   card: null,
   printing: null,
   candidates: [],

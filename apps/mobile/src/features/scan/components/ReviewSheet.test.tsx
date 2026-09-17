@@ -19,6 +19,7 @@ const darkMagician = card('dark-magician', 'Dark Magician')
 const byName = (code: string): ResolvedScan => ({
   code,
   resolution: 'by_name',
+  outcome: 'card_only',
   card: blueEyes,
   printing: null,
   candidates: [],
@@ -28,6 +29,7 @@ const byName = (code: string): ResolvedScan => ({
 const ambiguous = (code: string): ResolvedScan => ({
   code,
   resolution: 'unresolved',
+  outcome: 'ambiguous',
   card: blueEyes,
   printing: null,
   candidates: [
@@ -46,6 +48,7 @@ const ambiguous = (code: string): ResolvedScan => ({
 const nothing = (code: string): ResolvedScan => ({
   code,
   resolution: 'unresolved',
+  outcome: 'no_match',
   card: null,
   printing: null,
   candidates: [],

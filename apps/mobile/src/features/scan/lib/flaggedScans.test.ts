@@ -19,6 +19,7 @@ const printing = (id: string, cardId: string): ScannedPrinting => ({
 const settled = (code: string): ResolvedScan => ({
   code,
   resolution: 'exact',
+  outcome: 'resolved',
   card: card('blue-eyes'),
   printing: printing('lob-001', 'blue-eyes'),
   candidates: [],
@@ -28,6 +29,7 @@ const settled = (code: string): ResolvedScan => ({
 const byName = (code: string): ResolvedScan => ({
   code,
   resolution: 'by_name',
+  outcome: 'card_only',
   card: card('blue-eyes'),
   printing: null,
   candidates: [],
@@ -37,6 +39,7 @@ const byName = (code: string): ResolvedScan => ({
 const ambiguousPrintings = (code: string): ResolvedScan => ({
   code,
   resolution: 'unresolved',
+  outcome: 'ambiguous',
   card: card('blue-eyes'),
   printing: null,
   candidates: [
@@ -49,6 +52,7 @@ const ambiguousPrintings = (code: string): ResolvedScan => ({
 const ambiguousCards = (code: string): ResolvedScan => ({
   code,
   resolution: 'unresolved',
+  outcome: 'ambiguous',
   card: null,
   printing: null,
   candidates: [
@@ -61,6 +65,7 @@ const ambiguousCards = (code: string): ResolvedScan => ({
 const nothing = (code: string): ResolvedScan => ({
   code,
   resolution: 'unresolved',
+  outcome: 'no_match',
   card: null,
   printing: null,
   candidates: [],

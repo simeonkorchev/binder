@@ -32,6 +32,7 @@ const candidatePrinting = {
 const fullMatch: ScanMatchBody = {
   $schema: 'https://api.binder.test/schemas/ScanMatch.json',
   resolution: 'by_prefix_and_number',
+  outcome: 'ambiguous',
   card,
   printing,
   candidates: [{ card: candidateCard, printing: candidatePrinting }],
@@ -42,6 +43,7 @@ describe('toResolvedScan', () => {
     expect(toResolvedScan('LOB-EN001', fullMatch)).toEqual({
       code: 'LOB-EN001',
       resolution: 'by_prefix_and_number',
+      outcome: 'ambiguous',
       card,
       printing,
       candidates: [{ card: candidateCard, printing: candidatePrinting }],
@@ -51,6 +53,7 @@ describe('toResolvedScan', () => {
   it('keeps the code the camera read even when the ladder resolved nothing', () => {
     const unresolved: ScanMatchBody = {
       resolution: 'unresolved',
+      outcome: 'no_match',
       card: null,
       printing: null,
       candidates: [],
@@ -59,6 +62,7 @@ describe('toResolvedScan', () => {
     expect(toResolvedScan('SDK-001', unresolved)).toEqual({
       code: 'SDK-001',
       resolution: 'unresolved',
+      outcome: 'no_match',
       card: null,
       printing: null,
       candidates: [],
@@ -68,6 +72,7 @@ describe('toResolvedScan', () => {
   it('carries a candidate the name rung produced, which names a card and no set', () => {
     const byName: ScanMatchBody = {
       resolution: 'by_name',
+      outcome: 'ambiguous',
       card,
       printing: null,
       candidates: [{ card: candidateCard, printing: null }],

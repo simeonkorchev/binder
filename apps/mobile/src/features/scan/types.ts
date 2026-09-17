@@ -25,6 +25,14 @@ export type ScannedPrinting = components['schemas']['ScanPrinting']
 type SetResolution = components['schemas']['ScanMatch']['resolution']
 
 /**
+ * What happened to the scan, and so what the user must do next. This is the
+ * discriminator, not `resolution`: the ladder answers `unresolved` both when
+ * several rows matched and when none did, which are opposite situations — a
+ * choice and a search. The API's own description says to read this instead.
+ */
+type ScanOutcome = components['schemas']['ScanMatch']['outcome']
+
+/**
  * A card the ladder could not rule out. `printing` is null for a candidate the
  * name rung produced, which names a card and no set — and the generated type
  * says so.
@@ -42,6 +50,8 @@ export interface ResolvedScan {
   /** The printed code the scanner read, as it was sent to the resolver. */
   code: string
   resolution: SetResolution
+  /** Read this, not `resolution`, to decide what to show. */
+  outcome: ScanOutcome
   card: ScannedCard | null
   printing: ScannedPrinting | null
   /** Always a list: an unambiguous match carries an empty one, never null. */

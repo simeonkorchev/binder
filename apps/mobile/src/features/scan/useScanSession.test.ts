@@ -36,6 +36,7 @@ const mockFetch: jest.MockedFunction<typeof fetch> = jest.fn()
 
 const matchFor = (code: string): ScanMatchBody => ({
   resolution: 'exact',
+  outcome: 'resolved',
   card: { id: `card-${code}`, name: `Card ${code}`, imageObjectKey: null },
   printing: { id: `printing-${code}`, cardId: `card-${code}`, setCode: 'LOB', rarity: 'Common' },
   candidates: [],

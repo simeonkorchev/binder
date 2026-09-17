@@ -47,7 +47,11 @@ const BinderPageScreen = ({ route }: BinderPageScreenProps): React.JSX.Element =
   }
   if (read.state.status === 'error') {
     return (
-      <Notice text={t('binder.page.loadError')} tone="error" onRetry={read.reload} retryLabel={t('binder.page.retry')} />
+      <Notice
+        text={t('binder.page.loadError')}
+        tone="error"
+        retry={{ label: t('binder.page.retry'), onPress: read.reload }}
+      />
     )
   }
 
@@ -59,6 +63,8 @@ const BinderPageScreen = ({ route }: BinderPageScreenProps): React.JSX.Element =
     if (next === page) read.reload()
     else setPage(next)
   }
+
+  const turnPage = (step: -1 | 1): void => setPage(clampPage(page + step, pageCount))
 
   const move = async (slot: SlotBody, toPosition: number): Promise<void> => {
     setOpenSlot(null)
@@ -93,7 +99,7 @@ const BinderPageScreen = ({ route }: BinderPageScreenProps): React.JSX.Element =
         onOpenCard={setOpenSlot}
         onAddCard={() => setIsAdding(true)}
         onMove={(slot, toPosition) => void move(slot, toPosition)}
-        onTurnPage={(step) => setPage(clampPage(page + step, pageCount))}
+        onTurnPage={turnPage}
       />
 
       <Text style={[styles.hint, { color: colors.textSecondary }]}>{t('binder.page.dragHint')}</Text>
@@ -115,11 +121,7 @@ const BinderPageScreen = ({ route }: BinderPageScreenProps): React.JSX.Element =
         </Pressable>
       )}
 
-      <PageIndicator
-        page={page}
-        pageCount={pagerLength(pageCount)}
-        onTurnPage={(step) => setPage(clampPage(page + step, pageCount))}
-      />
+      <PageIndicator page={page} pageCount={pagerLength(pageCount)} onTurnPage={turnPage} />
 
       {openSlot === null ? null : (
         <PocketActions
@@ -143,12 +145,12 @@ export default BinderPageScreen
 interface NoticeProps {
   text: string
   tone: 'muted' | 'error'
-  retryLabel?: string
-  onRetry?: () => void
+  /** Absent while loading: there is nothing to try again yet. */
+  retry?: { label: string; onPress: () => void }
 }
 
 /** The screen before there is a page to draw: still loading, or unable to. */
-const Notice = ({ text, tone, retryLabel, onRetry }: NoticeProps): React.JSX.Element => {
+const Notice = ({ text, tone, retry }: NoticeProps): React.JSX.Element => {
   const { colors } = useTheme()
 
   return (
@@ -156,14 +158,14 @@ const Notice = ({ text, tone, retryLabel, onRetry }: NoticeProps): React.JSX.Ele
       <Text style={[styles.noticeText, { color: tone === 'error' ? colors.error : colors.textSecondary }]}>
         {text}
       </Text>
-      {onRetry === undefined || retryLabel === undefined ? null : (
+      {retry === undefined ? null : (
         <Pressable
-          onPress={onRetry}
+          onPress={retry.onPress}
           accessibilityRole="button"
-          accessibilityLabel={retryLabel}
+          accessibilityLabel={retry.label}
           style={[styles.retry, { borderColor: colors.accent }]}
         >
-          <Text style={[styles.retryLabel, { color: colors.accent }]}>{retryLabel}</Text>
+          <Text style={[styles.retryLabel, { color: colors.accent }]}>{retry.label}</Text>
         </Pressable>
       )}
     </View>

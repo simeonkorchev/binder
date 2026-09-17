@@ -17,6 +17,7 @@ const codeOf = (init: RequestInit | undefined): string => {
 
 const matchFor = (code: string): ScanMatchBody => ({
   resolution: 'exact',
+  outcome: 'resolved',
   card: { id: `card-${code}`, name: `Card ${code}`, imageObjectKey: null },
   printing: { id: `printing-${code}`, cardId: `card-${code}`, setCode: code, rarity: 'Common' },
   candidates: [],
