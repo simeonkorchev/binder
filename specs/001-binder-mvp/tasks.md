@@ -23,7 +23,7 @@ until the gate exists, so this is one agent, alone.
 
 - [x] T010 **W1** Migrations 001–004 per `plan.md` — `db/migrations/`
 - [x] T011 **W1** Store integration test harness on real Postgres — `internal/testdb/`
-- [ ] T012 [P] **W7** Auth: sign-in, session JWT, middleware — `internal/user/**`
+- [x] T012 [P] **W7** Auth: sign-in, session JWT, middleware — `internal/user/**`. Provider tokens verified against the provider's JWKS in `pkg/oidc` (fetching behind an interface, TTL cache, refetch on an unknown key id); session JWT in `internal/user/session` with the secret validated at startup and **no fallback**; `api.Middleware` + `api.ActorFromContext` is the `ActorFunc` the binder and listing domains take. **No live Apple or Google sign-in has been performed** — `appleid.apple.com/auth/keys` is 403 at this environment's proxy; Google's JWKS endpoint was fetched and parsed successfully with the real `HTTPFetcher`
 
 ## Wave 2 — ingestion and core domains (all parallel)
 

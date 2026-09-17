@@ -107,7 +107,7 @@ var _ = Describe("Tokens", func() {
 			BeforeEach(func() {
 				issued, issueErr := tokens.Issue(userID)
 				Expect(issueErr).NotTo(HaveOccurred())
-				rawToken = issued.Value[:len(issued.Value)-1] + "A"
+				rawToken = tamperSignature(issued.Value)
 			})
 
 			It("rejects it", func() {
@@ -275,4 +275,24 @@ func signWith(secret string, claims jwt.Claims) string {
 	raw, err := jwt.Signed(signer).Claims(claims).Serialize()
 	Expect(err).NotTo(HaveOccurred())
 	return raw
+}
+
+// tamperSignature changes one byte of a token's signature, leaving its header and
+// payload alone.
+//
+// It replaces the last character with a *different* one rather than with a fixed
+// one: appending a constant "A" is a no-op on the runs where the signature
+// already ends in "A", which made this spec pass by luck about 1.5% of the time
+// and fail the gate the rest.
+func tamperSignature(token string) string {
+	Expect(token).NotTo(BeEmpty())
+
+	flipped := []byte(token)
+	last := len(flipped) - 1
+	if flipped[last] == 'A' {
+		flipped[last] = 'B'
+	} else {
+		flipped[last] = 'A'
+	}
+	return string(flipped)
 }
