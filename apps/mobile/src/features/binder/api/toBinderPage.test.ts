@@ -1,4 +1,4 @@
-import type { PageBody, SlotBody } from '../types'
+import type { SlotBody } from '../types'
 
 import { toBinderPage } from './toBinderPage'
 
