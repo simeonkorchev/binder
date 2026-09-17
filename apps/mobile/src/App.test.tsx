@@ -33,13 +33,13 @@ describe('App', () => {
     }
   })
 
-  it('says a screen is unbuilt rather than rendering a blank page', async () => {
+  it('opens the market tab on what is for sale, not on a placeholder', async () => {
     const user = userEvent.setup()
     await render(<App />)
 
     await user.press(screen.getByRole('button', { name: MARKET_TAB }))
 
-    expect(await screen.findByText('This screen is not built yet.')).toBeOnTheScreen()
+    expect(await screen.findByRole('button', { name: 'Search' })).toBeOnTheScreen()
   })
 
   it('opens the binders tab on the collector\'s binders, not on a placeholder', async () => {

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import BinderPageScreen from '@/features/binder/BinderPageScreen'
 import BindersScreen from '@/features/binder/BindersScreen'
+import MarketScreen from '@/features/market/MarketScreen'
 import ScanScreen from '@/features/scan/ScanScreen'
 import { useTheme } from '@/theme/useTheme'
 
@@ -58,7 +59,7 @@ const TabsNavigator = (): React.JSX.Element => {
       />
       <Tab.Screen
         name="Market"
-        component={PlaceholderScreen}
+        component={MarketScreen}
         options={{ title: t('nav.market') }}
       />
     </Tab.Navigator>
