@@ -37,5 +37,68 @@
       "message": "The resolver could not be reached. Your cards are safe and waiting.",
       "retry": "Try again"
     }
+  },
+  "binder": {
+    "list": {
+      "empty": "No binders yet. Create one and the cards you scan have somewhere to live.",
+      "create": "New binder",
+      "createTitle": "Name the binder",
+      "nameLabel": "Binder name",
+      "namePlaceholder": "Blue-Eyes, trades, duplicates…",
+      "save": "Create binder",
+      "cancel": "Cancel",
+      "loadError": "Your binders could not be loaded.",
+      "createError": "The binder could not be created.",
+      "retry": "Try again",
+      "openLabel": "Open the binder {{name}}"
+    },
+    "page": {
+      "indicator": "Page {{page}} of {{pageCount}}",
+      "previous": "Previous page",
+      "next": "Next page",
+      "emptyBinder": "This binder is empty. Add a card and it lands in the first pocket.",
+      "loadError": "This page could not be loaded.",
+      "retry": "Try again",
+      "dragHint": "Hold a card and drag it to another pocket, or onto the strip at either edge to send it to the next page. Tapping a card offers the same moves as buttons.",
+      "saving": "Saving…",
+      "moveError": "The card could not be moved.",
+      "removeError": "The card could not be removed.",
+      "addError": "The card could not be added."
+    },
+    "pocket": {
+      "empty": "Empty",
+      "emptyLabel": "Pocket {{pocket}}, empty",
+      "cardLabel": "Pocket {{pocket}}, card, {{resolution}}",
+      "add": "Add a card",
+      "addLabel": "Pocket {{pocket}}, empty. Add a card here."
+    },
+    "resolution": {
+      "exact": "Set confirmed",
+      "byPrefixAndNumber": "Set from the printed code",
+      "byNumber": "Set from the card number",
+      "byName": "No set — matched by name",
+      "unresolved": "No set — never matched"
+    },
+    "actions": {
+      "title": "Move or remove this card",
+      "pocketBack": "One pocket back",
+      "pocketForward": "One pocket forward",
+      "previousPage": "To the previous page",
+      "nextPage": "To the next page",
+      "remove": "Remove from the binder",
+      "close": "Close"
+    },
+    "add": {
+      "title": "Add a card",
+      "searchLabel": "Search the card database by name",
+      "searchPlaceholder": "Card name",
+      "prompt": "Type part of a card name to search.",
+      "empty": "No card matches that name.",
+      "error": "The card search failed.",
+      "retry": "Try again",
+      "note": "A card added by name is filed with no set. Scanning it records the set it was printed in.",
+      "close": "Close",
+      "addLabel": "Add {{name}} to the binder"
+    }
   }
 }
