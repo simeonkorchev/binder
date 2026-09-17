@@ -105,8 +105,8 @@ the MVP and a running app.
 
 ## Wave 5 — done means done
 
-- [ ] T070 Quality gate — `make check`
-- [ ] T071 Quality gate — `cd apps/mobile && npm run lint && npm run typecheck && npm run test:run && npm run knip`
+- [x] T070 Quality gate — `make check` — **green**: 0 lint issues, composite coverage 87.4%, every Ginkgo suite under `-race`, `check-contract` regenerates with no diff, `check-ci-parity` green. Working tree clean afterwards
+- [x] T071 Quality gate — `cd apps/mobile && npm run lint && npm run typecheck && npm run test:run && npm run knip` — **all four green**: 466 tests across 47 suites, zero act warnings
 - [ ] T072 UI screenshots of every new screen in BOTH themes (`CLAUDE.md` requires this before any UI change is done) — **still blocked in this container**: no emulator, no `adb`, no Android SDK, and the scanner is a dev build, so neither Expo Go nor a web preview can render it. Blocks ticking T038, T040, T041, T046 and T047, and the sign-in screen from T083 is outstanding for the same reason
 - [ ] T073 Clean-code checklist — `.claude/rules/007-clean-code-checklist.md` walked over every touched file
 
