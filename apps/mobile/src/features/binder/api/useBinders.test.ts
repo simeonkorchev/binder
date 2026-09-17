@@ -36,7 +36,9 @@ describe('useBinders', () => {
     await waitFor(() => {
       expect(result.current.state).toEqual({ status: 'ready', binders: [binder()] })
     })
-    expect(mockFetch).toHaveBeenCalledWith('https://api.binder.test/binders')
+    expect(mockFetch).toHaveBeenCalledWith('https://api.binder.test/binders', {
+      headers: {},
+    })
   })
 
   it('reads a collector with no binders as an empty list', async () => {

@@ -32,7 +32,9 @@ describe('useSellerContact', () => {
   it('asks the seller the buyer picked, id and all', async () => {
     await renderContact('seller-7')
 
-    expect(mockFetch).toHaveBeenCalledWith('https://api.binder.test/sellers/seller-7/contact')
+    expect(mockFetch).toHaveBeenCalledWith('https://api.binder.test/sellers/seller-7/contact', {
+      headers: {},
+    })
   })
 
   it('reveals what the seller opted into sharing', async () => {

@@ -1,4 +1,5 @@
 import { apiUrl } from './apiUrl'
+import { bearerToken, forgetSession } from './sessionStore'
 
 /**
  * The three shapes of request this API answers with: a body, a body from a
@@ -9,26 +10,29 @@ import { apiUrl } from './apiUrl'
  * none of them launders a failure into an empty binder or an empty market
  * (003-frontend.md §11).
  *
- * It lives in `lib/` rather than under one feature because two features now
- * call it: the binder's slots and the marketplace's listings speak the same
- * HTTP, and a second copy of it is a second place a header can be wrong
- * (000-principles.md §6).
+ * It lives in `lib/` rather than under one feature because every feature calls
+ * it: the scanner's queue, the binder's slots, the marketplace's listings and
+ * the sign-in exchange speak the same HTTP, and a second copy of it is a second
+ * place a header can be wrong (000-principles.md §6).
  *
- * **No `Authorization` header.** Every endpoint but the browse feed takes an
- * actor and answers 401 without one, and this app has no sign-in: the spec's
- * mobile wave has no task for it (`specs/001-binder-mvp/tasks.md`, Wave 4).
- * These requests are correct apart from the credential, and the screens show
- * the error state until a session exists to attach. Adding a token store here
- * would be guessing at the shape of a wave that has not been designed.
+ * **The bearer token is attached here and nowhere else.** No hook passes one in
+ * and no component holds one: they all go through these three functions, which
+ * read the session from `sessionStore`. Signed out the header is simply absent,
+ * which is a correct request for the one public endpoint — `GET /listings`, the
+ * browse feed — and a 401 from every other one.
  */
 
 /**
  * A request that came back with a status the caller did not want.
  *
  * It carries the status because some of them mean something specific to one
- * caller: `POST /listings` answers 409 when the card is already for sale, which
- * the sheet says as a sentence rather than as a generic failure. Reading that
- * off the message text would be parsing English.
+ * caller: `POST /listings` answers 409 when the card is already for sale, and a
+ * 401 means the session is gone rather than the request being wrong. The screens
+ * say those as different sentences, and reading them off the message text would
+ * be parsing English.
+ *
+ * The message names the method, the path and the status — never a token, a body,
+ * or anything else the request carried (004-security.md).
  */
 export class ApiError extends Error {
   readonly status: number
@@ -41,8 +45,8 @@ export class ApiError extends Error {
 }
 
 export const readJson = async <T>(path: string): Promise<T> => {
-  const response = await fetch(apiUrl(path))
-  if (!response.ok) throw new ApiError('GET', path, response.status)
+  const response = await fetch(apiUrl(path), { headers: headers(false) })
+  if (!response.ok) await refuse('GET', path, response)
 
   const body: T = await response.json()
   return body
@@ -55,10 +59,10 @@ export const writeJson = async <T>(
 ): Promise<T> => {
   const response = await fetch(apiUrl(path), {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: headers(true),
     body: JSON.stringify(body),
   })
-  if (!response.ok) throw new ApiError(method, path, response.status)
+  if (!response.ok) await refuse(method, path, response)
 
   const answered: T = await response.json()
   return answered
@@ -71,8 +75,37 @@ export const writeEmpty = async (
 ): Promise<void> => {
   const response = await fetch(apiUrl(path), {
     method,
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    headers: headers(body !== undefined),
     body: body === undefined ? undefined : JSON.stringify(body),
   })
-  if (!response.ok) throw new ApiError(method, path, response.status)
+  if (!response.ok) await refuse(method, path, response)
+}
+
+/** The credential when there is one, and a content type when there is a body. */
+const headers = (hasBody: boolean): Record<string, string> => {
+  const token = bearerToken()
+
+  return {
+    ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+    // Absent rather than empty: `Bearer ` with nothing after it is a malformed
+    // credential, and the one endpoint that needs none would start refusing it.
+    ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
+  }
+}
+
+/**
+ * Turns a refused response into the error the caller sees, and takes the session
+ * away first when the server says the credential is no good.
+ *
+ * A 401 is the only status this helper acts on. The session JWT lasts 24 hours
+ * and cannot be refreshed, so a token the server has stopped accepting has to
+ * go: keeping it would put a dead credential on every later request, and each
+ * screen would show its own "could not be loaded" for what is really "sign in
+ * again". Dropping it publishes `signed-out`, and the navigator renders the
+ * sign-in screen from that state — no screen has to navigate anywhere (T082).
+ */
+const refuse = async (method: string, path: string, response: Response): Promise<never> => {
+  if (response.status === 401) await forgetSession()
+
+  throw new ApiError(method, path, response.status)
 }

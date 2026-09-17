@@ -38,7 +38,9 @@ describe('useBinderPage', () => {
         page: { page: 2, pageCount: 5, pockets: Array.from({ length: 9 }, () => null) },
       })
     })
-    expect(mockFetch).toHaveBeenCalledWith('https://api.binder.test/binders/binder-1?page=2')
+    expect(mockFetch).toHaveBeenCalledWith('https://api.binder.test/binders/binder-1?page=2', {
+      headers: {},
+    })
   })
 
   it('reads a binder with no cards as an empty page, not as a failure', async () => {
@@ -103,7 +105,10 @@ describe('useBinderPage', () => {
     })
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenLastCalledWith('https://api.binder.test/binders/binder-1?page=1')
+      expect(mockFetch).toHaveBeenLastCalledWith(
+        'https://api.binder.test/binders/binder-1?page=1',
+        { headers: {} },
+      )
     })
   })
 })
