@@ -82,9 +82,13 @@ linters:
       #
       # Deliberately NOT listed: model.AddSlotInput and model.MoveSlotInput
       # (a slot's printing and position are genuinely optional per request, so
-      # guarding them produces explicit-zero noise that hides the real signal)
-      # and model.Page (built in one place, from three values that are all
-      # always present).
+      # guarding them produces explicit-zero noise that hides the real signal),
+      # model.Page (built in one place, from three values that are all always
+      # present), listing/model.ListingSearch (every filter is optional by
+      # definition) and listing/model.SellerContact (two opt-in fields, both
+      # legitimately absent, and nothing in internal/listing constructs one —
+      # an include entry that guards no construction reads as coverage that
+      # does not exist).
       include:
         - 'github\.com/simeonkorchev/binder/internal/card/model\.Card$'
         - 'github\.com/simeonkorchev/binder/internal/card/model\.CardPrinting$'
@@ -94,6 +98,8 @@ linters:
         - 'github\.com/simeonkorchev/binder/internal/card/model\.Candidate$'
         - 'github\.com/simeonkorchev/binder/internal/binder/model\.Binder$'
         - 'github\.com/simeonkorchev/binder/internal/binder/model\.Slot$'
+        - 'github\.com/simeonkorchev/binder/internal/listing/model\.Listing$'
+        - 'github\.com/simeonkorchev/binder/internal/listing/model\.ListedCard$'
     lll:
       # 002-go-conventions.md section 1.1: long signatures break one parameter
       # per line rather than carrying a suppression.
