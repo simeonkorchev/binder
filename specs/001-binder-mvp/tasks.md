@@ -21,7 +21,7 @@ until the gate exists, so this is one agent, alone.
 
 ## Wave 1 — data and identity
 
-- [ ] T010 **W1** Migrations 001–004 per `plan.md` — `db/migrations/`
+- [x] T010 **W1** Migrations 001–004 per `plan.md` — `db/migrations/`
 - [x] T011 **W1** Store integration test harness on real Postgres — `internal/testdb/`
 - [ ] T012 [P] **W7** Auth: sign-in, session JWT, middleware — `internal/user/**`
 
