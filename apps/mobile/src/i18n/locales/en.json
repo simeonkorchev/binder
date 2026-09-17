@@ -36,6 +36,43 @@
     "offline": {
       "message": "The resolver could not be reached. Your cards are safe and waiting.",
       "retry": "Try again"
+    },
+    "review": {
+      "open": "Review",
+      "openAccessible": "Review flagged cards: {{flagged}} still to check",
+      "title": "Cards to check",
+      "subtitle": "The scanner could not settle these. Fix them while the cards are still in front of you.",
+      "done": "Done",
+      "empty": "Nothing to check. Every card this sweep captured was matched to a set.",
+      "copies": "{{copies}} copies captured",
+      "codeAccessible": "Scanned code {{code}}",
+      "reason": {
+        "refused": "The server would not accept this read, so no card was looked up.",
+        "unresolved": "No card matched this code.",
+        "ambiguous": "More than one card matches. Pick the one you are holding.",
+        "no_set": "Found the card, but not which set it is from."
+      },
+      "keep": "Keep {{name}}, set unknown",
+      "choose": "{{name}} \u2014 {{set}}",
+      "chooseNoSet": "{{name}} \u2014 set unknown",
+      "search": "Search by name",
+      "discard": "Leave this card out",
+      "kept": "Keeping {{name}}, set unknown",
+      "keptWithSet": "Keeping {{name}} from {{set}}",
+      "discarded": "Left out of the binder",
+      "change": "Change",
+      "changeAccessible": "Change what happens to {{code}}"
+    },
+    "search": {
+      "title": "Find the card by name",
+      "label": "Card name",
+      "placeholder": "Blue-Eyes White Dragon",
+      "submit": "Search",
+      "searching": "Searching\u2026",
+      "prompt": "Type part of the card's name and search.",
+      "empty": "No card by that name. Try a shorter part of it.",
+      "failed": "The card search could not be reached. Try again.",
+      "back": "Back to the flagged cards"
     }
   },
   "binder": {
