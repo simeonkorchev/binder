@@ -55,6 +55,25 @@ var errNoMigrations = errors.New("migrations not found")
 func New(t *testing.T) *sqlx.DB {
 	t.Helper()
 
+	db, err := sqlx.Connect(driverName, NewURL(t))
+	if err != nil {
+		t.Fatalf("connecting to the test database: %v", err)
+	}
+	t.Cleanup(func() { _ = db.Close() })
+
+	return db
+}
+
+// NewURL provisions an isolated, fully-migrated test database and returns the
+// URL that reaches it. It registers cleanup on t. Skips the test if no database
+// is reachable.
+//
+// It exists for the spec that starts the real server binary: that process opens
+// its own pool from DATABASE_URL, so what it needs handing to it is an address,
+// not an *sqlx.DB. Every other suite wants the connection and calls New.
+func NewURL(t *testing.T) string {
+	t.Helper()
+
 	adminURL := os.Getenv(databaseURLEnv)
 	if adminURL == "" {
 		t.Skipf("%s is unset: run `eval \"$(tools/test-db-local.sh)\"`, or `make test` which does it", databaseURLEnv)
@@ -80,13 +99,7 @@ func New(t *testing.T) *sqlx.DB {
 	if err != nil {
 		t.Fatalf("addressing the test database: %v", err)
 	}
-	db, err := sqlx.Connect(driverName, url)
-	if err != nil {
-		t.Fatalf("connecting to the test database: %v", err)
-	}
-	t.Cleanup(func() { _ = db.Close() })
-
-	return db
+	return url
 }
 
 // exec runs a DDL statement whose only variable parts are database names.
