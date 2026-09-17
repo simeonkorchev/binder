@@ -34,8 +34,17 @@ describe('App', () => {
   })
 
   it('says a screen is unbuilt rather than rendering a blank page', async () => {
+    const user = userEvent.setup()
     await render(<App />)
 
-    expect(screen.getByText('This screen is not built yet.')).toBeOnTheScreen()
+    await user.press(screen.getByRole('button', { name: BINDERS_TAB }))
+
+    expect(await screen.findByText('This screen is not built yet.')).toBeOnTheScreen()
+  })
+
+  it('opens the scanner on a way to get the camera, not on a blank viewfinder', async () => {
+    await render(<App />)
+
+    expect(screen.getByRole('button', { name: 'Allow camera' })).toBeOnTheScreen()
   })
 })

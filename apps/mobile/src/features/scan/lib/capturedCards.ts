@@ -1,7 +1,7 @@
 import type { RejectedScan, ResolvedScan } from '../types'
 
 /** What the resolver has made of one captured card so far. */
-export type CaptureStatus =
+type CaptureStatus =
   /** Queued, or in flight — the resolver has not answered about it yet. */
   | 'pending'
   /** The ladder named a card. */
@@ -11,7 +11,7 @@ export type CaptureStatus =
   /** The resolver refused the scan — a 4xx, so sending it again would be refused again. */
   | 'refused'
 
-export interface CapturedCard {
+interface Capture {
   /**
    * Stable per capture. The index is part of it because the code is not
    * unique: capturing the same code twice is a collector's second copy, and
@@ -19,16 +19,18 @@ export interface CapturedCard {
    */
   key: string
   code: string
-  status: CaptureStatus
-  /** The card's name once the ladder named it, and null until then. */
-  name: string | null
 }
 
-/** An answer decides the status; without one, only a refusal does. */
-const statusOf = (answer: ResolvedScan | undefined, isRefused: boolean): CaptureStatus => {
-  if (answer === undefined) return isRefused ? 'refused' : 'pending'
-  return answer.card === null ? 'unmatched' : 'matched'
-}
+/**
+ * One captured card, as the strip draws it.
+ *
+ * The name is tied to the status rather than sitting beside it as an optional
+ * string: a named card is exactly a matched one, so the strip never has to
+ * decide what to render for a "matched card with no name" that cannot happen.
+ */
+export type CapturedCard =
+  | (Capture & { status: 'matched'; name: string })
+  | (Capture & { status: Exclude<CaptureStatus, 'matched'>; name: null })
 
 /**
  * Joins the codes the sweep captured with the answers the resolver has sent
@@ -53,13 +55,14 @@ export const capturedCards = (
 
   return codes
     .map((code, index): CapturedCard => {
+      const capture: Capture = { key: `${index}:${code}`, code }
       const answer = answers.get(code)
-      return {
-        key: `${index}:${code}`,
-        code,
-        status: statusOf(answer, refusals.has(code)),
-        name: answer?.card?.name ?? null,
+
+      if (answer === undefined) {
+        return { ...capture, status: refusals.has(code) ? 'refused' : 'pending', name: null }
       }
+      if (answer.card === null) return { ...capture, status: 'unmatched', name: null }
+      return { ...capture, status: 'matched', name: answer.card.name }
     })
     .reverse()
 }

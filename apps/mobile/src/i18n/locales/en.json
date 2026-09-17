@@ -13,6 +13,29 @@
     "guide": {
       "codeLabel": "Code",
       "caption": "Fill the frame with the card and keep the printed code inside the marked strip."
+    },
+    "permission": {
+      "title": "Scanning needs the camera",
+      "reason": "Binder reads the code printed under the artwork. The frames stay on your phone and nothing is recorded.",
+      "allow": "Allow camera",
+      "deniedTitle": "The camera stayed off",
+      "deniedReason": "Binder cannot read a card without it. Allowing it is the only thing this screen needs.",
+      "blockedTitle": "Camera access is turned off",
+      "blockedReason": "Turn the camera back on for Binder in the system settings, then come back to this screen.",
+      "openSettings": "Open settings"
+    },
+    "noCamera": "Binder found no camera on this phone, so there is nothing to scan with.",
+    "captured": {
+      "label": "Captured",
+      "countAccessible": "Captured: {{captured}}",
+      "empty": "Nothing captured yet. Sweep the page and cards land here.",
+      "pending": "Checking…",
+      "unmatched": "No match",
+      "refused": "Could not be read"
+    },
+    "offline": {
+      "message": "The resolver could not be reached. Your cards are safe and waiting.",
+      "retry": "Try again"
     }
   }
 }

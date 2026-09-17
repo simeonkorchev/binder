@@ -3,6 +3,7 @@ import { NavigationContainer, type NavigatorScreenParams } from '@react-navigati
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useTranslation } from 'react-i18next'
 
+import ScanScreen from '@/features/scan/ScanScreen'
 import { useTheme } from '@/theme/useTheme'
 
 import { navigationTheme } from './navigationTheme'
@@ -44,7 +45,7 @@ const TabsNavigator = (): React.JSX.Element => {
 
   return (
     <Tab.Navigator>
-      <Tab.Screen name="Scan" component={PlaceholderScreen} options={{ title: t('nav.scan') }} />
+      <Tab.Screen name="Scan" component={ScanScreen} options={{ title: t('nav.scan') }} />
       <Tab.Screen
         name="Binders"
         component={PlaceholderScreen}
