@@ -363,3 +363,52 @@ weaker than the code in front of it. Full write-up, blast radius and the fix
 migration: `.ai/findings/open/2026-09-17-contact-blank-check-trims-spaces-only.md`.
 Reach for `btrim(col, E' \t\r\n')` in any new CHECK of this shape.
 Evidence: verified on the suite's Postgres 16 · since 2026-09-17 · verified 2026-09-17
+
+### a-new-migration-needs-the-test-template-dropped
+`internal/testdb` migrates `binder_test_template` **once per cluster** and then
+clones every suite's database from it (`ensureTemplate` only checks whether the
+database exists). Adding a migration therefore does nothing until the template is
+dropped, and the symptom is the new schema missing in a store suite while
+`tools/migrate.sh` reports the file applied — e.g.
+`invalid input value for enum set_resolution: "manual" (SQLSTATE 22P02)` from a
+spec that inserts the rung migration 005 added.
+
+```bash
+psql -d 'postgres://binder:binder@localhost:5432/postgres' -c 'DROP DATABASE IF EXISTS binder_test_template'
+```
+
+The next `go test` rebuilds it. `ALTER TYPE ... ADD VALUE` outside a BEGIN/COMMIT
+block survives both paths: psql autocommits it, and testdb's whole-file Exec runs
+it in the implicit transaction Postgres 16 allows it in — as long as the file
+never *uses* the new value, which is why 005's CHECK is written over the
+complement (`NOT IN ('by_name','unresolved')`) instead of naming `manual`.
+Evidence: `internal/testdb/testdb.go`, `db/migrations/005_manual_set_resolution.sql` · since 2026-09-17 · verified 2026-09-17
+
+### huma-does-not-flatten-an-embedded-struct-into-the-parent-schema
+Sharing wire fields between two request bodies by embedding an anonymous struct
+**silently drops them from the OpenAPI schema**. `AddSlotBody` embedding
+`slotCardBody` generated `{"properties": {"$schema", "position"}}` — no `cardId`,
+no `setResolution` — and because huma sets `additionalProperties: false`, every
+previously valid request came back 422. Nothing fails at compile time and the Go
+struct still has the fields; only the schema and the requests are wrong.
+
+Repeat the fields in each body and share the *rule* instead: one `validate` and
+one `toX` on the common type, with the repeating body converting into it. See
+`internal/binder/api/slot.go` (`addSlotBody.card()`), pinned by
+`TestAddSlotBodyCarriesEveryCardField`.
+Evidence: `internal/binder/api/slot.go`, `internal/binder/api/batch.go` · since 2026-09-17 · verified 2026-09-17
+
+### one-statement-is-not-the-same-guarantee-as-one-transaction
+A batch write being a single multi-row `INSERT` makes *that statement* atomic;
+it does not prove the store joined the caller's transaction. Both matter, and
+only the second is easy to break — swapping `sqlxtx.MustGetTx(ctx)` for `s.db`
+compiles, passes every "a bad row aborts the batch" spec, and quietly commits
+outside the caller's `InTx`.
+
+The spec that catches it opens a transaction, inserts, asserts the rows are
+visible inside, then returns an error and asserts the binder is empty
+(`internal/binder/store/batch_test.go`, "inside a transaction the caller
+opened"). It has to be a **separate top-level Describe**: as a Context under the
+suite's existing `InsertSlots` block, the ancestor's `JustBeforeEach` inserts the
+batch first and the second insert collides on positions.
+Evidence: `internal/binder/store/batch_test.go` · since 2026-09-17 · verified 2026-09-17

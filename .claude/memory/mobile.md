@@ -286,8 +286,14 @@ Do not write a client-side loop over `POST /binders/{binderId}/slots` to put a
 sweep into a binder. Every binder write the contract publishes is single-row and
 `service.AddSlot` opens its own `InTx` per call, so a 60-card sweep is 61
 requests and a failure at card 40 leaves a binder holding 39 cards — after the
-user has put the cards away. T048 is blocked on a batch endpoint, which is a new
-operation across `api → service → store` and so a spec-pipeline change; the
-details and the decision mapping are in finding
-2026-09-17-no-atomic-way-to-commit-a-scanned-session.
-Evidence: `packages/types/openapi.json`, `internal/binder/service/slot.go` · since 2026-09-17 · verified 2026-09-17
+user has put the cards away.
+
+**Resolved on the server, 2026-09-17**: `POST /binders/{binderId}/slots/batch`
+takes the whole sweep in one transaction — all of it or none — and the finding
+is closed. The client half is still to write: send the flat list (a decision
+worth `copies` cards is that many entries; there is no `copies` field and no
+per-card position, the batch appends), file a printing the user picked as
+`manual` rather than `exact`, and split anything over 450. See
+`decisions.md#2026-09-17-a-batch-commit-appends-and-is-bounded-at-450` and
+`specs/001-binder-mvp/addendum-batch-commit.md`.
+Evidence: `packages/types/openapi.json`, `internal/binder/service/batch.go` · since 2026-09-17 · verified 2026-09-17

@@ -247,3 +247,70 @@ knowing: when a code rung matches several printings the ladder answers
 candidates, so the printing the user picks cannot be filed under the rung that
 found it.
 Evidence: `db/migrations/003_binders.sql`, `internal/card/model/match.go`, `internal/card/service/match.go` · since 2026-09-17 · verified 2026-09-17
+
+### 2026-09-17-a-user-picked-printing-is-manual-not-exact
+**Supersedes `2026-09-17-a-user-picked-printing-is-recorded-as-exact`**, which
+recorded the compromise under protest and left the door open for exactly this.
+`db/migrations/005_manual_set_resolution.sql` adds a sixth `set_resolution`:
+`manual`, printing-bearing, meaning a *person* settled the set by choosing one
+of the candidates an ambiguous scan offered. `exact` means "the whole printed
+code matched one printing" and a slot written that way is indistinguishable from
+a real code match forever after — the harm is a stored value that is false, and
+a provenance column beside it would not have made the false one true.
+
+One value, not a `decided_by` column: `set_resolution` answers one question —
+how the set was determined — and "a person read it off the card" is an answer to
+that question. `manual` is only for the printing-bearing case; a user who keeps
+a card and leaves its set open stays `by_name`, which already means exactly that
+and misleads nobody.
+
+Two consequences to know. The CHECK is now written over the complement,
+`(set_resolution NOT IN ('by_name','unresolved')) = (card_printing_id IS NOT NULL)`,
+so it never names the value its own migration added (Postgres refuses that) and
+a later printing-bearing rung needs no constraint change. And the one list of
+resolutions became two: `cardmodel.SetResolutions()` is what a **slot** may
+store (six), `cardmodel.ScanResolutions()` is what the **ladder** can answer
+(five) — `POST /scans/resolve` publishes the second, or its enum would advertise
+an answer no rung can give.
+Evidence: `db/migrations/005_manual_set_resolution.sql`, `internal/card/model/match.go` · since 2026-09-17 · verified 2026-09-17
+
+### 2026-09-17-a-scans-outcome-is-a-separate-type-from-its-set-resolution
+`MatchResult` carries **both** `Outcome` (`resolved` / `card_only` /
+`ambiguous` / `no_match`) and `Resolution`, and a client switches on the first.
+They are not one concept: `resolution` says how the *set* was settled, which is
+what a `binder_slots` row stores, and it answers `unresolved` for two scans that
+need opposite reactions — several printings matched (the user picks) and nothing
+matched (the user searches). `apps/mobile/.../lib/flaggedScans.ts` was
+classifying on the answer's *shape* because of it.
+
+Adding a `set_resolution` enum value was **rejected** for this one, which is the
+opposite call to `manual` above and for a reason worth keeping: the outcome is
+not an answer to "how was the set determined", and it is never stored — a slot
+records a resolution, and what the client should do next is not a property of the
+slot.
+
+The outcome is stated by each rung where it concludes, never derived at the
+edge; deriving it would have to guess which of the two `unresolved` cases it was
+looking at, which is the bug. The ladder's `AfterEach` derives it independently
+from the shape and compares, over all five shapes — that is the oracle, and it
+lives only in the test.
+Evidence: `internal/card/model/match.go`, `internal/card/service/match.go` · since 2026-09-17 · verified 2026-09-17
+
+### 2026-09-17-a-batch-commit-appends-and-is-bounded-at-450
+`POST /binders/{binderId}/slots/batch` takes a flat list of cards and appends
+them in order — no per-card `position` and no `copies` count. A position per
+entry would let one request ask for an arrangement with a hole in it, and
+density is this domain's whole contract; `copies` would be a second way to say
+what repeating the entry already says, and a second thing the bound has to be
+computed over. A decision covering three physical cards is three entries.
+
+The bound is `model.MaxSlotsPerBatch` = `SlotsPerPage * 50` = 450, enforced
+twice: `maxItems` in the schema so huma answers before a handler runs, and
+`service.ErrBatchTooLarge` so the boundary check is not a licence for the layer
+below to assume. A struct tag cannot read the constant, so
+`batch_internal_test.go` pins the literal to it.
+
+An empty batch is a 201 with `[]` and still checks ownership — a commit of
+nothing is not an error, and not a way to probe for somebody else's binder
+either.
+Evidence: `internal/binder/api/batch.go`, `internal/binder/service/batch.go` · since 2026-09-17 · verified 2026-09-17

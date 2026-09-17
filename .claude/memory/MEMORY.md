@@ -30,6 +30,9 @@ brackets are what a session would search for, the slug is the anchor.
 - [project] where a handler gets the signed-in user now; `Middleware` authenticates but does not authorise; `ActorFromContext` → go.md#the-actor-seam-is-middleware-plus-actorfromcontext-in-user-api
 - [reference] does a logged 500 leak a column value; `pgconn.PgError.Error()` omits `Detail` → go.md#pgx-error-strings-exclude-postgres-detail-so-a-500-log-cannot-leak-a-value
 - [reference] a tab-only contact passes `btrim(col) <> ''`; `strings.TrimSpace` vs `btrim` → go.md#go-trimspace-and-postgres-btrim-disagree-about-tabs
+- [reference] a new migration missing from a store suite; "invalid input value for enum" though `migrate.sh` says applied; `binder_test_template` → go.md#a-new-migration-needs-the-test-template-dropped
+- [reference] a request that was valid now 422s; fields missing from the generated schema after sharing them by embedding → go.md#huma-does-not-flatten-an-embedded-struct-into-the-parent-schema
+- [reference] proving a batch write is atomic; a store that commits outside its caller's `InTx`; why the spec is a separate top-level Describe → go.md#one-statement-is-not-the-same-guarantee-as-one-transaction
 - [project] a `$ref` with no null, a `*uuid.UUID` documented as a plain string, `"type": ["array","null"]` on a slice that is always made; why decorating `huma.Registry` does not work; `humaschema.Config` → go.md#huma-documents-three-shapes-as-the-wrong-nullability
 
 ## mobile.md — apps/mobile
@@ -43,9 +46,9 @@ brackets are what a session would search for, the slug is the anchor.
 - [project] where the navigator, the locales and the theme tokens live; route names and params; why the param list is a type alias → mobile.md#where-the-app-shell-lives
 - [reference] mocking `fetch` in a mobile hook test; a second call failing with a body already read; `process.env.EXPO_PUBLIC_*` set in `beforeEach` → mobile.md#jest-has-a-real-fetch-and-runtime-expo-public-env
 - [project] one card scanned twenty times, or a second copy silently refused; what "left the frame" means and why it counts reads not seconds → mobile.md#a-re-read-is-a-second-copy-only-after-the-code-left-the-frame
-- [project] a review UI switching on `resolution`; why `unresolved` covers both "several matched" and "nothing matched"; where the five real match shapes are → mobile.md#the-ladders-unresolved-means-two-different-things
+- [project] a review UI switching on `resolution`; why `unresolved` covered both "several matched" and "nothing matched" — **the server now answers `outcome`; the app has not moved to it yet** → mobile.md#the-ladders-unresolved-means-two-different-things
 - [project] where the flagged-card review lives; why it is a `Modal` and not a route; why a card found by name search has no set → mobile.md#the-review-sheet-is-a-modal-over-the-scan-tab-not-a-route
-- [project] putting a scanned sweep into a binder; why there is no one-call commit and what a loop over `POST /binders/{binderId}/slots` costs → mobile.md#committing-a-scanned-session-has-no-atomic-endpoint
+- [project] putting a scanned sweep into a binder — **the batch endpoint now exists**; the client half is still to write → mobile.md#committing-a-scanned-session-has-no-atomic-endpoint
 - [project] `@binder/types` missing from `apps/mobile/package.json`; a value import Metro cannot resolve; why a feature's `types.ts` must not re-add nullability with `Omit<…> & {…}` → mobile.md#binder-types-resolves-through-the-workspace-symlink
 
 ## decisions.md — binding
@@ -64,7 +67,9 @@ brackets are what a session would search for, the slug is the anchor.
 - [project] why the scan queue calls `fetch` and not React Query; `EXPO_PUBLIC_API_URL` with no fallback; which failures are retried and which are recorded → decisions.md#2026-09-17-the-scan-queue-owns-its-fetch-there-is-no-data-layer-yet
 - [project] expo-router vs react-navigation, and the five routes the MVP has → decisions.md#2026-09-17-navigation-is-react-navigation-not-expo-router
 - [project] whether the captured-card strip animates; why `react-native-reanimated` is not a dependency → decisions.md#2026-09-17-capture-feedback-is-a-tick-a-count-and-a-strip-with-no-reanimated
-- [project] which `set_resolution` a user-picked printing is filed under; why the enum has no `manual` rung → decisions.md#2026-09-17-a-user-picked-printing-is-recorded-as-exact
+- [project] which `set_resolution` a user-picked printing is filed under; the `manual` rung; slot vocabulary vs ladder answers → decisions.md#2026-09-17-a-user-picked-printing-is-manual-not-exact (supersedes decisions.md#2026-09-17-a-user-picked-printing-is-recorded-as-exact)
+- [project] why a scan carries `outcome` as well as `resolution`; why this one did NOT get an enum value → decisions.md#2026-09-17-a-scans-outcome-is-a-separate-type-from-its-set-resolution
+- [project] putting a whole sweep into a binder in one call; no per-card position, no `copies`; the 450 bound and where it is enforced → decisions.md#2026-09-17-a-batch-commit-appends-and-is-bounded-at-450
 - [project] whether a nullable field stays `required`; `anyOf` with `{"type":"null"}` for a nullable `$ref`; why huma's own `ErrorModel` is corrected too → decisions.md#2026-09-17-a-nullable-field-stays-required-and-gains-a-null-branch
 
 ## deploy.md — infrastructure and CI
