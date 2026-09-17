@@ -47,10 +47,12 @@ var _ = Describe("Binder slots", func() {
 
 		BeforeEach(func() {
 			input = model.AddSlotInput{
-				CardID:         cardID,
-				CardPrintingID: &printingID,
-				SetResolution:  cardmodel.SetResolutionExact,
-				Position:       nil,
+				SlotCard: model.SlotCard{
+					CardID:         cardID,
+					CardPrintingID: &printingID,
+					SetResolution:  cardmodel.SetResolutionExact,
+				},
+				Position: nil,
 			}
 			fakeStore.CountSlotsReturns(4, nil)
 		})
@@ -182,8 +184,7 @@ var _ = Describe("Binder slots", func() {
 		DescribeTable("a resolution that determines no set is accepted without a printing",
 			func(resolution cardmodel.SetResolution) {
 				accepted, addErr := svc.AddSlot(ctx, ownerID, binderID, model.AddSlotInput{
-					CardID:        cardID,
-					SetResolution: resolution,
+					SlotCard: model.SlotCard{CardID: cardID, SetResolution: resolution},
 				})
 
 				Expect(addErr).NotTo(HaveOccurred())

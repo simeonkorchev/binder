@@ -74,6 +74,11 @@ var serviceErrorMappings = []serviceErrorMapping{
 		message:  "That printing is not a printing of that card.",
 	},
 	{
+		sentinel: service.ErrBatchTooLarge,
+		status:   http.StatusUnprocessableEntity,
+		message:  "That is more cards than one commit can hold. Send them in smaller batches.",
+	},
+	{
 		sentinel: service.ErrPositionTaken,
 		status:   http.StatusConflict,
 		message:  "The binder changed while this was being saved. Try again.",

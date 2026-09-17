@@ -12,6 +12,17 @@ import (
 // so that the grid is one fact.
 const SlotsPerPage = 9
 
+// MaxSlotsPerBatch is the most cards one batch write may add: fifty binder
+// pages, which is far more than one sitting at the scanner produces and small
+// enough that the request stays one INSERT.
+//
+// A bound has to exist — an unbounded batch is one request that can insert
+// arbitrarily many rows in one transaction — and it has to be a number rather
+// than a feeling, so it is derived from the grid the binder is actually made
+// of. A client with more than this to commit splits it; nothing is written for
+// a batch that is over.
+const MaxSlotsPerBatch = SlotsPerPage * 50
+
 // Binder is one collector's binder.
 type Binder struct {
 	ID        uuid.UUID

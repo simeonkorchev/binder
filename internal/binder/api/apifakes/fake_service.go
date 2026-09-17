@@ -27,6 +27,22 @@ type FakeService struct {
 		result1 model.Slot
 		result2 error
 	}
+	AddSlotsStub        func(context.Context, uuid.UUID, uuid.UUID, model.AddSlotsInput) ([]model.Slot, error)
+	addSlotsMutex       sync.RWMutex
+	addSlotsArgsForCall []struct {
+		arg1 context.Context
+		arg2 uuid.UUID
+		arg3 uuid.UUID
+		arg4 model.AddSlotsInput
+	}
+	addSlotsReturns struct {
+		result1 []model.Slot
+		result2 error
+	}
+	addSlotsReturnsOnCall map[int]struct {
+		result1 []model.Slot
+		result2 error
+	}
 	CreateBinderStub        func(context.Context, uuid.UUID, string) (model.Binder, error)
 	createBinderMutex       sync.RWMutex
 	createBinderArgsForCall []struct {
@@ -183,6 +199,73 @@ func (fake *FakeService) AddSlotReturnsOnCall(i int, result1 model.Slot, result2
 	}
 	fake.addSlotReturnsOnCall[i] = struct {
 		result1 model.Slot
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeService) AddSlots(arg1 context.Context, arg2 uuid.UUID, arg3 uuid.UUID, arg4 model.AddSlotsInput) ([]model.Slot, error) {
+	fake.addSlotsMutex.Lock()
+	ret, specificReturn := fake.addSlotsReturnsOnCall[len(fake.addSlotsArgsForCall)]
+	fake.addSlotsArgsForCall = append(fake.addSlotsArgsForCall, struct {
+		arg1 context.Context
+		arg2 uuid.UUID
+		arg3 uuid.UUID
+		arg4 model.AddSlotsInput
+	}{arg1, arg2, arg3, arg4})
+	stub := fake.AddSlotsStub
+	fakeReturns := fake.addSlotsReturns
+	fake.recordInvocation("AddSlots", []interface{}{arg1, arg2, arg3, arg4})
+	fake.addSlotsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeService) AddSlotsCallCount() int {
+	fake.addSlotsMutex.RLock()
+	defer fake.addSlotsMutex.RUnlock()
+	return len(fake.addSlotsArgsForCall)
+}
+
+func (fake *FakeService) AddSlotsCalls(stub func(context.Context, uuid.UUID, uuid.UUID, model.AddSlotsInput) ([]model.Slot, error)) {
+	fake.addSlotsMutex.Lock()
+	defer fake.addSlotsMutex.Unlock()
+	fake.AddSlotsStub = stub
+}
+
+func (fake *FakeService) AddSlotsArgsForCall(i int) (context.Context, uuid.UUID, uuid.UUID, model.AddSlotsInput) {
+	fake.addSlotsMutex.RLock()
+	defer fake.addSlotsMutex.RUnlock()
+	argsForCall := fake.addSlotsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+}
+
+func (fake *FakeService) AddSlotsReturns(result1 []model.Slot, result2 error) {
+	fake.addSlotsMutex.Lock()
+	defer fake.addSlotsMutex.Unlock()
+	fake.AddSlotsStub = nil
+	fake.addSlotsReturns = struct {
+		result1 []model.Slot
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeService) AddSlotsReturnsOnCall(i int, result1 []model.Slot, result2 error) {
+	fake.addSlotsMutex.Lock()
+	defer fake.addSlotsMutex.Unlock()
+	fake.AddSlotsStub = nil
+	if fake.addSlotsReturnsOnCall == nil {
+		fake.addSlotsReturnsOnCall = make(map[int]struct {
+			result1 []model.Slot
+			result2 error
+		})
+	}
+	fake.addSlotsReturnsOnCall[i] = struct {
+		result1 []model.Slot
 		result2 error
 	}{result1, result2}
 }

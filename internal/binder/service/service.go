@@ -44,6 +44,9 @@ var (
 	// this one was about to use. The request was correct when it was made, so
 	// the answer is "try again", not "change something".
 	ErrPositionTaken = errors.New("position was taken by a concurrent change")
+	// ErrBatchTooLarge is returned for a batch over model.MaxSlotsPerBatch.
+	// Nothing is written: the client splits the commit and sends it again.
+	ErrBatchTooLarge = errors.New("too many cards in one batch")
 )
 
 // BinderStore reads and writes binders and reads their slots in bulk.
@@ -72,6 +75,11 @@ type SlotStore interface {
 	GetSlotByID(ctx context.Context, binderID, slotID uuid.UUID) (model.Slot, error)
 	// InsertSlot requires the position to already be free.
 	InsertSlot(ctx context.Context, slot model.Slot) (model.Slot, error)
+	// InsertSlots writes every slot in one statement, so none of them is
+	// written if any of them is refused, and returns them in position order.
+	// Every position must already be free. An empty batch writes nothing and
+	// returns an empty slice, which is not an error.
+	InsertSlots(ctx context.Context, slots []model.Slot) ([]model.Slot, error)
 	// DeleteSlotByID leaves a hole at the slot's position for
 	// ClosePositionGap to close.
 	DeleteSlotByID(ctx context.Context, binderID, slotID uuid.UUID) error

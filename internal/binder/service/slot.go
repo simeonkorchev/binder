@@ -22,7 +22,7 @@ func (s *Service) AddSlot(
 ) (model.Slot, error) {
 	// Checked before the transaction opens: these are facts about the request
 	// itself, and none of them needs to read a row to decide.
-	if err := validateResolution(input); err != nil {
+	if err := validateResolution(input.SlotCard); err != nil {
 		return model.Slot{}, err
 	}
 
@@ -50,17 +50,7 @@ func (s *Service) AddSlot(
 			}
 		}
 
-		stored, err := s.store.InsertSlot(ctx, model.Slot{
-			ID:             uuid.New(),
-			BinderID:       binderID,
-			Position:       position,
-			CardID:         input.CardID,
-			CardPrintingID: input.CardPrintingID,
-			SetResolution:  input.SetResolution,
-			// Zero on purpose: the timestamps come back from the database.
-			CreatedAt: time.Time{},
-			UpdatedAt: time.Time{},
-		})
+		stored, err := s.store.InsertSlot(ctx, newSlot(binderID, position, input.SlotCard))
 		if err != nil {
 			return translateSlotWriteError(err)
 		}
@@ -154,19 +144,35 @@ func (s *Service) slotInBinder(ctx context.Context, binderID, slotID uuid.UUID) 
 // before the INSERT rather than after it: a CHECK violation coming back from
 // the driver is a 500 telling the client the server broke, when in fact their
 // request was wrong (000-principles.md section 10).
-func validateResolution(input model.AddSlotInput) error {
-	if !cardmodel.ValidSetResolution(input.SetResolution) {
+func validateResolution(card model.SlotCard) error {
+	if !cardmodel.ValidSetResolution(card.SetResolution) {
 		return ErrResolutionUnknown
 	}
 
-	requiresPrinting := cardmodel.RequiresPrinting(input.SetResolution)
-	if requiresPrinting && input.CardPrintingID == nil {
+	requiresPrinting := cardmodel.RequiresPrinting(card.SetResolution)
+	if requiresPrinting && card.CardPrintingID == nil {
 		return ErrPrintingRequired
 	}
-	if !requiresPrinting && input.CardPrintingID != nil {
+	if !requiresPrinting && card.CardPrintingID != nil {
 		return ErrPrintingNotAllowed
 	}
 	return nil
+}
+
+// newSlot builds the row a card goes into the binder as. Both writes go through
+// it, so the one thing they differ about is the position they pass in.
+func newSlot(binderID uuid.UUID, position int, card model.SlotCard) model.Slot {
+	return model.Slot{
+		ID:             uuid.New(),
+		BinderID:       binderID,
+		Position:       position,
+		CardID:         card.CardID,
+		CardPrintingID: card.CardPrintingID,
+		SetResolution:  card.SetResolution,
+		// Zero on purpose: the timestamps come back from the database.
+		CreatedAt: time.Time{},
+		UpdatedAt: time.Time{},
+	}
 }
 
 // insertPosition decides where a card goes. Nil appends it; a value has to land

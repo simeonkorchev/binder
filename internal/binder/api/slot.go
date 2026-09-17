@@ -20,6 +20,7 @@ var errNoActor = huma.Error401Unauthorized("Sign in to use your binders.")
 // It is faked through api.Service, which embeds it.
 type SlotService interface {
 	AddSlot(ctx context.Context, ownerID, binderID uuid.UUID, input model.AddSlotInput) (model.Slot, error)
+	AddSlots(ctx context.Context, ownerID, binderID uuid.UUID, input model.AddSlotsInput) ([]model.Slot, error)
 	MoveSlot(ctx context.Context, ownerID, binderID uuid.UUID, input model.MoveSlotInput) error
 	RemoveSlot(ctx context.Context, ownerID, binderID, slotID uuid.UUID) error
 }
@@ -80,8 +81,69 @@ type addSlotInput struct {
 	Body     addSlotBody
 }
 
-// addSlotBody is a card to put into the binder, as the review sheet confirmed
-// it. The resolution and the printing have to agree, which Resolve checks.
+// slotCardBody is a card to put into a binder, as the review sheet confirmed
+// it: everything a slot records except where it goes. Both writes carry it, so
+// the rule that the resolution and the printing must agree is checked by one
+// function for both.
+type slotCardBody struct {
+	CardID         uuid.UUID     `json:"cardId"`
+	CardPrintingID *uuid.UUID    `json:"cardPrintingId" required:"false"`
+	SetResolution  setResolution `json:"setResolution"`
+}
+
+func (b slotCardBody) toSlotCard() model.SlotCard {
+	return model.SlotCard{
+		CardID:         b.CardID,
+		CardPrintingID: b.CardPrintingID,
+		SetResolution:  cardmodel.SetResolution(b.SetResolution),
+	}
+}
+
+// validate rejects a card whose resolution and printing disagree, so the client
+// is told which field is wrong rather than getting a bare 422 from the service.
+// location is where in the request body this card sits, so a batch can point at
+// the entry that is wrong rather than at the batch.
+//
+// The service checks the same thing again: this guard is not a licence for the
+// layer below to assume (000-principles.md section 10).
+func (b slotCardBody) validate(location string) []error {
+	resolution := cardmodel.SetResolution(b.SetResolution)
+	if !cardmodel.ValidSetResolution(resolution) {
+		// The enum in the schema already refused anything else; this is the
+		// zero value, which is not a resolution.
+		return []error{&huma.ErrorDetail{
+			Message:  "setResolution has to be a way a card's set can be resolved.",
+			Location: location + ".setResolution",
+			Value:    string(b.SetResolution),
+		}}
+	}
+
+	requiresPrinting := cardmodel.RequiresPrinting(resolution)
+	if requiresPrinting && b.CardPrintingID == nil {
+		return []error{&huma.ErrorDetail{
+			Message:  "A card whose set was determined has to name the printing it was determined to be.",
+			Location: location + ".cardPrintingId",
+			Value:    nil,
+		}}
+	}
+	if !requiresPrinting && b.CardPrintingID != nil {
+		return []error{&huma.ErrorDetail{
+			Message:  "A card whose set was not determined cannot name a printing.",
+			Location: location + ".cardPrintingId",
+			Value:    b.CardPrintingID,
+		}}
+	}
+	return nil
+}
+
+// addSlotBody is one card and where it goes.
+//
+// It repeats slotCardBody's three fields rather than embedding it: huma does
+// not flatten an anonymous embedded struct into the parent's schema — the
+// embedded fields simply disappear from it, and `additionalProperties: false`
+// then rejects every request that sends them. The rule about those three fields
+// is what must not be duplicated, and it is not: both bodies validate through
+// slotCardBody.validate and convert through slotCardBody.toSlotCard.
 type addSlotBody struct {
 	CardID         uuid.UUID     `json:"cardId"`
 	CardPrintingID *uuid.UUID    `json:"cardPrintingId" required:"false"`
@@ -91,38 +153,18 @@ type addSlotBody struct {
 	Position *int `json:"position" required:"false" minimum:"0"`
 }
 
-// Resolve rejects a body whose resolution and printing disagree, so the client
-// is told which field is wrong rather than getting a bare 422 from the service.
-// The service checks the same thing again: this guard is not a licence for the
-// layer below to assume (000-principles.md section 10).
-func (b addSlotBody) Resolve(huma.Context) []error {
-	resolution := cardmodel.SetResolution(b.SetResolution)
-	if !cardmodel.ValidSetResolution(resolution) {
-		// The enum in the schema already refused anything else; this is the
-		// zero value, which is not a rung.
-		return []error{&huma.ErrorDetail{
-			Message:  "setResolution has to be a rung of the match ladder.",
-			Location: "body.setResolution",
-			Value:    string(b.SetResolution),
-		}}
+// card is the part of this body a slot records, in the shape both writes share.
+func (b addSlotBody) card() slotCardBody {
+	return slotCardBody{
+		CardID:         b.CardID,
+		CardPrintingID: b.CardPrintingID,
+		SetResolution:  b.SetResolution,
 	}
+}
 
-	requiresPrinting := cardmodel.RequiresPrinting(resolution)
-	if requiresPrinting && b.CardPrintingID == nil {
-		return []error{&huma.ErrorDetail{
-			Message:  "A card matched by its set code has to name the printing it matched.",
-			Location: "body.cardPrintingId",
-			Value:    nil,
-		}}
-	}
-	if !requiresPrinting && b.CardPrintingID != nil {
-		return []error{&huma.ErrorDetail{
-			Message:  "A card whose set was not determined cannot name a printing.",
-			Location: "body.cardPrintingId",
-			Value:    b.CardPrintingID,
-		}}
-	}
-	return nil
+// Resolve is the boundary guard for the single-card write.
+func (b addSlotBody) Resolve(huma.Context) []error {
+	return b.card().validate("body")
 }
 
 type slotOutput struct {
@@ -153,10 +195,8 @@ func registerSlotEndpoints(api huma.API, svc SlotService, actor ActorFunc) {
 			}
 
 			slot, err := svc.AddSlot(ctx, ownerID, req.BinderID, model.AddSlotInput{
-				CardID:         req.Body.CardID,
-				CardPrintingID: req.Body.CardPrintingID,
-				SetResolution:  cardmodel.SetResolution(req.Body.SetResolution),
-				Position:       req.Body.Position,
+				SlotCard: req.Body.card().toSlotCard(),
+				Position: req.Body.Position,
 			})
 			if err != nil {
 				return nil, handleErr(ctx, fmt.Errorf("adding a card to the binder: %w", err))

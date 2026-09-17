@@ -43,6 +43,7 @@ type Service interface {
 func RegisterEndpoints(api huma.API, svc Service, actor ActorFunc) {
 	registerBinderEndpoints(api, svc, actor)
 	registerSlotEndpoints(api, svc, actor)
+	registerBatchEndpoints(api, svc, actor)
 }
 
 // newOp builds one operation of this domain. Every operation goes through it so

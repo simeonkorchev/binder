@@ -87,10 +87,12 @@ var _ = Describe("Binder slot endpoints", func() {
 				Expect(passedOwnerID).To(Equal(ownerID))
 				Expect(passedBinderID).To(Equal(binderID))
 				Expect(input).To(Equal(model.AddSlotInput{
-					CardID:         cardID,
-					CardPrintingID: &printingID,
-					SetResolution:  cardmodel.SetResolutionExact,
-					Position:       nil,
+					SlotCard: model.SlotCard{
+						CardID:         cardID,
+						CardPrintingID: &printingID,
+						SetResolution:  cardmodel.SetResolutionExact,
+					},
+					Position: nil,
 				}))
 			})
 		})
