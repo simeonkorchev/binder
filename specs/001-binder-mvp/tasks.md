@@ -59,8 +59,8 @@ catches up.
 - [ ] T041 Card-shaped guide-frame overlay, with the code line's expected position hinted (the printed code sits *below* the art) — `components/ScanGuideFrame.tsx`
 - [x] T042 ML Kit text-recognition frame processor, **throttled** — running every frame burns battery for no extra reads — `useTextFrames.ts`
 - [x] T043 `{CODE}-{ID}` parser: pure function, OCR-noise tolerant (`0`/`O`, `1`/`I`/`l`, stray punctuation, case). **Completeness test per `000-principles.md` §9** — `lib/parseCardCode.ts`
-- [ ] T044 Stable-read debounce + in-session dedupe: accept only after N consecutive identical reads; a re-read while the code stays in frame is the *same* card, a re-read after it left is a second copy. Pure and unit-tested — `lib/useStableRead.ts`
-- [ ] T045 `useResolveScan` — async, queued, non-blocking; survives a dropped connection and resolves later — `api/useResolveScan.ts`
+- [x] T044 Stable-read debounce + in-session dedupe: accept only after N consecutive identical reads; a re-read while the code stays in frame is the *same* card, a re-read after it left is a second copy. Pure and unit-tested — `lib/useStableRead.ts`
+- [x] T045 `useResolveScan` — async, queued, non-blocking; survives a dropped connection and resolves later — `api/useResolveScan.ts`
 - [ ] T046 Capture feedback: haptic tick, running count, captured-card strip. `react-native-best-practices` skill governs any Reanimated used here
 - [ ] T047 Review sheet for flagged matches — `unresolved` and `by_name` slots surfaced for confirm/correct. **US3 is only satisfied here**, not by the scan loop
 - [ ] T048 Commit the reviewed session into the binder — one call, one transaction

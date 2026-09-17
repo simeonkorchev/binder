@@ -77,6 +77,24 @@ Do not reach for `ignoreExportsUsedInFile` — it would silence the check for
 every type in the app.
 Evidence: `apps/mobile/src/navigation/AppNavigator.test.ts` (commit 956ef3b) · since 2026-09-17 · verified 2026-09-17
 
+### jest-has-a-real-fetch-and-runtime-expo-public-env
+Two facts that decide how a mobile API hook is tested here, both the opposite
+of what the Expo setup suggests.
+
+`globalThis.fetch` and `Response` are real under `jest-expo`, so a hook that
+calls `fetch` is mocked with `const mockFetch: jest.MockedFunction<typeof fetch>
+= jest.fn()` plus `globalThis.fetch = mockFetch`, and the answers are real
+`new Response(JSON.stringify(body), { status })` objects. A `Response` body
+reads **once**: `mockResolvedValue(oneResponse)` passes the first call and fails
+the second with a body-already-read error that surfaces as a network failure.
+Use `mockImplementation` and build a fresh response per call.
+
+`process.env.EXPO_PUBLIC_*` is **not** inlined at transform time under jest, as
+it is in a Metro build — it can be set in `beforeEach` and read at runtime. A
+module that reads it at import time cannot be configured by a test; read it
+inside the request instead.
+Evidence: `apps/mobile/src/features/scan/api/useResolveScan.test.ts` (commit 87833f4) · since 2026-09-17 · verified 2026-09-17
+
 ## Navigation, i18n and theme
 
 ### where-the-app-shell-lives
@@ -103,3 +121,41 @@ Every route is registered with `navigation/PlaceholderScreen.tsx`; a screen wave
 replaces one registration. Tab icons are deliberately unset — the labels carry
 the accessible name, and no icon font is a dependency yet.
 Evidence: `apps/mobile/src/navigation/AppNavigator.tsx` (commits e7eb2dd, daaf34c, 956ef3b) · since 2026-09-17 · verified 2026-09-17
+
+## The scan loop
+
+### a-re-read-is-a-second-copy-only-after-the-code-left-the-frame
+The scanner reads the same card four times a second, so `lib/useStableRead.ts`
+owns two decisions no frame can make. A code is accepted after **three
+consecutive identical reads** (ML Kit misreads a glyph on one frame far more
+often than on three). Whether seeing it again is the same card or the next copy
+of it is decided by whether it **left the frame**, which is measured in reads,
+never wall-clock: three consecutive reads that did not carry the code — another
+card, or no code at all — and it is forgotten, so the next stable read of it is
+a second copy and lands in the session. Under that threshold it is one card
+sitting still and every read after the first is ignored. Collectors own
+duplicates, so both halves are product requirements, not tuning.
+
+The threshold is in reads because the scanner only learns anything when the
+frame processor hands it a result; a stalled or backgrounded camera must not age
+a card out on a timer nobody watched. The contract that follows: `observe` must
+be called **once per processed frame, with `null` when the frame carried no
+code**. `useTextFrames` only reports frames ML Kit found text in, so a screen
+that forwards nothing else can never forget a card across a blank view — the
+wiring (T046) has to supply the absent reads.
+Evidence: `apps/mobile/src/features/scan/lib/useStableRead.ts` (commit b33f820) · since 2026-09-17 · verified 2026-09-17
+
+### the-generated-scan-match-claims-a-card-that-cannot-be-null
+huma renders a Go pointer-to-struct field as a plain `$ref` with no null in it,
+so `components['schemas']['ScanMatch']` says `card` and `printing` are always
+there while `internal/card/api/scan.go` documents the opposite — the card is
+null when nothing matched, the printing is null for every rung that resolves no
+set. The wire is the source of truth; `features/scan/types.ts` restores the
+nullability with `Omit<…> & { card: … | null }`, which keeps the link to the
+generated type. Any pointer-to-struct field on any endpoint has the same gap.
+
+`@binder/types` is **not** in `apps/mobile/package.json` and resolves through
+the workspace root symlink. `import type` is erased, so nothing is bundled and
+knip stays quiet; a **value** import from that package would need the dependency
+declared before Metro could resolve it.
+Evidence: `apps/mobile/src/features/scan/types.ts` (commit 8559d4c) · since 2026-09-17 · verified 2026-09-17

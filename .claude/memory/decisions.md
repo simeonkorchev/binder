@@ -168,3 +168,22 @@ pushed over them (`BinderPage` — `{ binderId }`, `SellerContact` —
 `{ sellerId }`). Neither choice requires Expo Go, which the app cannot use
 anyway.
 Evidence: `apps/mobile/src/navigation/AppNavigator.tsx` (commit 956ef3b) · since 2026-09-17 · verified 2026-09-17
+
+### 2026-09-17-the-scan-queue-owns-its-fetch-there-is-no-data-layer-yet
+`003-frontend.md` says React Query for all data, and `apps/mobile` has no React
+Query, no API client and no query client — so `features/scan/api/useResolveScan.ts`
+calls `fetch` itself rather than a dependency being added unilaterally in the
+middle of a wave. The base URL is `process.env.EXPO_PUBLIC_API_URL` with **no
+fallback**: unset throws, which holds the queue instead of posting scans at a
+localhost nobody is serving. The second screen that calls the API is the one
+that extracts a client, and that is when React Query is worth deciding on.
+
+The queue's retry policy is part of the same decision, because it is what
+React Query would otherwise own. A dropped connection or a 5xx leaves the scan
+at the head of the queue (the trip failed, and it can be made again); a 4xx
+leaves the queue and is recorded as rejected with its status (the resolver
+answered about *that code*, and retrying it forever would wedge everything swept
+after it). Draining restarts on the next accepted scan or on `retryQueued` —
+there is no timer, so a queue can never spin against a server that is down.
+Evidence: `apps/mobile/src/features/scan/api/useResolveScan.ts` (commit 87833f4) · since 2026-09-17 · verified 2026-09-17
+
