@@ -3,6 +3,7 @@ package oidc_test
 import (
 	"context"
 	"crypto/x509"
+	"strings"
 	"time"
 
 	"github.com/go-jose/go-jose/v4"
@@ -149,17 +150,7 @@ var _ = Describe("Verifier", func() {
 
 		When("the signature was tampered with", func() {
 			BeforeEach(func() {
-				signed := valid.sign(provider)
-				// Flip the last character of the signature segment, leaving the
-				// header and payload — and so the key id — untouched.
-				flipped := []byte(signed)
-				last := len(flipped) - 1
-				if flipped[last] == 'A' {
-					flipped[last] = 'B'
-				} else {
-					flipped[last] = 'A'
-				}
-				rawToken = string(flipped)
+				rawToken = tamperSignature(valid.sign(provider))
 			})
 
 			It("rejects it", func() {
@@ -349,3 +340,30 @@ var _ = Describe("Verifier", func() {
 		)
 	})
 })
+
+// tamperSignature changes one byte of a token's signature, leaving its header and
+// payload — and so its key id — alone.
+//
+// It flips the *first* character of the signature segment rather than the last,
+// and that is the whole point of the helper. A JWS signature is base64url of a
+// byte count that is not a multiple of three, so its final character carries
+// padding bits the decoder throws away: changing "A" to "B" there decodes to a
+// byte-identical signature, the token verifies, and the spec asserting it is
+// rejected fails. RS256's 256-byte signature leaves four padding bits, which
+// made this a one-in-four flake — measured at 5 failures in 20 runs. The first
+// character of the segment is always fully significant.
+func tamperSignature(token string) string {
+	GinkgoHelper()
+
+	dot := strings.LastIndex(token, ".")
+	Expect(dot).To(BeNumerically(">", 0), "token has no signature segment")
+	Expect(len(token)).To(BeNumerically(">", dot+1), "token has an empty signature segment")
+
+	flipped := []byte(token)
+	if flipped[dot+1] == 'A' {
+		flipped[dot+1] = 'B'
+	} else {
+		flipped[dot+1] = 'A'
+	}
+	return string(flipped)
+}

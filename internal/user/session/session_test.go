@@ -278,21 +278,29 @@ func signWith(secret string, claims jwt.Claims) string {
 }
 
 // tamperSignature changes one byte of a token's signature, leaving its header and
-// payload alone.
+// payload — and so its key id — alone.
 //
-// It replaces the last character with a *different* one rather than with a fixed
-// one: appending a constant "A" is a no-op on the runs where the signature
-// already ends in "A", which made this spec pass by luck about 1.5% of the time
-// and fail the gate the rest.
+// It flips the *first* character of the signature segment rather than the last,
+// and that is the whole point of the helper. A JWS signature is base64url of a
+// byte count that is not a multiple of three, so its final character carries
+// padding bits the decoder throws away: changing "A" to "B" there decodes to a
+// byte-identical signature, the token verifies, and the spec asserting it is
+// rejected fails. HS256's 32-byte signature leaves two padding bits, so
+// flipping the last character was a one-in-sixteen flake; the equivalent spec in
+// pkg/oidc, on RS256's four padding bits, was one in four. The first character of
+// the segment is always fully significant.
 func tamperSignature(token string) string {
-	Expect(token).NotTo(BeEmpty())
+	GinkgoHelper()
+
+	dot := strings.LastIndex(token, ".")
+	Expect(dot).To(BeNumerically(">", 0), "token has no signature segment")
+	Expect(len(token)).To(BeNumerically(">", dot+1), "token has an empty signature segment")
 
 	flipped := []byte(token)
-	last := len(flipped) - 1
-	if flipped[last] == 'A' {
-		flipped[last] = 'B'
+	if flipped[dot+1] == 'A' {
+		flipped[dot+1] = 'B'
 	} else {
-		flipped[last] = 'A'
+		flipped[dot+1] = 'A'
 	}
 	return string(flipped)
 }
