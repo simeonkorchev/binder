@@ -85,9 +85,9 @@ no hardcoded colours**, and the app has five screens to move between.
 
 ### W11 — the marketplace [US6][US7]
 
-- [ ] T060 Mark a slot for sale / unlist — `apps/mobile/src/features/market/`
-- [ ] T061 Browse listings, filters, translated empty state
-- [ ] T062 Seller contact sheet — reveals only opted-in fields, and renders the "no contact shared" case
+- [x] T060 Mark a slot for sale / unlist — `apps/mobile/src/features/market/`. Unlisting covers a listing the sheet itself made: **no endpoint maps a binder slot back to its listing** (`SlotBody` carries no listing id, and the browse feed carries no slot id), so a card listed in an earlier session answers 409 and the sheet says "already for sale" rather than offering a take-down it cannot perform. Closing that needs a contract change, not a client one.
+- [x] T061 Browse listings, filters, translated empty state
+- [x] T062 Seller contact sheet — reveals only opted-in fields, and renders the "no contact shared" case
 
 ## Wave 5 — done means done
 
