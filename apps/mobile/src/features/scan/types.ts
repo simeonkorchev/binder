@@ -4,13 +4,17 @@ import type { components } from '@binder/types'
  * The feature's re-export of the generated contract: `@binder/types` is
  * imported here and in the API hooks, never in a screen or a component, so a
  * regenerated schema has one blast radius (003-frontend.md §5).
+ *
+ * The pieces below are exported as the screens come to need them — a card, a
+ * printing and a set resolution are all reachable through `ResolvedScan` until
+ * one of them is named on its own.
  */
 
 /** A card as the resolver returns it. */
-export type ScannedCard = components['schemas']['ScanCard']
+type ScannedCard = components['schemas']['ScanCard']
 
 /** One card as printed in one set. */
-export type ScannedPrinting = components['schemas']['ScanPrinting']
+type ScannedPrinting = components['schemas']['ScanPrinting']
 
 /**
  * How the scanned card's set was determined — the rungs of the match ladder,
@@ -18,7 +22,7 @@ export type ScannedPrinting = components['schemas']['ScanPrinting']
  * guessed. Aliased from the generated enum so a rung added in Go cannot drift
  * out of sync with a union re-typed by hand.
  */
-export type SetResolution = components['schemas']['ScanMatch']['resolution']
+type SetResolution = components['schemas']['ScanMatch']['resolution']
 
 /**
  * A card the ladder could not rule out.
@@ -29,7 +33,7 @@ export type SetResolution = components['schemas']['ScanMatch']['resolution']
  * it. The wire is the source of truth, so the nullability is restored here
  * rather than being discovered as a crash in the review sheet.
  */
-export type ScanCandidate = Omit<components['schemas']['ScanCandidate'], 'printing'> & {
+type ScanCandidate = Omit<components['schemas']['ScanCandidate'], 'printing'> & {
   printing: ScannedPrinting | null
 }
 
