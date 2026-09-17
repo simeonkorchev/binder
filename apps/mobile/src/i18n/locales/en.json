@@ -8,5 +8,11 @@
   },
   "common": {
     "screenNotBuilt": "This screen is not built yet."
+  },
+  "scan": {
+    "guide": {
+      "codeLabel": "Code",
+      "caption": "Fill the frame with the card and keep the printed code inside the marked strip."
+    }
   }
 }
