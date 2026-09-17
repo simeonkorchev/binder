@@ -12,6 +12,7 @@ export const resolutionLabelKeys = {
   by_prefix_and_number: 'binder.resolution.byPrefixAndNumber',
   by_number: 'binder.resolution.byNumber',
   by_name: 'binder.resolution.byName',
+  manual: 'binder.resolution.manual',
   unresolved: 'binder.resolution.unresolved',
 } as const satisfies Record<SetResolution, string>
 
@@ -20,7 +21,9 @@ export const resolutionLabelKeys = {
  *
  * The two rungs that do not are what US3 says has to be shown rather than
  * guessed — and a pocket says so in words, never with a colour alone
- * (003-frontend.md §10).
+ * (003-frontend.md §10). `manual` is on the other side of the line: the user
+ * picked a printing in the review sheet, so there is a set, and it is the one
+ * they read off the card (`db/migrations/005_manual_set_resolution.sql`).
  */
 export const hasKnownSet = (resolution: SetResolution): boolean =>
   resolution !== 'by_name' && resolution !== 'unresolved'

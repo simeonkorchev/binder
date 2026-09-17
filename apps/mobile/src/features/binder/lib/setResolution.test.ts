@@ -7,6 +7,7 @@ const everyRung: SetResolution[] = [
   'by_prefix_and_number',
   'by_number',
   'by_name',
+  'manual',
   'unresolved',
 ]
 
@@ -26,6 +27,7 @@ describe('hasKnownSet', () => {
     ['by_prefix_and_number', true],
     ['by_number', true],
     ['by_name', false],
+    ['manual', true],
     ['unresolved', false],
   ])('%s records a set: %s', (rung, known) => {
     expect(hasKnownSet(rung)).toBe(known)

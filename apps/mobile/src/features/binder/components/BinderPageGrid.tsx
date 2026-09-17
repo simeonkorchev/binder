@@ -27,6 +27,11 @@ import { BinderPocket } from './BinderPocket'
  * Below it the same movement turns the page, which is what a flick across a
  * physical binder does — and it is why a card can be dragged from anywhere on
  * the grid without costing the page its swipe.
+ *
+ * It is measured with the touches' own timestamps rather than `Date.now()`:
+ * the platform stamps the events, so the rest is the time between two real
+ * touches and not between two readings of a clock that a test or a suspended
+ * app can move independently.
  */
 const dragHoldMs = 220
 /** How far a finger travels before the gesture commits to being one or the other. */
@@ -39,6 +44,7 @@ type GestureMode = 'undecided' | 'drag' | 'swipe'
 
 /** The touch in progress. Never rendered — only the drag it may turn into is. */
 interface Gesture {
+  /** The platform's own timestamp for the touch that started it, not wall-clock. */
   startedAt: number
   /** Where the touch went down, in the grid's own coordinates. */
   startX: number
@@ -47,13 +53,18 @@ interface Gesture {
   mode: GestureMode
 }
 
-/** A card in the air: where it was picked up and where the finger is now. */
+/**
+ * A card in the air. It carries everything the grid draws while the finger
+ * moves — how far the card has travelled, which strip it is over, and the size
+ * of a pocket — so that rendering never reads the measurement ref.
+ */
 interface Drag {
   pocket: number
-  startX: number
-  startY: number
-  x: number
-  y: number
+  dx: number
+  dy: number
+  edge: Edge
+  cellWidth: number
+  cellHeight: number
 }
 
 type Edge = 'previous' | 'next' | null
@@ -101,19 +112,18 @@ export const BinderPageGrid = ({
   onMove,
   onTurnPage,
 }: BinderPageGridProps): React.JSX.Element => {
-  const [geometry, setGeometry] = useState<GridGeometry>({ width: 0, height: 0 })
   const [drag, setDrag] = useState<Drag | null>(null)
   const gridRef = useRef<View>(null)
-  // Touches carry page coordinates and land on whichever pocket is under the
-  // finger, so the grid's own origin is the only thing that makes them
-  // comparable to the geometry the drop targets are measured in.
+  // The measurement is a ref and not state: nothing renders differently because
+  // the grid was measured, and a `setState` here would be a second render on
+  // every layout pass for a value only the touch handlers read. Touches carry
+  // page coordinates and land on whichever pocket is under the finger, so the
+  // grid's own origin is what makes them comparable.
+  const geometry = useRef<GridGeometry>({ width: 0, height: 0 })
   const origin = useRef({ x: 0, y: 0 })
   const gesture = useRef<Gesture | null>(null)
 
   const addable = addablePocket(shape)
-  const cellWidth = geometry.width / columns
-  const cellHeight = geometry.height / rows
-  const hoveredEdge = drag === null ? null : edgeOf(dropTargetAt(drag.x, drag.y, geometry))
 
   const pointOf = (event: GestureResponderEvent): { x: number; y: number } => ({
     x: event.nativeEvent.pageX - origin.current.x,
@@ -131,10 +141,10 @@ export const BinderPageGrid = ({
 
   const grant = (event: GestureResponderEvent): void => {
     const point = pointOf(event)
-    const target = dropTargetAt(point.x, point.y, geometry)
+    const target = dropTargetAt(point.x, point.y, geometry.current)
 
     gesture.current = {
-      startedAt: Date.now(),
+      startedAt: event.nativeEvent.timestamp,
       startX: point.x,
       startY: point.y,
       pocket: target.kind === 'pocket' ? target.pocket : null,
@@ -156,17 +166,18 @@ export const BinderPageGrid = ({
       const carriesCard =
         current.pocket !== null &&
         (pockets[current.pocket] ?? null) !== null &&
-        Date.now() - current.startedAt >= dragHoldMs
+        event.nativeEvent.timestamp - current.startedAt >= dragHoldMs
       current.mode = carriesCard ? 'drag' : 'swipe'
     }
 
     if (current.mode !== 'drag' || current.pocket === null) return
     setDrag({
       pocket: current.pocket,
-      startX: current.startX,
-      startY: current.startY,
-      x: point.x,
-      y: point.y,
+      dx: point.x - current.startX,
+      dy: point.y - current.startY,
+      edge: edgeOf(dropTargetAt(point.x, point.y, geometry.current)),
+      cellWidth: geometry.current.width / columns,
+      cellHeight: geometry.current.height / rows,
     })
   }
 
@@ -182,7 +193,7 @@ export const BinderPageGrid = ({
       if (slot === null) return
 
       const destination = dropDestination(
-        dropTargetAt(point.x, point.y, geometry),
+        dropTargetAt(point.x, point.y, geometry.current),
         slot.position,
         shape,
       )
@@ -203,7 +214,7 @@ export const BinderPageGrid = ({
 
   const measure = (event: LayoutChangeEvent): void => {
     const { width, height } = event.nativeEvent.layout
-    setGeometry({ width, height })
+    geometry.current = { width, height }
     gridRef.current?.measureInWindow((x, y) => {
       origin.current = { x, y }
     })
@@ -213,10 +224,13 @@ export const BinderPageGrid = ({
 
   return (
     <View style={styles.stage}>
-      <EdgeStrip labelKey="binder.page.previous" isActive={hoveredEdge === 'previous'} />
+      <EdgeStrip labelKey="binder.page.previous" isActive={drag?.edge === 'previous'} />
 
       <View
         ref={gridRef}
+        // The grid is one gesture surface with no accessible name of its own —
+        // its pockets carry those — so a test reaches it by id.
+        testID="binder-page-grid"
         onLayout={measure}
         style={styles.grid}
         onStartShouldSetResponder={() => true}
@@ -247,20 +261,18 @@ export const BinderPageGrid = ({
 
         {drag !== null && draggedSlot !== null ? (
           <View
+            testID="binder-page-ghost"
             pointerEvents="none"
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
             style={[
               styles.ghost,
               {
-                left: (drag.pocket % columns) * cellWidth,
-                top: Math.floor(drag.pocket / columns) * cellHeight,
-                width: cellWidth,
-                height: cellHeight,
-                transform: [
-                  { translateX: drag.x - drag.startX },
-                  { translateY: drag.y - drag.startY },
-                ],
+                left: (drag.pocket % columns) * drag.cellWidth,
+                top: Math.floor(drag.pocket / columns) * drag.cellHeight,
+                width: drag.cellWidth,
+                height: drag.cellHeight,
+                transform: [{ translateX: drag.dx }, { translateY: drag.dy }],
               },
             ]}
           >
@@ -275,7 +287,7 @@ export const BinderPageGrid = ({
         ) : null}
       </View>
 
-      <EdgeStrip labelKey="binder.page.next" isActive={hoveredEdge === 'next'} />
+      <EdgeStrip labelKey="binder.page.next" isActive={drag?.edge === 'next'} />
     </View>
   )
 }

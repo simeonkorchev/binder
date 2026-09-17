@@ -117,7 +117,8 @@
       "byPrefixAndNumber": "Set from the printed code",
       "byNumber": "Set from the card number",
       "byName": "No set — matched by name",
-      "unresolved": "No set — never matched"
+      "unresolved": "No set — never matched",
+      "manual": "Set you chose yourself"
     },
     "actions": {
       "title": "Move or remove this card",
