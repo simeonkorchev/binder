@@ -79,9 +79,9 @@ no hardcoded colours**, and the app has five screens to move between.
 
 ### W10 — the binder [US4][US5]
 
-- [ ] T050 3×3 page grid, swipe paging, page indicator — `apps/mobile/src/features/binder/`
-- [ ] T051 Drag-to-reorder across slots and across page boundaries; bulk position update in one call
-- [ ] T052 Add and remove cards; translated empty state for an empty binder
+- [x] T050 3×3 page grid, swipe paging, page indicator — `apps/mobile/src/features/binder/`
+- [x] T051 Drag-to-reorder across slots and across page boundaries; bulk position update in one call
+- [x] T052 Add and remove cards; translated empty state for an empty binder
 
 ### W11 — the marketplace [US6][US7]
 
