@@ -60,6 +60,7 @@ brackets are what a session would search for, the slug is the anchor.
 - [project] why `SellerContact` returns a `dataerror` rather than its own sentinel → decisions.md#2026-09-17-sellercontact-keeps-the-stores-missingentityerror
 - [project] why the scan queue calls `fetch` and not React Query; `EXPO_PUBLIC_API_URL` with no fallback; which failures are retried and which are recorded → decisions.md#2026-09-17-the-scan-queue-owns-its-fetch-there-is-no-data-layer-yet
 - [project] expo-router vs react-navigation, and the five routes the MVP has → decisions.md#2026-09-17-navigation-is-react-navigation-not-expo-router
+- [project] whether the captured-card strip animates; why `react-native-reanimated` is not a dependency → decisions.md#2026-09-17-capture-feedback-is-a-tick-a-count-and-a-strip-with-no-reanimated
 - [project] whether a nullable field stays `required`; `anyOf` with `{"type":"null"}` for a nullable `$ref`; why huma's own `ErrorModel` is corrected too → decisions.md#2026-09-17-a-nullable-field-stays-required-and-gains-a-null-branch
 
 ## deploy.md — infrastructure and CI

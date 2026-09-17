@@ -55,13 +55,13 @@ a binder page and cards land in the session without a single tap. **The scan
 loop never blocks on the network** — resolution is fired async and its result
 catches up.
 
-- [ ] T040 VisionCamera setup, camera permission flow, Expo config plugin for the **dev build** — `apps/mobile/src/features/scan/`
-- [ ] T041 Card-shaped guide-frame overlay, with the code line's expected position hinted (the printed code sits *below* the art) — `components/ScanGuideFrame.tsx`
+- [ ] T040 VisionCamera setup, camera permission flow, Expo config plugin for the **dev build** — **code complete, screenshots not taken.** `useCameraAccess` classifies a refusal *after* asking, because Android reports `denied` both for a permission never requested and for one blocked forever; `denied` gets another ask, `blocked` gets the settings app, a phone with no capture device gets a translated line, and the permission is re-read on resume. The config plugin landed with the app shell (`app.config.ts`). Unticked for the same reason as T038 — see T072
+- [ ] T041 Card-shaped guide-frame overlay, with the code line's expected position hinted (the printed code sits *below* the art) — **code complete, screenshots not taken.** `components/ScanGuideFrame.tsx`: a 59 × 86 frame and a dashed strip on the bottom-right where the code is printed. Unticked for the same reason as T038 — see T072
 - [x] T042 ML Kit text-recognition frame processor, **throttled** — running every frame burns battery for no extra reads — `useTextFrames.ts`
 - [x] T043 `{CODE}-{ID}` parser: pure function, OCR-noise tolerant (`0`/`O`, `1`/`I`/`l`, stray punctuation, case). **Completeness test per `000-principles.md` §9** — `lib/parseCardCode.ts`
 - [x] T044 Stable-read debounce + in-session dedupe: accept only after N consecutive identical reads; a re-read while the code stays in frame is the *same* card, a re-read after it left is a second copy. Pure and unit-tested — `lib/useStableRead.ts`
 - [x] T045 `useResolveScan` — async, queued, non-blocking; survives a dropped connection and resolves later — `api/useResolveScan.ts`
-- [ ] T046 Capture feedback: haptic tick, running count, captured-card strip. `react-native-best-practices` skill governs any Reanimated used here
+- [ ] T046 Capture feedback: haptic tick, running count, captured-card strip — **code complete, screenshots not taken.** No Reanimated: the strip is a `FlatList` of fixed-width tiles and adding a native animation library to a dev build for it is a spec decision (`.claude/memory/decisions.md#2026-09-17-capture-feedback-is-a-tick-a-count-and-a-strip-with-no-reanimated`). `useScanSession` wires the loop, including the absent reads `useStableRead` needs to see a second copy. Unticked for the same reason as T038 — see T072
 - [ ] T047 Review sheet for flagged matches — `unresolved` and `by_name` slots surfaced for confirm/correct. **US3 is only satisfied here**, not by the scan loop
 - [ ] T048 Commit the reviewed session into the binder — one call, one transaction
 
@@ -93,7 +93,7 @@ no hardcoded colours**, and the app has five screens to move between.
 
 - [ ] T070 Quality gate — `make check`
 - [ ] T071 Quality gate — `cd apps/mobile && npm run lint && npm run typecheck && npm run test:run && npm run knip`
-- [ ] T072 UI screenshots of every new screen in BOTH themes (`CLAUDE.md` requires this before any UI change is done)
+- [ ] T072 UI screenshots of every new screen in BOTH themes (`CLAUDE.md` requires this before any UI change is done) — **still blocked in this container**: no emulator, no `adb`, no Android SDK, and the scanner is a dev build, so neither Expo Go nor a web preview can render it. Blocks ticking T038, T040, T041 and T046
 - [ ] T073 Clean-code checklist — `.claude/rules/007-clean-code-checklist.md` walked over every touched file
 - [ ] T074 Memory written: what the next session would re-derive — `.claude/memory/`
 
