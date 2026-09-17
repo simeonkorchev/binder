@@ -15,7 +15,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'Binder',
   slug: 'binder',
-  scheme: 'binder',
+  // Two schemes: the app's own, and the application id. Google returns an
+  // installed client's authorization code to a redirect built from the app id
+  // (`com.simeonkorchev.binder:/oauthredirect`, which is what
+  // `features/auth/lib/googleIdentity.ts` asks `makeRedirectUri` for), and the
+  // OS only hands that URL back to an app that has registered the scheme.
+  scheme: ['binder', 'com.simeonkorchev.binder'],
   version: '0.0.0',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
@@ -25,6 +30,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: 'com.simeonkorchev.binder',
     supportsTablet: false,
+    // The Sign in with Apple entitlement. Without it the system sheet refuses
+    // at runtime, and Apple sign-in is not optional once Google is offered
+    // (D1) — so this is what makes the App Store requirement buildable.
+    usesAppleSignIn: true,
   },
   android: {
     package: 'com.simeonkorchev.binder',
