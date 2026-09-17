@@ -25,32 +25,14 @@ type ScannedPrinting = components['schemas']['ScanPrinting']
 type SetResolution = components['schemas']['ScanMatch']['resolution']
 
 /**
- * A card the ladder could not rule out.
- *
- * `printing` is null for a candidate the name rung produced, which names a card
- * and no set — `internal/card/api/scan.go` says so, and the generated type does
- * not: huma renders a Go pointer-to-struct as a plain `$ref`, with no null in
- * it. The wire is the source of truth, so the nullability is restored here
- * rather than being discovered as a crash in the review sheet.
+ * A card the ladder could not rule out. `printing` is null for a candidate the
+ * name rung produced, which names a card and no set — and the generated type
+ * says so.
  */
-type ScanCandidate = Omit<components['schemas']['ScanCandidate'], 'printing'> & {
-  printing: ScannedPrinting | null
-}
+type ScanCandidate = components['schemas']['ScanCandidate']
 
-/**
- * `POST /scans/resolve`'s response body as the server actually sends it.
- *
- * `card` is null when nothing matched at all and `printing` is null for every
- * rung that resolves no set — the same correction as `ScanCandidate` above.
- */
-export type ScanMatchBody = Omit<
-  components['schemas']['ScanMatch'],
-  'card' | 'printing' | 'candidates'
-> & {
-  card: ScannedCard | null
-  printing: ScannedPrinting | null
-  candidates: ScanCandidate[] | null
-}
+/** `POST /scans/resolve`'s response body. */
+export type ScanMatchBody = components['schemas']['ScanMatch']
 
 /** One scanned card, resolved: what the camera read and what the ladder made of it. */
 export interface ResolvedScan {

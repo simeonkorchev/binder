@@ -78,15 +78,4 @@ describe('toResolvedScan', () => {
     expect(resolved.printing).toBeNull()
     expect(resolved.candidates).toEqual([{ card: candidateCard, printing: null }])
   })
-
-  it('turns a null candidate list into an empty one', () => {
-    const noCandidates: ScanMatchBody = {
-      resolution: 'exact',
-      card,
-      printing,
-      candidates: null,
-    }
-
-    expect(toResolvedScan('LOB-EN001', noCandidates).candidates).toEqual([])
-  })
 })
