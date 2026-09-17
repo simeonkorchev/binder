@@ -14,7 +14,7 @@ import type { BrowseListingsBody, ListedCard } from '../types'
  * "nothing is for sale" or "nothing matched you" depending on it, and the
  * answer alone cannot say which.
  */
-export type ListingsState =
+type ListingsState =
   | { status: 'loading' }
   | { status: 'error' }
   | { status: 'ready'; listings: ListedCard[]; filter: ListingFilter }

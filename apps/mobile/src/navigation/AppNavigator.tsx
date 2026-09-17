@@ -6,11 +6,11 @@ import { useTranslation } from 'react-i18next'
 import BinderPageScreen from '@/features/binder/BinderPageScreen'
 import BindersScreen from '@/features/binder/BindersScreen'
 import MarketScreen from '@/features/market/MarketScreen'
+import SellerContactScreen from '@/features/market/SellerContactScreen'
 import ScanScreen from '@/features/scan/ScanScreen'
 import { useTheme } from '@/theme/useTheme'
 
 import { navigationTheme } from './navigationTheme'
-import { PlaceholderScreen } from './PlaceholderScreen'
 
 /** The three places the app can be in — scan, what you own, what is for sale. */
 export type RootTabParamList = {
@@ -84,7 +84,7 @@ export const AppNavigator = (): React.JSX.Element => {
         />
         <Stack.Screen
           name="SellerContact"
-          component={PlaceholderScreen}
+          component={SellerContactScreen}
           options={{ title: t('nav.sellerContact') }}
         />
       </Stack.Navigator>

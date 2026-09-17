@@ -6,9 +6,6 @@
     "binderPage": "Binder",
     "sellerContact": "Seller contact"
   },
-  "common": {
-    "screenNotBuilt": "This screen is not built yet."
-  },
   "scan": {
     "guide": {
       "codeLabel": "Code",
@@ -182,6 +179,7 @@
       "copyPhone": "Copy the phone number {{value}}",
       "copy": "Copy",
       "copied": "Copied to the clipboard.",
+      "copyFailed": "The detail could not be copied.",
       "openFailed": "This phone could not open that."
     }
   }

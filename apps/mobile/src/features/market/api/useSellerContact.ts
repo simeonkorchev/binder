@@ -13,7 +13,7 @@ import type { SellerContactBody } from '../types'
  * blank or a failure (D4). A read that did not come back is `error`, which is a
  * different thing to tell a buyer.
  */
-export type SellerContactState =
+type SellerContactState =
   | { status: 'loading' }
   | { status: 'error' }
   | { status: 'ready'; methods: ContactMethod[] }
