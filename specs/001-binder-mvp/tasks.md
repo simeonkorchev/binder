@@ -65,6 +65,18 @@ catches up.
 - [ ] T047 Review sheet for flagged matches — `unresolved` and `by_name` slots surfaced for confirm/correct. **US3 is only satisfied here**, not by the scan loop
 - [ ] T048 Commit the reviewed session into the binder — one call, one transaction
 
+### W13 — mobile foundations (blocks every screen below)
+
+Same class of gap as T033: the rules require things no task owned. `apps/mobile`
+has no i18n, no theme tokens and no navigation, but `003-frontend.md` and
+`005-mobile.md` require every user-facing string through `t('key')` present in
+**both** locales, static styles in `StyleSheet.create` using **theme tokens with
+no hardcoded colours**, and the app has five screens to move between.
+
+- [ ] T036 i18n setup + `locales/{en,bg}.json`, and a test that fails when a key exists in one locale but not the other — a missing translation must break the build, not ship as a key
+- [ ] T037 Theme tokens, light **and** dark, with the `useTheme` seam screens consume. `CLAUDE.md` requires every UI change screenshotted in both themes; tokens are what make that meaningful
+- [ ] T038 Navigation (expo-router or react-navigation — pick one and say why), with the five routes the MVP needs: scan, binder, binder page, market, seller contact
+
 ### W10 — the binder [US4][US5]
 
 - [ ] T050 3×3 page grid, swipe paging, page indicator — `apps/mobile/src/features/binder/`
