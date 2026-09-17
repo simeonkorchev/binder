@@ -17,11 +17,19 @@ brackets are what a session would search for, the slug is the anchor.
 - [reference] "duplicate key value violates unique constraint" on a reorder; positions dense; UNIQUE is not deferrable → go.md#postgres-unique-is-not-deferrable-park-rows-to-reorder-positions
 - [reference] dataerror translation never fires; `*pq.Error` vs `*pgconn.PgError`; which driver a suite connects with → go.md#store-suites-must-connect-with-pgx-or-error-translation-is-never-exercised
 - [reference] `testdb.New` needs `*testing.T`; where a Ginkgo store suite takes its DB, `TRUNCATE ... CASCADE` per spec → go.md#store-suites-take-testdb-in-the-bootstrap-not-beforesuite
+- [reference] a `DescribeTable` entry sees a call count of 1 instead of 0; an ancestor's `JustBeforeEach` fires first → go.md#a-describetable-inherits-an-ancestors-justbeforeeach
+- [reference] a tampered-token spec that passes locally and fails the gate 1 run in 64 → go.md#tamper-a-token-by-flipping-to-a-different-byte-not-to-a-fixed-one
 - [reference] "is a global variable (gochecknoglobals)" in a `_test.go`; where Ginkgo spec fixtures go → go.md#gochecknoglobals-fires-in-test-files-too
 - [reference] `--- FAIL: TestX` under a green `SUCCESS! -- N Passed`; plain `testing` tests do run under `ginkgo run` → go.md#ginkgo-run-does-fail-on-plain-go-tests
 - [project] `eslog.LeveledErr` / `eslog.Error` do not exist here; demoting an expected error (a 404) below ERROR → go.md#no-pkg-eslog-here-demote-with-a-level-returning-method
 - [project] a listing has no seller_id; `listings → binder_slots → binders.owner_id`; where the cross-domain interface goes and why slot ownership is a join → go.md#listings-carry-no-seller-and-reach-one-by-joining-binders
 - [project] `GET /sellers/{id}/contact` with both fields empty; 200 vs 404 for a seller; the `SellerContacts` contract → go.md#a-seller-who-shared-no-contact-details-is-a-200-not-a-404
+- [reference] a token with no `exp` never expires; `jwt.Expected` with an empty issuer *skips* the check; the 1-minute default leeway; RS256-only → go.md#go-jose-validates-only-the-claims-it-finds
+- [reference] `appleid.apple.com/auth/keys` 403 at the proxy, Google's certs 200 and parsed; why no spec may reach a provider → go.md#apple-jwks-is-403-here-google-is-reachable-and-parses
+- [reference] `env:"X,required"` passes on `X=`; where the secret floor is enforced; no dev fallback → go.md#env-required-checks-presence-only-so-validate-the-value-too
+- [project] where a handler gets the signed-in user now; `Middleware` authenticates but does not authorise; `ActorFromContext` → go.md#the-actor-seam-is-middleware-plus-actorfromcontext-in-user-api
+- [reference] does a logged 500 leak a column value; `pgconn.PgError.Error()` omits `Detail` → go.md#pgx-error-strings-exclude-postgres-detail-so-a-500-log-cannot-leak-a-value
+- [reference] a tab-only contact passes `btrim(col) <> ''`; `strings.TrimSpace` vs `btrim` → go.md#go-trimspace-and-postgres-btrim-disagree-about-tabs
 
 ## mobile.md — apps/mobile
 
@@ -38,6 +46,10 @@ brackets are what a session would search for, the slug is the anchor.
 - [project] why `react-native-vision-camera` is not installed yet, and what the dev build already carries → decisions.md#2026-09-16-vision-camera-is-not-a-dependency-until-w9
 - [project] which listing endpoints need a session, and which deliberately do not → decisions.md#2026-09-17-browsing-listings-is-public-and-the-contact-reveal-is-not
 - [project] why `GET /listings` has no `page` parameter; `listingsPerBrowse`; newest-first → decisions.md#2026-09-17-the-browse-feed-is-the-newest-50-and-has-no-paging
+- [project] how long a session lasts, why 24h and not an hour, what to do when revocation is needed → decisions.md#2026-09-17-the-session-ttl-is-the-revocation-window
+- [project] `PUT` not `PATCH` on the contact; how an account opts back out → decisions.md#2026-09-17-contact-details-are-replaced-not-patched
+- [project] where Apple/Google issuers and client ids live; why `Issuers` is plural → decisions.md#2026-09-17-provider-facts-live-in-user-identity-not-in-pkg-oidc
+- [project] why `SellerContact` returns a `dataerror` rather than its own sentinel → decisions.md#2026-09-17-sellercontact-keeps-the-stores-missingentityerror
 
 ## deploy.md — infrastructure and CI
 

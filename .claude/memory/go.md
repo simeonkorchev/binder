@@ -76,6 +76,28 @@ migrated template, so truncation is cheaper than a tx-per-spec and survives the
 store opening its own transactions.
 Evidence: `cmd/cardimport/store/store_suite_test.go` · since 2026-09-16 · verified 2026-09-16
 
+### a-describetable-inherits-an-ancestors-justbeforeeach
+A `DescribeTable` nested inside a container whose `JustBeforeEach` **invokes the
+method under test** runs that invocation *before* the table's body, with whatever
+the enclosing fixture variables happen to hold — the zero value, since the table
+entry never gets a chance to set them. The symptom is a table of "must be
+refused" entries where the call count is 1 instead of 0 and nothing in the entry
+explains it: the assertion is failing on an *earlier*, legitimate call.
+
+Ginkgo is behaving as documented; the pattern is the bug. Put the table in its own
+sibling container and let it call the method itself, and say in a comment why it
+is not under the Describe it belongs to.
+Evidence: `internal/user/service/contact_test.go` · since 2026-09-17 · verified 2026-09-17
+
+### tamper-a-token-by-flipping-to-a-different-byte-not-to-a-fixed-one
+`raw[:len(raw)-1] + "A"` does not tamper with anything on the runs where the
+signature already ends in `A` — the token goes through unchanged, verifies, and
+the spec asserting it is *rejected* fails. base64url makes that about 1 in 64, so
+it passes locally and fails the gate later; it did, on the first `make check`.
+Flip to a *different* byte instead (`'A' -> 'B'`, else `-> 'A'`). Both
+tampered-signature specs here use that shape and ten consecutive runs are green.
+Evidence: `internal/user/session/session_test.go` (tamperSignature) · since 2026-09-17 · verified 2026-09-17
+
 ### gochecknoglobals-fires-in-test-files-too
 `.golangci.yml` excludes only `forcetypeassert`, `goconst` and `ireturn` from
 `_test.go`, so **`gochecknoglobals` applies to specs**. The package-level
@@ -200,3 +222,107 @@ split is stated on the `SellerContacts` interface (both-nil + nil error vs.
 drift; if the user domain's method disagrees when it lands, the adapter in the
 bootstrap is what reconciles it, not a change in either domain.
 Evidence: `internal/listing/service/seller.go` · since 2026-09-17 · verified 2026-09-17
+
+## Auth and identity
+
+### go-jose-validates-only-the-claims-it-finds
+`jwt.Claims.Validate`/`ValidateWithLeeway` check `iss`, `aud`, `exp`, `nbf` and
+`iat` **only when the token carries them**. Every registered claim is a pointer
+or a zero-able field, so a token with **no `exp` never expires**, one with no
+`iss` matches any issuer, and one with no `sub` yields an empty identity — all
+three pass validation and return nil. `jwt.Expected` is no help either: an empty
+`Expected.Issuer` or `AnyAudience` makes go-jose *skip* that check rather than
+fail it, so a misconfigured verifier accepts everything.
+
+`pkg/oidc.checkClaims` therefore refuses an absent `iss`, `sub`, `aud` or `exp`
+explicitly before calling `ValidateWithLeeway`, and `NewVerifier` refuses an empty
+issuer list or audience list at construction. Four `DescribeTable` entries in
+`pkg/oidc/verifier_test.go` sign a token with one claim deleted; removing the
+guard turns two of them red (verified).
+
+Two more defaults worth knowing: `Validate`'s leeway is **one minute**, which
+keeps accepting an expired token for that minute — both verifiers here call
+`ValidateWithLeeway` with a 30s `clockSkew` constant instead. And
+`jwt.ParseSigned` takes the permitted algorithms as an argument: provider tokens
+are parsed with `{RS256, ES256}` only, because accepting an HMAC algorithm is the
+algorithm-confusion attack (sign your own claims with the provider's *public* key
+as the shared secret), and session tokens with `{HS256}` only.
+Evidence: `pkg/oidc/oidc.go` (checkClaims) · since 2026-09-17 · verified 2026-09-17
+
+### apple-jwks-is-403-here-google-is-reachable-and-parses
+`https://appleid.apple.com/auth/keys` is answered **403 by the egress proxy** in
+this project's containers. `https://www.googleapis.com/oauth2/v3/certs` is
+reachable: fetched with the real `oidc.NewHTTPFetcher(...).Fetch` it returns 2
+keys, both `alg=RS256 use=sig` and `JSONWebKey.Valid() == true`, so that constant
+and the fetcher are proven against the live provider. Apple's is not, and **no
+live sign-in with either provider has ever been exercised** — both providers'
+issuers and audiences are configuration nobody has confirmed against a real
+token.
+
+So JWKS fetching is behind `oidc.Fetcher` and every spec generates an RSA key
+pair, signs its own token and serves the key set from `httptest`. Do not add a
+spec that reaches a provider; it would pass on a laptop and 403 here.
+`oidc.CachedKeys` caches with a TTL *and* refetches when asked for a key id it
+does not hold (a rotation mid-TTL would otherwise be a sign-in outage), floored
+by `MinRefetchInterval` so forged key ids cannot turn into a request each.
+Evidence: `pkg/oidc/keys.go`, `internal/user/identity/identity.go` · since 2026-09-17 · verified 2026-09-17
+
+### env-required-checks-presence-only-so-validate-the-value-too
+`caarlos0/env`'s `env:"X,required"` fails only when the variable is **absent**.
+`X=` — set to the empty string — parses happily, which is exactly how a
+deployment ends up with an empty signing secret and no error at startup. So the
+two halves are separate on purpose: `session.LoadConfig` fails on an unset
+`SESSION_JWT_SECRET`, and `session.New` fails on an empty or under-32-byte one
+(`ErrSecretMissing` / `ErrSecretTooShort`). **There is no fallback secret, not
+even a dev default** — a fallback is how a known key reaches production. Both
+paths have a spec, and the "not set" spec unsets the variable itself rather than
+trusting the ambient environment.
+Evidence: `internal/user/session/session.go` · since 2026-09-17 · verified 2026-09-17
+
+### the-actor-seam-is-middleware-plus-actorfromcontext-in-user-api
+`internal/user/api.Middleware(verifier)` is plain `func(http.Handler) http.Handler`
+and only **authenticates**: it resolves a `Bearer` token to a user id and puts it
+on the request context, and on *any* failure — no header, wrong scheme, forged or
+expired token — it passes the request through with **no actor** rather than
+rejecting it. Rejecting there would mean keeping a list of public paths inside the
+middleware (sign-in and the listings feed are public by design), which is a second
+place for the routing table to be wrong. `api.ActorFromContext` is the
+`ActorFunc` all three domains take and is where the 401 happens; it also refuses
+`uuid.Nil`, which would otherwise be the actor for every `owner_id` row.
+
+The context key stays in `internal/user/api` — that is the binding decision
+`2026-09-16-binder-api-takes-an-actorfunc-until-w7-lands` asked for. The seam is
+pinned rather than described: `var _ binderapi.ActorFunc = api.ActorFromContext`
+(and the listing one) plus a spec that drives the real `POST /binders` through
+this middleware with a real signed session. **Nothing in the middleware logs** —
+a rejected token is attacker-controlled bytes, an accepted one is a bearer
+credential — and a spec asserts the log buffer is empty after a rejection.
+Evidence: `internal/user/api/actor.go`, `internal/user/api/actor_test.go` · since 2026-09-17 · verified 2026-09-17
+
+### pgx-error-strings-exclude-postgres-detail-so-a-500-log-cannot-leak-a-value
+`internal/user/api.handleErr` logs `err.Error()` on the unmapped-500 path, same as
+the binder domain. In a domain whose columns are an email address and a phone
+number that is worth checking rather than assuming, so it was: a CHECK violation
+on `contact_email` produces
+
+```
+setting user contact details: ERROR: new row for relation "users" violates check constraint "users_contact_email_not_blank" (SQLSTATE 23514)
+```
+
+`pgconn.PgError.Error()` is severity + **Message** + SQLSTATE and omits `Detail`,
+which is where Postgres puts the offending row's values — so a constraint
+violation cannot put a contact detail or an `auth_subject` in a log line. The
+other half of the guarantee is code, not the driver: no error message in
+`internal/user/**` interpolates a contact value or a token, and the blank-contact
+error names the *fields* (`model.ContactField`) instead.
+Evidence: `internal/user/api/errors.go`, verified by inspecting a live 23514 · since 2026-09-17 · verified 2026-09-17
+
+### go-trimspace-and-postgres-btrim-disagree-about-tabs
+`btrim(text)` with no second argument trims **spaces only**, so
+`CHECK (contact_email IS NULL OR btrim(contact_email) <> '')` in `002_users.sql`
+accepts `E'\t'`. `strings.TrimSpace` does trim tabs and newlines, so the service
+and the API boundary catch what the column does not, and the column's backstop is
+weaker than the code in front of it. Full write-up, blast radius and the fix
+migration: `.ai/findings/open/2026-09-17-contact-blank-check-trims-spaces-only.md`.
+Reach for `btrim(col, E' \t\r\n')` in any new CHECK of this shape.
+Evidence: verified on the suite's Postgres 16 · since 2026-09-17 · verified 2026-09-17

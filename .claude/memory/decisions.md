@@ -90,3 +90,59 @@ and an OFFSET, not a reshaping.
 Unbounded was the alternative and was rejected: the table grows without bound
 and nothing in the MVP would have kept a feed readable.
 Evidence: `internal/listing/api/listing.go` (listingsPerBrowse) · since 2026-09-17 · verified 2026-09-17
+
+### 2026-09-17-the-session-ttl-is-the-revocation-window
+A session is a JWT this backend signs (HS256) with a 24h default TTL,
+`SESSION_TTL` in the environment. There is **no refresh token and no revocation
+list** in the MVP, which makes that TTL the only thing that closes the window on a
+stolen token — and the reason it is a day rather than an hour: with no refresh
+token, a shorter session means the user re-runs Apple's or Google's sign-in sheet
+during ordinary use. Symmetric rather than a key pair because the only party that
+verifies the token is the party that signed it.
+
+Shrinking it is an environment variable, not a change. If revocation becomes a
+real need — a "sign out everywhere" button, a compromised account — the answer is
+a `jti` plus a deny list or a `sessions_valid_from` column on `users`, and that is
+when the TTL can drop.
+Evidence: `internal/user/session/session.go` (DefaultTTL) · since 2026-09-17 · verified 2026-09-17
+
+### 2026-09-17-contact-details-are-replaced-not-patched
+`PUT /me/contact` replaces the whole contact preference: a field left out, or sent
+as `null`, is "not shared". PATCH was rejected because with it there is **no way to
+opt back out** — absent and `null` would each have to mean both "leave this alone"
+and "stop sharing this", and Go cannot tell an absent JSON field from a null one in
+a `*string`. `{}` is how an account stops sharing everything, and it is a 200.
+
+The consequence to keep in mind: a client that means to change only the phone
+number must send the email back too, or it is cleared. The mobile contact form
+sends both fields, which is the shape that makes this safe.
+Evidence: `internal/user/api/account.go` (setContactBody) · since 2026-09-17 · verified 2026-09-17
+
+### 2026-09-17-provider-facts-live-in-user-identity-not-in-pkg-oidc
+`pkg/oidc` is provider-agnostic on purpose — an issuer list, an audience list and a
+key lookup — so it holds no mention of Apple or Google and can be tested entirely
+against keys a spec generated. The two providers' issuers and JWKS URLs are
+constants in `internal/user/identity`, their client ids come from
+`APPLE_CLIENT_IDS` / `GOOGLE_CLIENT_IDS`, and a sign-in is dispatched through a
+`map[model.AuthProvider]ProviderVerifier` rather than a switch, so a third provider
+is a map entry.
+
+`oidc.Config.Issuers` is plural because Google issues both
+`https://accounts.google.com` and the bare `accounts.google.com`; accepting only
+one refuses tokens at random. `Audiences` is plural because a provider issues one
+client id per platform.
+Evidence: `internal/user/identity/identity.go` · since 2026-09-17 · verified 2026-09-17
+
+### 2026-09-17-sellercontact-keeps-the-stores-missingentityerror
+`internal/user/service.SellerContact` deliberately does **not** convert the store's
+`dataerror.MissingEntityError` into its own `ErrUserNotFound`, unlike `GetUser`
+right next to it. `internal/listing/service.SellerContacts` — the consumer-side
+interface it satisfies — documents that contract and branches on
+`dataerror.IsMissingEntityError`, and it is the consumer that owns the interface
+(002 §3a). Converting would have moved the translation into the bootstrap adapter,
+where a mistake is invisible.
+
+The return type is the other half of the decision: `model.Contact`, not
+`model.User`. The marketplace can reach a seller's published email and phone
+number and has no way to reach the provider subject or the timestamps.
+Evidence: `internal/user/service/contact.go` · since 2026-09-17 · verified 2026-09-17

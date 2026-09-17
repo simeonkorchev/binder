@@ -27,7 +27,7 @@ var (
 	// request that must not create or reach an account, the answer to every one
 	// of them is the same 401, and a client told which check failed has been
 	// handed an oracle for guessing at the next one.
-	ErrIdentityRejected = errors.New("identity token rejected")
+	ErrIdentityRejected = errors.New("provider identity token rejected")
 
 	// ErrProviderUnknown is returned when a sign-in names a provider this
 	// backend does not support.

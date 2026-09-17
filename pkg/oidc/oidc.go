@@ -47,7 +47,7 @@ var (
 	// problem rather than the client's, and must never become a 401.
 	ErrKeyUnknown = errors.New("signing key id is not published by the provider")
 
-	errNoIssuer    = errors.New("an issuer is required")
+	errNoIssuer    = errors.New("at least one issuer is required")
 	errNoAudience  = errors.New("at least one audience is required")
 	errNoKeyLookup = errors.New("a key lookup is required")
 )
