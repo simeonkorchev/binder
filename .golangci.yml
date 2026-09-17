@@ -88,7 +88,12 @@ linters:
       # definition) and listing/model.SellerContact (two opt-in fields, both
       # legitimately absent, and nothing in internal/listing constructs one —
       # an include entry that guards no construction reads as coverage that
-      # does not exist).
+      # does not exist). From the user domain, also deliberately NOT
+      # listed: user/model.Contact (both fields nil is the normal, correct state
+      # of an account that has not opted into being contacted, so guarding it
+      # would demand `Email: nil` at every construction) and user/model.Session
+      # and user/model.SignIn (each built in one place, and SignIn's nonce is
+      # genuinely optional).
       include:
         - 'github\.com/simeonkorchev/binder/internal/card/model\.Card$'
         - 'github\.com/simeonkorchev/binder/internal/card/model\.CardPrinting$'
@@ -100,6 +105,8 @@ linters:
         - 'github\.com/simeonkorchev/binder/internal/binder/model\.Slot$'
         - 'github\.com/simeonkorchev/binder/internal/listing/model\.Listing$'
         - 'github\.com/simeonkorchev/binder/internal/listing/model\.ListedCard$'
+        - 'github\.com/simeonkorchev/binder/internal/user/model\.User$'
+        - 'github\.com/simeonkorchev/binder/internal/user/model\.Identity$'
     lll:
       # 002-go-conventions.md section 1.1: long signatures break one parameter
       # per line rather than carrying a suppression.
