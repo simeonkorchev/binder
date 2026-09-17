@@ -157,4 +157,39 @@ specs asserted them and failed.
 apply the multi-statement migration files (no bind parameters, so the simple
 protocol is used); verified from a dropped `binder_test_template`. `pq` is still
 imported there for `pq.QuoteIdentifier`, which is a pure string function.
-Evidence: `internal/testdb/testdb.go` · since 2026-09-16 · verified 2026-09-16
+Evidence: `internal/testdb/testdb.go` · since 2026-09-16 · verified 2026-09-17
+
+## Domains
+
+### listings-carry-no-seller-and-reach-one-by-joining-binders
+`listings` has one column of its own that matters — `binder_slot_id`, UNIQUE and
+`ON DELETE CASCADE`. There is no `seller_id`, no card and no price, so every
+question about a listing except "does it exist" is a join:
+`listings → binder_slots → binders.owner_id` for the seller,
+`→ cards` (+ `LEFT JOIN card_printings`) for what is on offer.
+`internal/listing/store` therefore reads three other domains' tables, which is
+deliberate: the alternative is a copy of the columns (a second place to be
+wrong) or a round trip per row.
+
+The one dependency that is *not* a join is the seller's contact details, because
+they are behind consent rather than behind a key: `service.SellerContacts` is a
+one-method consumer-side interface declared next to the only code that reads it,
+and the user domain's service satisfies it at wiring time (002 §3a). Slot
+*ownership* is not modelled that way for a plain reason worth not re-deriving:
+`internal/binder/service` exposes no "who owns this slot" method to consume, and
+adding one to it from outside its own wave was not on the table.
+Evidence: `internal/listing/store/browse.go`, `internal/listing/service/service.go` · since 2026-09-17 · verified 2026-09-17
+
+### a-seller-who-shared-no-contact-details-is-a-200-not-a-404
+`GET /sellers/{id}/contact` answers `200 {"email":null,"phone":null}` for an
+account that opted into neither field — the default row in `002_users.sql`, and
+the state most accounts are in. The client's response to it is to show no
+contact button, so it needs to tell that apart from a failure, and encoding it as
+a 404 or an error would make every caller convert it back (000 §8b).
+
+Only an id that names **no user at all** is `ErrSellerNotFound` → 404. The
+split is stated on the `SellerContacts` interface (both-nil + nil error vs.
+`dataerror.MissingEntityError`) so the real implementation and a fake cannot
+drift; if the user domain's method disagrees when it lands, the adapter in the
+bootstrap is what reconciles it, not a change in either domain.
+Evidence: `internal/listing/service/seller.go` · since 2026-09-17 · verified 2026-09-17

@@ -61,3 +61,32 @@ huma's own `{binderId}` syntax either way, so a later move to Echo is a change
 in the bootstrap only. Handler specs drive the real registered API through
 `httptest`, so the adapter is covered rather than mocked.
 Evidence: `internal/binder/api/api_suite_test.go` · since 2026-09-16 · verified 2026-09-16
+
+## Product and code
+
+### 2026-09-17-browsing-listings-is-public-and-the-contact-reveal-is-not
+`GET /listings` takes no `ActorFunc`: the feed is identical for everybody, it
+carries no contact details, and requiring a session would be a parameter the
+handler only passes on. `GET /sellers/{id}/contact` does take one — the fields
+are personal data a seller published *to buyers*, and a session is the one thing
+between "a buyer is asking about this card" and a script reading every seller in
+the database. `POST /listings` and `DELETE /listings/{id}` need the actor to
+decide ownership, so they take it for a second reason.
+
+A maintainer may well want the feed behind a session too (D4 does not say);
+flipping it is adding the parameter and one spec, and the contact reveal is the
+half that must not be relaxed.
+Evidence: `internal/listing/api/listing.go`, `internal/listing/api/seller.go` · since 2026-09-17 · verified 2026-09-17
+
+### 2026-09-17-the-browse-feed-is-the-newest-50-and-has-no-paging
+`spec.md` gives the browse endpoint two parameters, `q` and `set`, and no page —
+so `GET /listings` answers with the **50 most recently listed** matches
+(`listingsPerBrowse`), ordered `created_at DESC, id`, and a buyer narrows with
+the two filters rather than paging. The cap is in the operation summary, so it is
+a stated limit and not a silent truncation, and `ListingSearch.Limit` carries it
+through the service to one `LIMIT $3` — adding paging later is a query parameter
+and an OFFSET, not a reshaping.
+
+Unbounded was the alternative and was rejected: the table grows without bound
+and nothing in the MVP would have kept a feed readable.
+Evidence: `internal/listing/api/listing.go` (listingsPerBrowse) · since 2026-09-17 · verified 2026-09-17

@@ -20,6 +20,8 @@ brackets are what a session would search for, the slug is the anchor.
 - [reference] "is a global variable (gochecknoglobals)" in a `_test.go`; where Ginkgo spec fixtures go → go.md#gochecknoglobals-fires-in-test-files-too
 - [reference] `--- FAIL: TestX` under a green `SUCCESS! -- N Passed`; plain `testing` tests do run under `ginkgo run` → go.md#ginkgo-run-does-fail-on-plain-go-tests
 - [project] `eslog.LeveledErr` / `eslog.Error` do not exist here; demoting an expected error (a 404) below ERROR → go.md#no-pkg-eslog-here-demote-with-a-level-returning-method
+- [project] a listing has no seller_id; `listings → binder_slots → binders.owner_id`; where the cross-domain interface goes and why slot ownership is a join → go.md#listings-carry-no-seller-and-reach-one-by-joining-binders
+- [project] `GET /sellers/{id}/contact` with both fields empty; 200 vs 404 for a seller; the `SellerContacts` contract → go.md#a-seller-who-shared-no-contact-details-is-a-200-not-a-404
 
 ## mobile.md — apps/mobile
 
@@ -34,6 +36,8 @@ brackets are what a session would search for, the slug is the anchor.
 - [project] which huma adapter; no Echo dependency; `humago` → decisions.md#2026-09-16-huma-adapter-is-humago
 - [project] no golang-migrate or goose; `tools/migrate.sh` plus `schema_migrations` → decisions.md#2026-09-16-no-migration-runner-binary
 - [project] why `react-native-vision-camera` is not installed yet, and what the dev build already carries → decisions.md#2026-09-16-vision-camera-is-not-a-dependency-until-w9
+- [project] which listing endpoints need a session, and which deliberately do not → decisions.md#2026-09-17-browsing-listings-is-public-and-the-contact-reveal-is-not
+- [project] why `GET /listings` has no `page` parameter; `listingsPerBrowse`; newest-first → decisions.md#2026-09-17-the-browse-feed-is-the-newest-50-and-has-no-paging
 
 ## deploy.md — infrastructure and CI
 
