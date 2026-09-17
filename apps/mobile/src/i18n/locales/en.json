@@ -180,7 +180,20 @@
       "copy": "Copy",
       "copied": "Copied to the clipboard.",
       "copyFailed": "The detail could not be copied.",
-      "openFailed": "This phone could not open that."
+      "openFailed": "This phone could not open that.",
+      "signInRequired": "Sign in to see how to reach this seller."
     }
+  },
+  "auth": {
+    "title": "Binder",
+    "intro": "Sign in to keep your binders and to sell a card. Browsing what is for sale needs no account.",
+    "apple": "Sign in with Apple",
+    "google": "Sign in with Google",
+    "signingIn": "Signing in…",
+    "failed": "Signing in did not work. Try again.",
+    "unavailable": "This phone cannot sign in that way. Use the other way in.",
+    "browse": "Browse what is for sale",
+    "opening": "Opening Binder…",
+    "signOut": "Sign out"
   }
 }

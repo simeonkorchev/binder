@@ -1,3 +1,4 @@
+import { waitFor } from '@testing-library/react-native'
 import * as SecureStore from 'expo-secure-store'
 
 import {
@@ -53,13 +54,13 @@ describe('sessionStore', () => {
     await rememberSession(session)
     await forgetInMemoryOnly()
 
-    await restoreSession()
+    restoreSession()
 
     expect(sessionState()).toEqual({ status: 'signed-in', session })
   })
 
-  it('finds no session on a first launch', async () => {
-    await restoreSession()
+  it('finds no session on a first launch', () => {
+    restoreSession()
 
     expect(sessionState()).toEqual({ status: 'signed-out' })
   })
@@ -68,10 +69,12 @@ describe('sessionStore', () => {
     await rememberSession(session)
     jest.setSystemTime(new Date('2026-09-19T10:00:00.000Z'))
 
-    await restoreSession()
+    restoreSession()
 
     expect(sessionState()).toEqual({ status: 'signed-out' })
-    await expect(SecureStore.getItemAsync('binder.session')).resolves.toBeNull()
+    await waitFor(async () => {
+      await expect(SecureStore.getItemAsync('binder.session')).resolves.toBeNull()
+    })
   })
 
   it('clears the keychain on sign-out, so the token cannot be restored', async () => {
@@ -96,12 +99,12 @@ describe('sessionStore', () => {
     expect(listener).toHaveBeenCalledTimes(2)
   })
 
-  it('does not wake its subscribers when a restore finds the signed-out state again', async () => {
-    await restoreSession()
+  it('does not wake its subscribers when a restore finds the signed-out state again', () => {
+    restoreSession()
     const listener = jest.fn()
     subscribeToSession(listener)
 
-    await restoreSession()
+    restoreSession()
 
     expect(listener).not.toHaveBeenCalled()
   })
@@ -129,11 +132,11 @@ describe('sessionStore', () => {
 
   it('finds no session when the keychain cannot be read', async () => {
     await rememberSession(session)
-    jest
-      .spyOn(SecureStore, 'getItemAsync')
-      .mockRejectedValueOnce(new Error('the keychain is locked'))
+    jest.spyOn(SecureStore, 'getItem').mockImplementationOnce(() => {
+      throw new Error('the keychain is locked')
+    })
 
-    await restoreSession()
+    restoreSession()
 
     expect(sessionState()).toEqual({ status: 'signed-out' })
   })

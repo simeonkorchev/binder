@@ -40,6 +40,17 @@ const SellerContactScreen = ({ route }: SellerContactScreenProps): React.JSX.Ele
     )
   }
 
+  // No retry button: asking again without a session repeats the same 401.
+  if (contact.state.status === 'sign-in-required') {
+    return (
+      <View style={[styles.screen, { backgroundColor: colors.background }]}>
+        <Text style={[styles.status, { color: colors.textSecondary }]}>
+          {t('market.contact.signInRequired')}
+        </Text>
+      </View>
+    )
+  }
+
   if (contact.state.status === 'error') {
     return (
       <View style={[styles.screen, { backgroundColor: colors.background }]}>

@@ -51,6 +51,7 @@ jest.mock('expo-haptics', () => ({
 jest.mock('expo-secure-store', () => {
   const keychain = new Map<string, string>()
   return {
+    getItem: (key: string): string | null => keychain.get(key) ?? null,
     getItemAsync: (key: string): Promise<string | null> =>
       Promise.resolve(keychain.get(key) ?? null),
     setItemAsync: (key: string, value: string): Promise<void> => {

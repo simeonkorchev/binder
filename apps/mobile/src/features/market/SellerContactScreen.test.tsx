@@ -2,6 +2,8 @@ import * as Clipboard from 'expo-clipboard'
 import { render, screen, userEvent } from '@testing-library/react-native'
 import { Linking } from 'react-native'
 
+import { forgetSession, rememberSession } from '@/lib/sessionStore'
+
 import App from '@/App'
 
 import type { ListedCard, SellerContactBody } from './types'
@@ -9,6 +11,13 @@ import type { ListedCard, SellerContactBody } from './types'
 const mockFetch: jest.MockedFunction<typeof fetch> = jest.fn()
 
 const MARKET_TAB = 'Market, tab, 3 of 3'
+const BROWSE = 'Browse what is for sale'
+
+const session = {
+  token: 'session.jwt.signature',
+  expiresAt: '2026-09-18T10:00:00.000Z',
+  userId: 'user-1',
+}
 
 const listed: ListedCard = {
   listingId: 'listing-1',
@@ -20,30 +29,46 @@ const listed: ListedCard = {
   listedAt: '2026-09-17T10:00:00Z',
 }
 
-/** The feed answers every browse; the seller's details answer their own path. */
+/**
+ * The feed answers every browse, the seller's details answer their own path, and
+ * the binder list answers the tab a signed-in collector lands on.
+ */
 const serverWhere =
   (contact: () => Response) =>
-  (input: RequestInfo | URL): Promise<Response> =>
-    Promise.resolve(
-      String(input).includes('/sellers/')
-        ? contact()
-        : new Response(JSON.stringify({ listings: [listed] }), { status: 200 }),
-    )
+  (input: RequestInfo | URL): Promise<Response> => {
+    const path = String(input)
+    if (path.includes('/sellers/')) return Promise.resolve(contact())
+    if (path.includes('/binders')) {
+      return Promise.resolve(new Response(JSON.stringify({ binders: [] }), { status: 200 }))
+    }
+    return Promise.resolve(new Response(JSON.stringify({ listings: [listed] }), { status: 200 }))
+  }
 
 const shares = (contact: SellerContactBody): Response =>
   new Response(JSON.stringify(contact), { status: 200 })
 
-/** Reaches the seller the way a buyer does: the tab, then the card they want. */
+/**
+ * Reaches the seller the way a buyer does: the market, then the card they want.
+ *
+ * Signed in, because this is the one thing in the market that needs an account —
+ * a signed-in caller is what separates a buyer from a script reading every
+ * seller in the database (internal/listing/api/seller.go).
+ */
 const openSeller = async (user: ReturnType<typeof userEvent.setup>): Promise<void> => {
+  await rememberSession(session)
   await render(<App />)
-  await user.press(screen.getByRole('button', { name: MARKET_TAB }))
+  await user.press(await screen.findByRole('button', { name: MARKET_TAB }))
   await user.press(
     await screen.findByRole('button', { name: 'Contact the seller of Dark Magician' }),
   )
 }
 
 describe('SellerContactScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Signed out before each case, after the previous test's tree is gone:
+    // dropping the session while a screen is still mounted would re-render it
+    // outside act.
+    await forgetSession()
     mockFetch.mockReset()
     mockFetch.mockImplementation(serverWhere(() => shares({ email: null, phone: null })))
     globalThis.fetch = mockFetch
@@ -113,5 +138,24 @@ describe('SellerContactScreen', () => {
     expect(
       screen.queryByText('This seller has not shared any contact details.'),
     ).not.toBeOnTheScreen()
+  })
+
+  // A visitor who came in through the public feed: the contact reveal is the one
+  // request in the market that needs an account, and "sign in" is something they
+  // can act on where "could not be loaded" is not (T082).
+  it('tells a signed-out visitor that reaching a seller needs an account', async () => {
+    mockFetch.mockImplementation(serverWhere(() => new Response('{}', { status: 401 })))
+    const user = userEvent.setup()
+
+    await render(<App />)
+    await user.press(await screen.findByRole('button', { name: BROWSE }))
+    await user.press(
+      await screen.findByRole('button', { name: 'Contact the seller of Dark Magician' }),
+    )
+
+    expect(
+      await screen.findByText('Sign in to see how to reach this seller.'),
+    ).toBeOnTheScreen()
+    expect(screen.queryByText('The seller\'s details could not be loaded.')).not.toBeOnTheScreen()
   })
 })

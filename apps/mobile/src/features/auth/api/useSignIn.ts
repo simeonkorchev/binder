@@ -14,7 +14,7 @@ import { exchangeIdentityToken } from './exchangeSession'
  * a decision, not a failure, and putting a red sentence under it would blame the
  * user for changing their mind.
  */
-export type SignInStatus = 'idle' | 'signing-in' | 'unavailable' | 'failed'
+type SignInStatus = 'idle' | 'signing-in' | 'unavailable' | 'failed'
 
 export interface SignInFlow {
   status: SignInStatus

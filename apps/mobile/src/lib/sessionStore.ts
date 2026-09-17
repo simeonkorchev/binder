@@ -25,9 +25,11 @@ import { isExpired, parseStoredSession, serializeSession, type Session } from '.
 const sessionKey = 'binder.session'
 
 /**
- * Three states, and `restoring` is not a detail: on launch the app does not yet
- * know whether it has a session, and showing the sign-in screen for the length
- * of a keychain read would flash it at somebody who is signed in.
+ * Three states, and `restoring` is not a detail: between the first render and the
+ * keychain read in the app's first effect, the app does not yet know whether it
+ * has a session. Rendering the sign-in screen in that gap would flash it at
+ * somebody who is signed in; rendering the tabs would flash a binder list that
+ * cannot be read yet.
  */
 export type SessionState =
   | { status: 'restoring' }
@@ -66,18 +68,26 @@ export const bearerToken = (): string | null =>
 /**
  * Reads the session back at launch.
  *
+ * The read is the **synchronous** keychain call on purpose: it happens in the
+ * app's first effect, so the answer is there in the same tick and no screen is
+ * rendered against a session the app has not decided about yet. The writes
+ * below stay asynchronous — those happen while the user is looking at something.
+ *
  * A token that has already run out is dropped rather than sent: the session JWT
  * lasts 24 hours and the backend has no refresh token, so yesterday's session
  * is a sign-in, not a failure.
  */
-export const restoreSession = async (): Promise<void> => {
-  const stored = parseStoredSession(await readStored())
+export const restoreSession = (): void => {
+  const stored = parseStoredSession(readStored())
   if (stored === null) {
     publish(signedOut)
     return
   }
   if (isExpired(stored, new Date())) {
-    await forgetSession()
+    // Signed out now; the dead token leaves the keychain right behind it.
+    // Publishing does not wait for a write nobody is looking at.
+    publish(signedOut)
+    void forgetSession()
     return
   }
   publish({ status: 'signed-in', session: stored })
@@ -120,9 +130,9 @@ const quietly = async (write: () => Promise<void>): Promise<void> => {
   }
 }
 
-const readStored = async (): Promise<string | null> => {
+const readStored = (): string | null => {
   try {
-    return await SecureStore.getItemAsync(sessionKey)
+    return SecureStore.getItem(sessionKey)
   } catch {
     // A keychain this app cannot read is the same situation as an empty one:
     // sign in again.

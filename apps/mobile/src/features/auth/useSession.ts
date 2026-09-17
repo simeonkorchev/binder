@@ -23,9 +23,7 @@ import {
 export const useSession = (): SessionState => {
   const state = useSyncExternalStore(subscribeToSession, sessionState)
 
-  useEffect(() => {
-    void restoreSession()
-  }, [])
+  useEffect(restoreSession, [])
 
   return state
 }

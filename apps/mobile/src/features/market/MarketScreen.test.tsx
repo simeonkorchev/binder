@@ -1,5 +1,7 @@
 import { render, screen, userEvent } from '@testing-library/react-native'
 
+import { forgetSession, rememberSession } from '@/lib/sessionStore'
+
 import App from '@/App'
 
 import type { ListedCard } from './types'
@@ -7,6 +9,13 @@ import type { ListedCard } from './types'
 const mockFetch: jest.MockedFunction<typeof fetch> = jest.fn()
 
 const MARKET_TAB = 'Market, tab, 3 of 3'
+const BROWSE = 'Browse what is for sale'
+
+const session = {
+  token: 'session.jwt.signature',
+  expiresAt: '2026-09-18T10:00:00.000Z',
+  userId: 'user-1',
+}
 
 const listed = (over: Partial<ListedCard> = {}): ListedCard => ({
   listingId: 'listing-1',
@@ -22,10 +31,15 @@ const listed = (over: Partial<ListedCard> = {}): ListedCard => ({
 const feed = (...listings: ListedCard[]): Response =>
   new Response(JSON.stringify({ listings }), { status: 200 })
 
-/** Opens the market the way a buyer does: from the tab bar. */
+/**
+ * Opens the market the way most buyers do: signed out, from the sign-in screen.
+ *
+ * Browse is the one public endpoint (W11), so every case below is also a case
+ * that it stays reachable with no account.
+ */
 const openMarket = async (user: ReturnType<typeof userEvent.setup>): Promise<void> => {
   await render(<App />)
-  await user.press(screen.getByRole('button', { name: MARKET_TAB }))
+  await user.press(await screen.findByRole('button', { name: BROWSE }))
 }
 
 // The empty feed is the case the backend went out of its way to get right —
@@ -33,7 +47,11 @@ const openMarket = async (user: ReturnType<typeof userEvent.setup>): Promise<voi
 // sentences a buyer is owed for it. Collapsing them would tell somebody who
 // searched for one card that the whole market is empty.
 describe('MarketScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Signed out before each case, after the previous test's tree is gone:
+    // dropping the session while a screen is still mounted would re-render it
+    // outside act.
+    await forgetSession()
     mockFetch.mockReset()
     mockFetch.mockImplementation(() => Promise.resolve(feed()))
     globalThis.fetch = mockFetch
@@ -117,5 +135,31 @@ describe('MarketScreen', () => {
     await openMarket(user)
 
     expect(await screen.findByText('The listings could not be loaded.')).toBeOnTheScreen()
+  })
+
+  // The header, not just the screen: signed out there is no credential to send,
+  // and the browse feed is the one endpoint that needs none.
+  it('reads the feed with no Authorization header at all', async () => {
+    const user = userEvent.setup()
+
+    await openMarket(user)
+    await screen.findByText(
+      'Nothing is for sale yet. Mark a card in one of your binders and it shows up here.',
+    )
+
+    expect(mockFetch.mock.calls[0]?.[1]?.headers).toEqual({})
+  })
+
+  it('shows the same market from the tab bar once a collector is signed in', async () => {
+    mockFetch.mockImplementation(() => Promise.resolve(feed(listed())))
+    await rememberSession(session)
+    const user = userEvent.setup()
+
+    await render(<App />)
+    await user.press(await screen.findByRole('button', { name: MARKET_TAB }))
+
+    expect(
+      await screen.findByRole('button', { name: 'Contact the seller of Dark Magician' }),
+    ).toBeOnTheScreen()
   })
 })
