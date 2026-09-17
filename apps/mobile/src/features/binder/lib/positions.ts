@@ -56,6 +56,13 @@ export const addablePocket = (shape: PageShape): number | null => {
   return shape.filled
 }
 
+/**
+ * How many of a page's pockets hold a card. The binder is dense, so they are
+ * the first ones — which is what lets a page describe itself with one number.
+ */
+export const filledPockets = <T,>(pockets: readonly (T | null)[]): number =>
+  pockets.filter((pocket) => pocket !== null).length
+
 /** The moves a pocket offers as buttons — the same set a drag can express. */
 export type MoveAction = 'pocketBack' | 'pocketForward' | 'previousPage' | 'nextPage'
 

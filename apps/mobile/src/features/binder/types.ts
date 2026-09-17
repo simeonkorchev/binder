@@ -28,9 +28,6 @@ export type SetResolution = SlotBody['setResolution']
 /** A card the database knows, as `GET /cards` returns it. */
 export type CardSummary = components['schemas']['ScanCard']
 
-/** `GET /cards` response body. */
-export type CardSearchBody = components['schemas']['SearchCardsBody']
-
 /**
  * One 3x3 page, shaped for the grid: always nine pockets, `null` where the
  * pocket is empty. The server sends nine; the mapper builds nine regardless, so

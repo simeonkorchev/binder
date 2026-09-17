@@ -3,6 +3,8 @@ import { NavigationContainer, type NavigatorScreenParams } from '@react-navigati
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useTranslation } from 'react-i18next'
 
+import BinderPageScreen from '@/features/binder/BinderPageScreen'
+import BindersScreen from '@/features/binder/BindersScreen'
 import ScanScreen from '@/features/scan/ScanScreen'
 import { useTheme } from '@/theme/useTheme'
 
@@ -19,7 +21,10 @@ export type RootTabParamList = {
 /** Everything pushed over the tabs. A route's params are its whole input. */
 export type RootStackParamList = {
   Tabs: NavigatorScreenParams<RootTabParamList> | undefined
-  BinderPage: { binderId: string }
+  // The name travels with the id because nothing on the page can look it up:
+  // `GET /binders/{id}` answers with a page of slots, and the list is the only
+  // place a binder's name is ever sent.
+  BinderPage: { binderId: string; binderName: string }
   SellerContact: { sellerId: string }
 }
 
@@ -48,7 +53,7 @@ const TabsNavigator = (): React.JSX.Element => {
       <Tab.Screen name="Scan" component={ScanScreen} options={{ title: t('nav.scan') }} />
       <Tab.Screen
         name="Binders"
-        component={PlaceholderScreen}
+        component={BindersScreen}
         options={{ title: t('nav.binders') }}
       />
       <Tab.Screen
@@ -71,8 +76,10 @@ export const AppNavigator = (): React.JSX.Element => {
         <Stack.Screen name="Tabs" component={TabsNavigator} options={{ headerShown: false }} />
         <Stack.Screen
           name="BinderPage"
-          component={PlaceholderScreen}
-          options={{ title: t('nav.binderPage') }}
+          component={BinderPageScreen}
+          // The header is the one place the binder's name fits, and the route
+          // carries it for exactly that.
+          options={({ route }) => ({ title: route.params.binderName })}
         />
         <Stack.Screen
           name="SellerContact"

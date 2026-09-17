@@ -1,5 +1,6 @@
 import {
   addablePocket,
+  filledPockets,
   clampPage,
   isLastPage,
   moveDestination,
@@ -85,6 +86,20 @@ describe('addablePocket', () => {
 
   it('is nowhere on a page with pages after it — that page has no empty pocket', () => {
     expect(addablePocket(shape({ page: 0, pageCount: 3 }))).toBeNull()
+  })
+})
+
+describe('filledPockets', () => {
+  it('counts the cards on a page', () => {
+    expect(filledPockets([{}, {}, null, null, null, null, null, null, null])).toBe(2)
+  })
+
+  it('counts an empty page as none', () => {
+    expect(filledPockets([null, null, null, null, null, null, null, null, null])).toBe(0)
+  })
+
+  it('counts a full page as nine', () => {
+    expect(filledPockets(Array.from({ length: 9 }, () => ({})))).toBe(9)
   })
 })
 

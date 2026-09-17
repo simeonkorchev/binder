@@ -59,6 +59,23 @@ describe('useBinders', () => {
     })
   })
 
+  it('reads the list again when a failed read is retried', async () => {
+    mockFetch.mockImplementation(() => Promise.resolve(answer({}, 500)))
+
+    const { result } = await renderHook(() => useBinders())
+    await waitFor(() => {
+      expect(result.current.state.status).toBe('error')
+    })
+
+    await act(async () => {
+      result.current.reload()
+    })
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+    })
+  })
+
   it('creates a binder and answers with the one the server made', async () => {
     const created = binder({ id: 'binder-2', name: 'Trades' })
     mockFetch.mockImplementation((_input, init) =>

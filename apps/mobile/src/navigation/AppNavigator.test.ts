@@ -6,10 +6,18 @@ import type { RootStackParamList, RootTabParamList } from './AppNavigator'
 // screens are not written yet, so nothing else would notice until they are.
 describe('route params', () => {
   it('gives each pushed route the id its screen must load', () => {
-    const binderPage: RootStackParamList['BinderPage'] = { binderId: 'b-1' }
+    const binderPage: RootStackParamList['BinderPage'] = { binderId: 'b-1', binderName: 'Blue-Eyes' }
     const sellerContact: RootStackParamList['SellerContact'] = { sellerId: 's-1' }
 
     expect([binderPage.binderId, sellerContact.sellerId]).toEqual(['b-1', 's-1'])
+  })
+
+  // The page screen puts it in the header: nothing it can read names the
+  // binder, because the page endpoint answers with slots and a page count.
+  it('carries the binder name to the page screen, which cannot look it up', () => {
+    const binderPage: RootStackParamList['BinderPage'] = { binderId: 'b-1', binderName: 'Trades' }
+
+    expect(binderPage.binderName).toBe('Trades')
   })
 
   it('takes no params for the three top-level destinations', () => {

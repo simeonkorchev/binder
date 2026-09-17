@@ -37,9 +37,18 @@ describe('App', () => {
     const user = userEvent.setup()
     await render(<App />)
 
-    await user.press(screen.getByRole('button', { name: BINDERS_TAB }))
+    await user.press(screen.getByRole('button', { name: MARKET_TAB }))
 
     expect(await screen.findByText('This screen is not built yet.')).toBeOnTheScreen()
+  })
+
+  it('opens the binders tab on the collector\'s binders, not on a placeholder', async () => {
+    const user = userEvent.setup()
+    await render(<App />)
+
+    await user.press(screen.getByRole('button', { name: BINDERS_TAB }))
+
+    expect(await screen.findByRole('button', { name: 'New binder' })).toBeOnTheScreen()
   })
 
   it('opens the scanner on a way to get the camera, not on a blank viewfinder', async () => {

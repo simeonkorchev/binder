@@ -53,8 +53,8 @@
         "no_set": "Found the card, but not which set it is from."
       },
       "keep": "Keep {{name}}, set unknown",
-      "choose": "{{name}} \u2014 {{set}}",
-      "chooseNoSet": "{{name}} \u2014 set unknown",
+      "choose": "{{name}} — {{set}}",
+      "chooseNoSet": "{{name}} — set unknown",
       "noSet": "Set unknown",
       "search": "Search by name",
       "discard": "Leave this card out",
@@ -69,7 +69,7 @@
       "label": "Card name",
       "placeholder": "Blue-Eyes White Dragon",
       "submit": "Search",
-      "searching": "Searching\u2026",
+      "searching": "Searching…",
       "prompt": "Type part of the card's name and search.",
       "empty": "No card by that name. Try a shorter part of it.",
       "failed": "The card search could not be reached. Try again.",
@@ -88,7 +88,8 @@
       "loadError": "Your binders could not be loaded.",
       "createError": "The binder could not be created.",
       "retry": "Try again",
-      "openLabel": "Open the binder {{name}}"
+      "openLabel": "Open the binder {{name}}",
+      "loading": "Loading your binders…"
     },
     "page": {
       "indicator": "Page {{page}} of {{pageCount}}",
@@ -101,7 +102,8 @@
       "saving": "Saving…",
       "moveError": "The card could not be moved.",
       "removeError": "The card could not be removed.",
-      "addError": "The card could not be added."
+      "addError": "The card could not be added.",
+      "loading": "Opening the binder…"
     },
     "pocket": {
       "empty": "Empty",
@@ -136,7 +138,8 @@
       "retry": "Try again",
       "note": "A card added by name is filed with no set. Scanning it records the set it was printed in.",
       "close": "Close",
-      "addLabel": "Add {{name}} to the binder"
+      "addLabel": "Add {{name}} to the binder",
+      "searching": "Searching…"
     }
   }
 }
