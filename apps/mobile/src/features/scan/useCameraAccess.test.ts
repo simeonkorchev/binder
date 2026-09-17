@@ -31,9 +31,8 @@ describe('useCameraAccess', () => {
     mockGetStatus.mockReset()
     mockRequest.mockReset()
     jest.restoreAllMocks()
-    jest.spyOn(AppState, 'addEventListener').mockReturnValue({
-      remove: jest.fn(),
-    } as unknown as NativeEventSubscription)
+    const subscription: NativeEventSubscription = { remove: jest.fn() }
+    jest.spyOn(AppState, 'addEventListener').mockReturnValue(subscription)
     jest.spyOn(Linking, 'openSettings').mockResolvedValue()
   })
 

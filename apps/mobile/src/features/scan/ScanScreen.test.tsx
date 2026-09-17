@@ -35,6 +35,8 @@ const AIMING_HELP = 'Fill the frame with the card and keep the printed code insi
 const EMPTY_STRIP = 'Nothing captured yet. Sweep the page and cards land here.'
 const NO_CAMERA = 'Binder found no camera on this phone, so there is nothing to scan with.'
 
+// The screen forwards the device to `<Camera>` and reads nothing off it, so
+// the fixture carries only what identifies it.
 const backCamera = (): CameraDevice =>
   ({ id: 'back', position: 'back', name: 'Back Camera' }) as CameraDevice
 
