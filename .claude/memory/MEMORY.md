@@ -30,6 +30,7 @@ brackets are what a session would search for, the slug is the anchor.
 - [project] where a handler gets the signed-in user now; `Middleware` authenticates but does not authorise; `ActorFromContext` → go.md#the-actor-seam-is-middleware-plus-actorfromcontext-in-user-api
 - [reference] does a logged 500 leak a column value; `pgconn.PgError.Error()` omits `Detail` → go.md#pgx-error-strings-exclude-postgres-detail-so-a-500-log-cannot-leak-a-value
 - [reference] a tab-only contact passes `btrim(col) <> ''`; `strings.TrimSpace` vs `btrim` → go.md#go-trimspace-and-postgres-btrim-disagree-about-tabs
+- [project] a `$ref` with no null, a `*uuid.UUID` documented as a plain string, `"type": ["array","null"]` on a slice that is always made; why decorating `huma.Registry` does not work; `humaschema.Config` → go.md#huma-documents-three-shapes-as-the-wrong-nullability
 
 ## mobile.md — apps/mobile
 
@@ -42,7 +43,7 @@ brackets are what a session would search for, the slug is the anchor.
 - [project] where the navigator, the locales and the theme tokens live; route names and params; why the param list is a type alias → mobile.md#where-the-app-shell-lives
 - [reference] mocking `fetch` in a mobile hook test; a second call failing with a body already read; `process.env.EXPO_PUBLIC_*` set in `beforeEach` → mobile.md#jest-has-a-real-fetch-and-runtime-expo-public-env
 - [project] one card scanned twenty times, or a second copy silently refused; what "left the frame" means and why it counts reads not seconds → mobile.md#a-re-read-is-a-second-copy-only-after-the-code-left-the-frame
-- [project] a null `card` or `printing` the generated type says cannot be null; huma pointer fields; `@binder/types` missing from `apps/mobile/package.json` → mobile.md#the-generated-scan-match-claims-a-card-that-cannot-be-null
+- [project] `@binder/types` missing from `apps/mobile/package.json`; a value import Metro cannot resolve; why a feature's `types.ts` must not re-add nullability with `Omit<…> & {…}` → mobile.md#binder-types-resolves-through-the-workspace-symlink
 
 ## decisions.md — binding
 
@@ -59,6 +60,7 @@ brackets are what a session would search for, the slug is the anchor.
 - [project] why `SellerContact` returns a `dataerror` rather than its own sentinel → decisions.md#2026-09-17-sellercontact-keeps-the-stores-missingentityerror
 - [project] why the scan queue calls `fetch` and not React Query; `EXPO_PUBLIC_API_URL` with no fallback; which failures are retried and which are recorded → decisions.md#2026-09-17-the-scan-queue-owns-its-fetch-there-is-no-data-layer-yet
 - [project] expo-router vs react-navigation, and the five routes the MVP has → decisions.md#2026-09-17-navigation-is-react-navigation-not-expo-router
+- [project] whether a nullable field stays `required`; `anyOf` with `{"type":"null"}` for a nullable `$ref`; why huma's own `ErrorModel` is corrected too → decisions.md#2026-09-17-a-nullable-field-stays-required-and-gains-a-null-branch
 
 ## deploy.md — infrastructure and CI
 

@@ -56,6 +56,22 @@ built from `t('nav.scan')`, it doubles as proof the translation reached the
 navigator.
 Evidence: `apps/mobile/jest.setup.ts`, `apps/mobile/src/App.test.tsx` (commit 956ef3b) · since 2026-09-17 · verified 2026-09-17
 
+### every-navigator-test-loads-the-scanners-native-modules
+A test that renders `App` fails at **import** with `system/camera-module-not-found:
+Failed to initialize VisionCamera`, before any test body runs: the Scan tab is
+the app's first screen, so the whole scanner — VisionCamera, its ML Kit text
+recognition, worklets-core and expo-haptics — is loaded by every test that
+mounts the navigator, and none of those native modules exist under jest.
+
+The four mocks live in `apps/mobile/jest.setup.ts` next to the SafeAreaProvider
+one, at their thinnest: a permission nobody has answered yet
+(`not-determined`), no capture device, a frame processor nobody feeds, and
+haptics that resolve. That default is deliberate — a screen test sees the
+permission explainer, which is what a fresh phone shows. A test about the scan
+loop itself overrides them with its own `jest.mock` in the file, which wins
+over the setup mock.
+Evidence: `apps/mobile/jest.setup.ts`, `apps/mobile/src/App.test.tsx` (commit a315c50) · since 2026-09-17 · verified 2026-09-17
+
 ### i18next-use-collides-with-react-19-use
 `import { use } from 'i18next'` then `use(initReactI18next)` at module scope
 fails lint with *React Hook "use" cannot be called at the top level*
@@ -145,17 +161,78 @@ that forwards nothing else can never forget a card across a blank view — the
 wiring (T046) has to supply the absent reads.
 Evidence: `apps/mobile/src/features/scan/lib/useStableRead.ts` (commit b33f820) · since 2026-09-17 · verified 2026-09-17
 
-### the-generated-scan-match-claims-a-card-that-cannot-be-null
-huma renders a Go pointer-to-struct field as a plain `$ref` with no null in it,
-so `components['schemas']['ScanMatch']` says `card` and `printing` are always
-there while `internal/card/api/scan.go` documents the opposite — the card is
-null when nothing matched, the printing is null for every rung that resolves no
-set. The wire is the source of truth; `features/scan/types.ts` restores the
-nullability with `Omit<…> & { card: … | null }`, which keeps the link to the
-generated type. Any pointer-to-struct field on any endpoint has the same gap.
-
+### binder-types-resolves-through-the-workspace-symlink
 `@binder/types` is **not** in `apps/mobile/package.json` and resolves through
 the workspace root symlink. `import type` is erased, so nothing is bundled and
 knip stays quiet; a **value** import from that package would need the dependency
 declared before Metro could resolve it.
-Evidence: `apps/mobile/src/features/scan/types.ts` (commit 8559d4c) · since 2026-09-17 · verified 2026-09-17
+
+The generated types tell the truth about null since 2026-09-17, so a feature's
+`types.ts` aliases `components['schemas'][…]` directly. **Never re-add
+nullability on the client** with `Omit<generated, …> & { … }`: the scan feature
+carried exactly that correction for `card`, `printing` and `candidates`, and it
+was a second source of truth for a fact the first one already stated. A
+generated type that looks wrong is a bug in `pkg/humaschema`, fixed there and
+regenerated (go.md#huma-documents-three-shapes-as-the-wrong-nullability).
+Evidence: `apps/mobile/src/features/scan/types.ts` (commit 1de05ff) · since 2026-09-17 · verified 2026-09-17
+
+### the-absent-reads-are-reported-by-usetextframes-not-by-the-screen
+`useStableRead.observe` must be called once per processed frame with `null`
+when the frame carried no code, and the place that can honour it is
+`features/scan/useTextFrames.ts` — it reports **every** frame the recognition
+pass ran on, empty ones as `null`. It is the only place that can: a frame
+`runAtTargetFps` skipped was never read and must not age a card out, a frame
+that was read and held no text must, and nothing downstream can tell those two
+apart. `useScanSession` therefore has no early return on an empty frame.
+
+The failure this prevents is silent — a card, a blank wall, then the same card
+again captures **once** instead of twice, and the collector's second copy is
+gone with no error anywhere. The test that pins it drives real frames through
+the real chain (`useScanSession.test.ts`, "captures a second copy met after the
+first left the frame"); putting the old `if (resultText.length === 0) return`
+back turns it red at 1 instead of 2.
+Evidence: `apps/mobile/src/features/scan/useTextFrames.ts` (commit 1ce85b1), `apps/mobile/src/features/scan/useScanSession.test.ts` (commit 6af3612) · since 2026-09-17 · verified 2026-09-17
+
+### a-camera-refusal-has-two-ways-out-and-the-status-only-tells-them-apart-after-asking
+A denied camera permission can be asked for again; a blocked one can only be
+changed in the settings app. VisionCamera reports `not-determined` exactly
+while the OS is still willing to show the dialog — on Android
+`CameraViewModule.getPermission` maps a denied permission back to
+`not-determined` for as long as `shouldShowRequestPermissionRationale` holds —
+so the status read **after** a refusal is what separates them.
+
+The status read **before** asking cannot, and this is the trap: Android
+answers `denied` both for a permission that was never requested (the rationale
+flag is false until the first ask) and for one blocked forever. Reading it as
+"blocked" sends a first-run user to the settings app for a dialog they were
+never shown. `features/scan/useCameraAccess.ts` therefore trusts only
+`granted` at mount, sends every other start to the explainer, and classifies
+the refusal afterwards. The permission also changes while the app is
+suspended, so the status is re-read on resume — and only a grant is acted on
+there, because whether the dialog will open again is something the request
+tells us and the status does not.
+Evidence: `apps/mobile/src/features/scan/useCameraAccess.ts` (commit a48869b) · since 2026-09-17 · verified 2026-09-17
+
+### the-capture-tick-uses-androids-view-haptics-to-stay-at-one-permission
+`expo-haptics`' `impactAsync` drives Android's `Vibrator`, which needs the
+`VIBRATE` permission in the manifest; `performAndroidHapticsAsync` uses the
+view's haptic feedback and needs none. `app.config.ts` states that the camera
+is the only permission this app asks for, so `lib/captureTick.ts` branches on
+`Platform.OS` to keep that true. A failure is swallowed — a phone with no
+haptic engine must not take a captured card down with it.
+Evidence: `apps/mobile/src/features/scan/lib/captureTick.ts` (commit 6af3612) · since 2026-09-17 · verified 2026-09-17
+
+### where-the-scan-screen-layer-lives
+`features/scan/ScanScreen.tsx` (a default export, registered on the `Scan` tab
+in `navigation/AppNavigator.tsx`) is layout only and branches three ways:
+`CameraAccessNotice` when access is not granted, a translated line when
+`useCameraDevice('back')` finds nothing, and the viewfinder otherwise.
+`useScanSession` is the whole loop behind it — frame processor, parser, stable
+read, resolve queue — and `useCameraAccess` owns the permission.
+
+Two things in there are easy to lose. `isActive={useIsFocused()}`: a bottom tab
+keeps its screens mounted, so without it the camera keeps reading frames while
+the user is in a binder. And `lib/capturedCards.ts` joins captures to answers
+**by code, first answer per code**, keyed `${index}:${code}` — the code is not
+unique, because capturing it twice is the collector's second copy.
+Evidence: `apps/mobile/src/features/scan/ScanScreen.tsx` (commit a315c50) · since 2026-09-17 · verified 2026-09-17

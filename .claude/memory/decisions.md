@@ -187,3 +187,38 @@ after it). Draining restarts on the next accepted scan or on `retryQueued` —
 there is no timer, so a queue can never spin against a server that is down.
 Evidence: `apps/mobile/src/features/scan/api/useResolveScan.ts` (commit 87833f4) · since 2026-09-17 · verified 2026-09-17
 
+### 2026-09-17-a-nullable-field-stays-required-and-gains-a-null-branch
+A property the Go code can send as `null` **stays** in its schema's `required`
+list and gains `null` to its type, rather than being dropped from `required`.
+Go's encoder emits the key either way — no DTO here uses `omitempty` — so
+`required` is the true statement; it is already what huma does for `*string`
+(`ScanCard.imageObjectKey`), so the siblings agree; and openapi-typescript
+renders it `card: ScanCard | null` rather than `card?: ScanCard`, which is the
+shape a client actually wants.
+
+A nullable `$ref` is written `anyOf: [{$ref}, {"type": "null"}]`, because a
+`$ref` has no `type` to add null to. huma's validator treats `{"type":"null"}`
+as unconstrained, so a nullable **object** field is effectively unvalidated on
+input. No input DTO has one today; one that does needs an explicit `Resolve`
+guard (000-principles.md section 10).
+
+The pass is applied to every registered type, huma's own `ErrorModel` included,
+rather than only to this repo's own DTOs: one rule with no exception list. The
+visible cost is `ErrorModel.errors` items, typed `[]*ErrorDetail` in Go and so
+documented as nullable, which huma never actually sends as null.
+Evidence: `pkg/humaschema/humaschema.go` (commit 68516ba) · since 2026-09-17
+
+### 2026-09-17-capture-feedback-is-a-tick-a-count-and-a-strip-with-no-reanimated
+T046 asked for capture feedback and the `react-native-best-practices` skill
+governs any Reanimated used for it. None is used: `react-native-reanimated` is
+not a dependency of `apps/mobile` and adding it would be a new native module in
+a dev build, for tile animations on a strip whose job is to be read, not
+watched. The feedback is a haptic tick per capture, a running count, and a
+horizontal `FlatList` of captured cards with `getItemLayout` over fixed-width
+tiles.
+
+Revisit only with a feedback requirement a static strip cannot meet. Adding
+Reanimated is then a spec decision, not a refactor, because it rebuilds the
+native app.
+Evidence: `apps/mobile/src/features/scan/components/CapturedStrip.tsx` (commit a315c50) · since 2026-09-17 · verified 2026-09-17
+

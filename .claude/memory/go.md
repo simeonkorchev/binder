@@ -138,6 +138,43 @@ other reason is ERROR. If a second layer ever needs the same thing, that is the
 moment to port `pkg/eslog`, not before.
 Evidence: `cmd/cardimages/pipeline/failure.go` (`FailureReason.Level`) · since 2026-09-16 · verified 2026-09-16
 
+## API layer (Huma)
+
+### huma-documents-three-shapes-as-the-wrong-nullability
+huma decides a property's nullability from the Go type behind it, and gets three
+of this API's shapes wrong — in both directions:
+
+- **a pointer to a struct** becomes a bare `$ref` listed in `required`, so
+  `*scanCard` is documented as always present and a client that trusts the
+  contract dereferences null;
+- **a pointer to a named array type that unmarshals from text** — `*uuid.UUID`
+  is one — becomes a plain non-null `string`, because the registry decays
+  "pointer to array" to "array" before the generator ever sees the pointer;
+- **every slice** is nullable (`huma.DefaultArrayNullable` is true) while every
+  mapper here returns a made slice, so clients are told to expect a `null` that
+  can never arrive.
+
+`humaschema.Config` replaces `huma.DefaultConfig` at every site that builds an
+API — the server, the `-openapi` generator, all four handler suites — and
+corrects all three under one rule: a Go pointer means null on the wire and
+nothing else does, with the `nullable` tag still winning.
+
+**Do not fix this by decorating `huma.Registry`.** huma's `mapRegistry.Schema`
+generates a struct's fields by calling **itself**, not the caller's wrapper, so
+a decorator only ever sees the outermost type. The correction runs on
+`Config.OnAddOperation`, the first point at which an operation's schemas all
+exist; it is a function of the Go types, so running it once per operation is
+idempotent. And huma **panics** on `nullable:"true"` over a field whose schema
+is a `$ref` to an object, so a nullable object cannot be asked for with a struct
+tag at all — it is written as `anyOf: [{$ref}, {type: null}]`.
+
+`humaschema.Inspect` reads the rule back off the emitted document, and
+`cmd/binderd/nullability_internal_test.go` fails the build on any property where
+the document and the Go field disagree. Its negative control registers the same
+routes on `huma.DefaultConfig` and asserts all thirteen original disagreements
+are named, so a green guard cannot mean an empty one.
+Evidence: `pkg/humaschema/humaschema.go` (commit 68516ba) · since 2026-09-17 · verified 2026-09-17
+
 ## Store and data
 
 ### postgres-unique-is-not-deferrable-park-rows-to-reorder-positions
