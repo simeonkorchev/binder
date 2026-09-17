@@ -178,7 +178,14 @@ and the user domain's service satisfies it at wiring time (002 §3a). Slot
 *ownership* is not modelled that way for a plain reason worth not re-deriving:
 `internal/binder/service` exposes no "who owns this slot" method to consume, and
 adding one to it from outside its own wave was not on the table.
-Evidence: `internal/listing/store/browse.go`, `internal/listing/service/service.go` · since 2026-09-17 · verified 2026-09-17
+
+W6 and W7 landed in parallel and the two halves do not line up by name: the
+consumer asks for `ContactFor(ctx, userID) (listing/model.SellerContact, error)`
+and `internal/user/service` offers `SellerContact(ctx, userID) (user/model.Contact, error)`.
+Both carry the same two `*string` fields and the same contract, so the bootstrap
+wiring is a few-line adapter type — that is where the two are reconciled, not by
+either domain importing the other.
+Evidence: `internal/listing/service/service.go`, `internal/user/service/contact.go` · since 2026-09-17 · verified 2026-09-17
 
 ### a-seller-who-shared-no-contact-details-is-a-200-not-a-404
 `GET /sellers/{id}/contact` answers `200 {"email":null,"phone":null}` for an
