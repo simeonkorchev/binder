@@ -5,16 +5,16 @@ import type { components } from '@binder/types'
  * imported here and in the API hooks, never in a screen or a component, so a
  * regenerated schema has one blast radius (003-frontend.md §5).
  *
- * The pieces below are exported as the screens come to need them — a card, a
- * printing and a set resolution are all reachable through `ResolvedScan` until
- * one of them is named on its own.
+ * A piece is exported here once something outside this file names it. The set
+ * resolution is still reachable through `ResolvedScan` alone, so it stays
+ * private.
  */
 
 /** A card as the resolver returns it. */
-type ScannedCard = components['schemas']['ScanCard']
+export type ScannedCard = components['schemas']['ScanCard']
 
 /** One card as printed in one set. */
-type ScannedPrinting = components['schemas']['ScanPrinting']
+export type ScannedPrinting = components['schemas']['ScanPrinting']
 
 /**
  * How the scanned card's set was determined — the rungs of the match ladder,
@@ -29,10 +29,13 @@ type SetResolution = components['schemas']['ScanMatch']['resolution']
  * name rung produced, which names a card and no set — and the generated type
  * says so.
  */
-type ScanCandidate = components['schemas']['ScanCandidate']
+export type ScanCandidate = components['schemas']['ScanCandidate']
 
 /** `POST /scans/resolve`'s response body. */
 export type ScanMatchBody = components['schemas']['ScanMatch']
+
+/** `GET /cards`'s response body: the cards a name search found. */
+export type SearchCardsBody = components['schemas']['SearchCardsBody']
 
 /** One scanned card, resolved: what the camera read and what the ladder made of it. */
 export interface ResolvedScan {
