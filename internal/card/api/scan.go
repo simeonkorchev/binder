@@ -47,13 +47,15 @@ type scanCandidate struct {
 }
 
 // setResolution is model.SetResolution on the wire. It exists as its own type
-// so the OpenAPI enum is generated from model.SetResolutions() rather than
+// so the OpenAPI enum is generated from model.ScanResolutions() rather than
 // re-typed into a struct tag that the next rung added would not update.
 type setResolution model.SetResolution
 
-// Schema declares the enum from the one list of rungs.
+// Schema declares the enum from the one list of rungs. It is ScanResolutions
+// and not SetResolutions: `manual` is a value a binder slot may store, and not
+// one this endpoint can ever answer.
 func (setResolution) Schema(huma.Registry) *huma.Schema {
-	resolutions := model.SetResolutions()
+	resolutions := model.ScanResolutions()
 	values := make([]any, 0, len(resolutions))
 	for _, resolution := range resolutions {
 		values = append(values, string(resolution))
@@ -66,11 +68,39 @@ func (setResolution) Schema(huma.Registry) *huma.Schema {
 	}
 }
 
-// scanMatch is what the ladder concluded. Card is null only when nothing
-// matched at all; Printing is non-null exactly for the rungs that resolve a set
+// scanOutcome is model.ScanOutcome on the wire, for the same reason
+// setResolution is its own type: one list of outcomes, in the model.
+type scanOutcome model.ScanOutcome
+
+// Schema declares the enum from the one list of outcomes.
+func (scanOutcome) Schema(huma.Registry) *huma.Schema {
+	outcomes := model.ScanOutcomes()
+	values := make([]any, 0, len(outcomes))
+	for _, outcome := range outcomes {
+		values = append(values, string(outcome))
+	}
+
+	return &huma.Schema{
+		Type: huma.TypeString,
+		Enum: values,
+		Description: "What happened to this scan, and so what to do with it next. " +
+			"Read this rather than `resolution` to decide what to show: `resolution` " +
+			"answers `unresolved` both when several rows matched and when none did.",
+	}
+}
+
+// scanMatch is what the ladder concluded.
+//
+// Outcome is the field a client switches on. Resolution says how the *set* was
+// settled, which is what a binder slot records, and it cannot double as the
+// discriminator: `unresolved` is the honest answer both for a scan with
+// candidates to choose between and for one that matched nothing at all.
+//
+// Printing is non-null exactly for the rungs that resolve a set
 // (model.RequiresPrinting), which is the same equivalence the binder_slots CHECK
 // enforces in SQL.
 type scanMatch struct {
+	Outcome    scanOutcome   `json:"outcome"`
 	Resolution setResolution `json:"resolution"`
 	Card       *scanCard     `json:"card"`
 	Printing   *scanPrinting `json:"printing"`
@@ -130,6 +160,7 @@ func registerScanEndpoints(api huma.API, svc ScanService) {
 // toScanMatch maps a match result onto the wire, field for field.
 func toScanMatch(match model.MatchResult) scanMatch {
 	return scanMatch{
+		Outcome:    scanOutcome(match.Outcome),
 		Resolution: setResolution(match.Resolution),
 		Card:       toScanCardPtr(match.Card),
 		Printing:   toScanPrintingPtr(match.Printing),

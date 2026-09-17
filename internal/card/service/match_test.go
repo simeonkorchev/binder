@@ -72,6 +72,12 @@ var _ = Describe("ResolveScan", func() {
 	// The equivalence db/migrations/003_binders.sql states as a CHECK. Asserted
 	// after every spec, so no rung can produce a result a binder slot would
 	// have to refuse.
+	//
+	// The second assertion is the one that keeps Outcome honest. Every rung
+	// states its own outcome where it concludes, so nothing in the ladder
+	// derives it from the other fields — which is exactly why a test has to,
+	// independently, and compare. Together the specs below reach all five
+	// shapes the ladder can produce, so this runs over every one of them.
 	AfterEach(func() {
 		if err != nil {
 			return
@@ -79,6 +85,10 @@ var _ = Describe("ResolveScan", func() {
 		Expect(model.RequiresPrinting(result.Resolution)).To(
 			Equal(result.Printing != nil),
 			"a resolution requiring a printing must carry one, and no other may",
+		)
+		Expect(result.Outcome).To(
+			Equal(outcomeOfShape(result)),
+			"the stated outcome must agree with the shape of the result it came with",
 		)
 	})
 
@@ -227,6 +237,7 @@ var _ = Describe("ResolveScan", func() {
 
 		It("settles the card and leaves the set open", func() {
 			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Outcome).To(Equal(model.ScanOutcomeAmbiguous))
 			Expect(result.Resolution).To(Equal(model.SetResolutionUnresolved))
 			Expect(result.Card).To(HaveValue(Equal(darkMagician)))
 			Expect(result.Printing).To(BeNil())
@@ -252,6 +263,7 @@ var _ = Describe("ResolveScan", func() {
 
 		It("settles neither the card nor the set", func() {
 			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Outcome).To(Equal(model.ScanOutcomeAmbiguous))
 			Expect(result.Resolution).To(Equal(model.SetResolutionUnresolved))
 			Expect(result.Card).To(BeNil())
 			Expect(result.Printing).To(BeNil())
@@ -277,6 +289,7 @@ var _ = Describe("ResolveScan", func() {
 
 		It("resolves the card by name and no set", func() {
 			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Outcome).To(Equal(model.ScanOutcomeCardOnly))
 			Expect(result.Resolution).To(Equal(model.SetResolutionByName))
 			Expect(result.Card).To(HaveValue(Equal(darkMagician)))
 			Expect(result.Printing).To(BeNil())
@@ -302,6 +315,7 @@ var _ = Describe("ResolveScan", func() {
 
 		It("refuses to pick a winner", func() {
 			Expect(err).NotTo(HaveOccurred())
+			Expect(result.Outcome).To(Equal(model.ScanOutcomeAmbiguous))
 			Expect(result.Resolution).To(Equal(model.SetResolutionUnresolved))
 			Expect(result.Card).To(BeNil())
 			Expect(result.Printing).To(BeNil())
@@ -323,6 +337,11 @@ var _ = Describe("ResolveScan", func() {
 
 		It("is unresolved, and that is not an error", func() {
 			Expect(err).NotTo(HaveOccurred())
+			// The point of the outcome field: this answers the same
+			// `unresolved` resolution as the two ambiguous specs above, and it
+			// is a different outcome, because the user's next move is a search
+			// rather than a choice.
+			Expect(result.Outcome).To(Equal(model.ScanOutcomeNoMatch))
 			Expect(result.Resolution).To(Equal(model.SetResolutionUnresolved))
 			Expect(result.Card).To(BeNil())
 			Expect(result.Printing).To(BeNil())
@@ -396,3 +415,21 @@ var _ = Describe("ResolveScan", func() {
 		})
 	})
 })
+
+// outcomeOfShape works out what a result's Outcome has to be from the rest of
+// its fields, so the AfterEach above can hold the ladder to it. It is the
+// derivation the mobile app used to do for itself (lib/flaggedScans.ts), kept
+// here as a test oracle and nowhere in production: the server states the
+// outcome, and this is what proves the statement true.
+func outcomeOfShape(result model.MatchResult) model.ScanOutcome {
+	switch {
+	case len(result.Candidates) > 0:
+		return model.ScanOutcomeAmbiguous
+	case result.Card == nil:
+		return model.ScanOutcomeNoMatch
+	case result.Printing == nil:
+		return model.ScanOutcomeCardOnly
+	default:
+		return model.ScanOutcomeResolved
+	}
+}

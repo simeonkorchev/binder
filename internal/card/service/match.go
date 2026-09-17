@@ -31,6 +31,7 @@ type rungOutcome struct {
 func undecided() rungOutcome {
 	return rungOutcome{
 		match: model.MatchResult{
+			Outcome:    model.ScanOutcomeUnset,
 			Resolution: model.SetResolutionUnset,
 			Card:       nil,
 			Printing:   nil,
@@ -53,6 +54,10 @@ func undecided() rungOutcome {
 // printings come back as candidates for the user to choose between, because
 // guessing between them is the silent wrongness US3 exists to prevent. A rung
 // that matches nothing hands over to the next one.
+//
+// Every rung states its own model.ScanOutcome where it concludes, so "several
+// matched" and "nothing matched" are two answers on the wire even though both
+// leave the set unresolved.
 func (s *Service) ResolveScan(ctx context.Context, scan model.ScanInput) (model.MatchResult, error) {
 	code := parseScanCode(scan.Code)
 	name := strings.TrimSpace(scan.Name)
@@ -111,6 +116,7 @@ func decideCodeRung(printings []model.PrintedCard, resolution model.SetResolutio
 		return undecided()
 	case 1:
 		return rungOutcome{match: model.MatchResult{
+			Outcome:    model.ScanOutcomeResolved,
 			Resolution: resolution,
 			Card:       &printings[0].Card,
 			Printing:   &printings[0].Printing,
@@ -129,6 +135,7 @@ func decideCodeRung(printings []model.PrintedCard, resolution model.SetResolutio
 // records (003_binders.sql).
 func ambiguousPrintings(printings []model.PrintedCard) model.MatchResult {
 	result := model.MatchResult{
+		Outcome:    model.ScanOutcomeAmbiguous,
 		Resolution: model.SetResolutionUnresolved,
 		Card:       nil,
 		Printing:   nil,
@@ -155,7 +162,7 @@ func soleCard(printings []model.PrintedCard) (*model.Card, bool) {
 // and never a set, so it never carries a printing.
 func (s *Service) matchByName(ctx context.Context, name string) (model.MatchResult, error) {
 	if name == "" {
-		return unresolved(nil), nil
+		return noMatch(), nil
 	}
 
 	matches, err := s.store.FindCardsByName(ctx, name, nameSimilarityThreshold, nameCandidateLimit)
@@ -163,17 +170,18 @@ func (s *Service) matchByName(ctx context.Context, name string) (model.MatchResu
 		return model.MatchResult{}, fmt.Errorf("matching the scanned name: %w", err)
 	}
 	if len(matches) == 0 {
-		return unresolved(nil), nil
+		return noMatch(), nil
 	}
 
 	// Card names repeat in the imported dump (001_cards.sql), so two cards can
 	// score identically against one scanned name. A best score that is only
 	// tied is not a winner; anything strictly better is.
 	if len(matches) > 1 && matches[0].Similarity == matches[1].Similarity {
-		return unresolved(nameCandidates(matches)), nil
+		return ambiguousCards(matches), nil
 	}
 
 	return model.MatchResult{
+		Outcome:    model.ScanOutcomeCardOnly,
 		Resolution: model.SetResolutionByName,
 		Card:       &matches[0].Card,
 		Printing:   nil,
@@ -181,12 +189,32 @@ func (s *Service) matchByName(ctx context.Context, name string) (model.MatchResu
 	}, nil
 }
 
-func unresolved(candidates []model.Candidate) model.MatchResult {
+// noMatch is the conclusion for a scan nothing matched: the ladder ran out of
+// rungs. It and ambiguousCards below both answer SetResolutionUnresolved — the
+// set is genuinely undetermined either way — and they are two functions rather
+// than one because what the user has to do next is not the same, which is
+// exactly what Outcome carries. They were one function, and a client could not
+// tell the two apart without inspecting the shape of the answer.
+func noMatch() model.MatchResult {
 	return model.MatchResult{
+		Outcome:    model.ScanOutcomeNoMatch,
 		Resolution: model.SetResolutionUnresolved,
 		Card:       nil,
 		Printing:   nil,
-		Candidates: candidates,
+		Candidates: nil,
+	}
+}
+
+// ambiguousCards is the conclusion for a name rung whose best score was only
+// tied. The cards come back as candidates for the user to choose between; no
+// card is settled, because which of the tied ones was meant is the question.
+func ambiguousCards(matches []model.NameMatch) model.MatchResult {
+	return model.MatchResult{
+		Outcome:    model.ScanOutcomeAmbiguous,
+		Resolution: model.SetResolutionUnresolved,
+		Card:       nil,
+		Printing:   nil,
+		Candidates: nameCandidates(matches),
 	}
 }
 
