@@ -1,0 +1,12 @@
+{
+  "nav": {
+    "scan": "Scan",
+    "binders": "Binders",
+    "market": "Market",
+    "binderPage": "Binder",
+    "sellerContact": "Seller contact"
+  },
+  "common": {
+    "screenNotBuilt": "This screen is not built yet."
+  }
+}

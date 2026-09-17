@@ -1,0 +1,12 @@
+{
+  "nav": {
+    "scan": "Сканиране",
+    "binders": "Класьори",
+    "market": "Пазар",
+    "binderPage": "Класьор",
+    "sellerContact": "Контакт с продавача"
+  },
+  "common": {
+    "screenNotBuilt": "Този екран още не е готов."
+  }
+}

@@ -14,13 +14,21 @@
     "knip": "knip"
   },
   "dependencies": {
+    "@react-navigation/bottom-tabs": "^7.19.1",
+    "@react-navigation/native": "^7.4.1",
+    "@react-navigation/native-stack": "^7.19.1",
     "expo": "~57.0.23",
     "expo-build-properties": "~57.0.18",
     "expo-dev-client": "~57.0.19",
+    "expo-localization": "~57.0.2",
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.4",
+    "i18next": "^26.4.2",
     "react": "^19.2.3",
+    "react-i18next": "^17.0.14",
     "react-native": "^0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
     "react-native-vision-camera": "~4.7.3",
     "react-native-vision-camera-text-recognition": "~3.0.5",
     "react-native-worklets-core": "~1.6.3"
