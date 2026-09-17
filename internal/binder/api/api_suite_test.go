@@ -9,12 +9,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/simeonkorchev/binder/internal/binder/api"
+	"github.com/simeonkorchev/binder/pkg/humaschema"
 )
 
 var (
@@ -46,7 +46,7 @@ func signedOut() api.ActorFunc {
 // rather than calling a handler function directly.
 func newTestHandler(svc api.Service, actor api.ActorFunc) http.Handler {
 	mux := http.NewServeMux()
-	api.RegisterEndpoints(humago.New(mux, huma.DefaultConfig("Binder", "test")), svc, actor)
+	api.RegisterEndpoints(humago.New(mux, humaschema.Config("Binder", "test")), svc, actor)
 	return mux
 }
 

@@ -12,6 +12,7 @@ import (
 	cardapi "github.com/simeonkorchev/binder/internal/card/api"
 	listingapi "github.com/simeonkorchev/binder/internal/listing/api"
 	userapi "github.com/simeonkorchev/binder/internal/user/api"
+	"github.com/simeonkorchev/binder/pkg/humaschema"
 )
 
 const (
@@ -67,7 +68,7 @@ func register(api huma.API, svc services) {
 // exempt paths here (internal/user/api/actor.go).
 func newHandler(svc services, verifier userapi.SessionVerifier) http.Handler {
 	mux := http.NewServeMux()
-	register(humago.New(mux, huma.DefaultConfig(apiTitle, apiVersion)), svc)
+	register(humago.New(mux, humaschema.Config(apiTitle, apiVersion)), svc)
 	return userapi.Middleware(verifier)(mux)
 }
 
@@ -77,7 +78,7 @@ func newHandler(svc services, verifier userapi.SessionVerifier) http.Handler {
 // It is the same register call the server makes, on the same config, so the
 // document cannot describe an API this binary does not serve.
 func openAPIDocument() ([]byte, error) {
-	api := humago.New(http.NewServeMux(), huma.DefaultConfig(apiTitle, apiVersion))
+	api := humago.New(http.NewServeMux(), humaschema.Config(apiTitle, apiVersion))
 	register(api, services{})
 
 	document, err := json.MarshalIndent(api.OpenAPI(), "", specIndent)

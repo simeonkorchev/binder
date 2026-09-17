@@ -17,7 +17,10 @@
             "type": "string"
           },
           "cardPrintingId": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "position": {
             "format": "int64",
@@ -96,10 +99,7 @@
             "items": {
               "$ref": "#/components/schemas/ListedCardBody"
             },
-            "type": [
-              "array",
-              "null"
-            ]
+            "type": "array"
           }
         },
         "required": [
@@ -192,12 +192,16 @@
           "errors": {
             "description": "Optional list of individual error details",
             "items": {
-              "$ref": "#/components/schemas/ErrorDetail"
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ErrorDetail"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
-            "type": [
-              "array",
-              "null"
-            ]
+            "type": "array"
           },
           "instance": {
             "description": "A URI reference that identifies the specific occurrence of the problem.",
@@ -275,10 +279,7 @@
             "items": {
               "$ref": "#/components/schemas/BinderBody"
             },
-            "type": [
-              "array",
-              "null"
-            ]
+            "type": "array"
           }
         },
         "required": [
@@ -414,12 +415,16 @@
           },
           "slots": {
             "items": {
-              "$ref": "#/components/schemas/SlotBody"
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SlotBody"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
-            "type": [
-              "array",
-              "null"
-            ]
+            "type": "array"
           }
         },
         "required": [
@@ -485,7 +490,14 @@
             "$ref": "#/components/schemas/ScanCard"
           },
           "printing": {
-            "$ref": "#/components/schemas/ScanPrinting"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScanPrinting"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -533,16 +545,27 @@
             "items": {
               "$ref": "#/components/schemas/ScanCandidate"
             },
-            "type": [
-              "array",
-              "null"
-            ]
+            "type": "array"
           },
           "card": {
-            "$ref": "#/components/schemas/ScanCard"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScanCard"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "printing": {
-            "$ref": "#/components/schemas/ScanPrinting"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScanPrinting"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "resolution": {
             "description": "How the scanned card's set was determined.",
@@ -604,10 +627,7 @@
             "items": {
               "$ref": "#/components/schemas/ScanCard"
             },
-            "type": [
-              "array",
-              "null"
-            ]
+            "type": "array"
           }
         },
         "required": [
@@ -763,7 +783,10 @@
             "type": "string"
           },
           "cardPrintingId": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "id": {
             "type": "string"

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	humav2 "github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
@@ -21,6 +20,7 @@ import (
 	"github.com/simeonkorchev/binder/internal/user/api/apifakes"
 	"github.com/simeonkorchev/binder/internal/user/model"
 	"github.com/simeonkorchev/binder/internal/user/session"
+	"github.com/simeonkorchev/binder/pkg/humaschema"
 )
 
 // The seam this domain exists to fill: one resolver serves every domain's
@@ -220,7 +220,7 @@ var _ = Describe("Another domain behind this domain's middleware", func() {
 
 		mux := http.NewServeMux()
 		binderapi.RegisterEndpoints(
-			humago.New(mux, humav2.DefaultConfig("Binder", "test")), fakeBinder, api.ActorFromContext)
+			humago.New(mux, humaschema.Config("Binder", "test")), fakeBinder, api.ActorFromContext)
 		handler = api.Middleware(tokens)(mux)
 	})
 

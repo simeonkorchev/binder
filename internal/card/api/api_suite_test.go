@@ -9,11 +9,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/simeonkorchev/binder/internal/card/api"
+	"github.com/simeonkorchev/binder/pkg/humaschema"
 )
 
 // errService is the don't-care service failure: the specs using it assert the
@@ -30,7 +30,7 @@ func TestAPI(t *testing.T) {
 // rather than calling a handler function directly.
 func newTestHandler(svc api.Service) http.Handler {
 	mux := http.NewServeMux()
-	api.RegisterEndpoints(humago.New(mux, huma.DefaultConfig("Binder", "test")), svc)
+	api.RegisterEndpoints(humago.New(mux, humaschema.Config("Binder", "test")), svc)
 	return mux
 }
 

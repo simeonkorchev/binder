@@ -241,7 +241,7 @@ export interface components {
              */
             readonly $schema?: string;
             cardId: string;
-            cardPrintingId?: string;
+            cardPrintingId?: string | null;
             /** Format: int64 */
             position?: number | null;
             /**
@@ -271,7 +271,7 @@ export interface components {
              * @example https://example.com/schemas/BrowseListingsBody.json
              */
             readonly $schema?: string;
-            listings: components["schemas"]["ListedCardBody"][] | null;
+            listings: components["schemas"]["ListedCardBody"][];
         };
         CreateBinderInputBody: {
             /**
@@ -314,7 +314,7 @@ export interface components {
              */
             detail?: string;
             /** @description Optional list of individual error details */
-            errors?: components["schemas"]["ErrorDetail"][] | null;
+            errors?: (components["schemas"]["ErrorDetail"] | null)[];
             /**
              * Format: uri
              * @description A URI reference that identifies the specific occurrence of the problem.
@@ -360,7 +360,7 @@ export interface components {
              * @example https://example.com/schemas/ListBindersOutputBody.json
              */
             readonly $schema?: string;
-            binders: components["schemas"]["BinderBody"][] | null;
+            binders: components["schemas"]["BinderBody"][];
         };
         ListedCardBody: {
             cardId: string;
@@ -411,7 +411,7 @@ export interface components {
             page: number;
             /** Format: int64 */
             pageCount: number;
-            slots: components["schemas"]["SlotBody"][] | null;
+            slots: (components["schemas"]["SlotBody"] | null)[];
         };
         RenameBinderInputBody: {
             /**
@@ -437,7 +437,7 @@ export interface components {
         };
         ScanCandidate: {
             card: components["schemas"]["ScanCard"];
-            printing: components["schemas"]["ScanPrinting"];
+            printing: components["schemas"]["ScanPrinting"] | null;
         };
         ScanCard: {
             id: string;
@@ -451,9 +451,9 @@ export interface components {
              * @example https://example.com/schemas/ScanMatch.json
              */
             readonly $schema?: string;
-            candidates: components["schemas"]["ScanCandidate"][] | null;
-            card: components["schemas"]["ScanCard"];
-            printing: components["schemas"]["ScanPrinting"];
+            candidates: components["schemas"]["ScanCandidate"][];
+            card: components["schemas"]["ScanCard"] | null;
+            printing: components["schemas"]["ScanPrinting"] | null;
             /**
              * @description How the scanned card's set was determined.
              * @enum {string}
@@ -473,7 +473,7 @@ export interface components {
              * @example https://example.com/schemas/SearchCardsBody.json
              */
             readonly $schema?: string;
-            cards: components["schemas"]["ScanCard"][] | null;
+            cards: components["schemas"]["ScanCard"][];
         };
         SellerContactBody: {
             /**
@@ -536,7 +536,7 @@ export interface components {
              */
             readonly $schema?: string;
             cardId: string;
-            cardPrintingId: string;
+            cardPrintingId: string | null;
             id: string;
             /** Format: int64 */
             page: number;
