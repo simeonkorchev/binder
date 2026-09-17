@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react-native'
 import type { Frame } from 'react-native-vision-camera'
 
+import { testFrame } from './testFrame'
 import { scanFramesPerSecond, useTextFrames } from './useTextFrames'
 
 const mockScanText = jest.fn<{ resultText: string }, [Frame]>()
@@ -21,23 +22,6 @@ jest.mock('react-native-vision-camera-text-recognition', () => ({
 jest.mock('react-native-worklets-core', () => ({
   useRunOnJS: (callback: (text: string | null) => void) => callback,
 }))
-
-const testFrame = (): Frame => ({
-  isValid: true,
-  width: 1920,
-  height: 1080,
-  bytesPerRow: 1920,
-  planesCount: 1,
-  isMirrored: false,
-  timestamp: 1_000,
-  orientation: 'portrait',
-  pixelFormat: 'yuv',
-  toArrayBuffer: () => new ArrayBuffer(0),
-  toString: () => '1920 x 1080 Frame',
-  getNativeBuffer: () => {
-    throw new Error('the scanner never reads the native buffer')
-  },
-})
 
 describe('useTextFrames', () => {
   beforeEach(() => {
