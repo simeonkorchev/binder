@@ -13,6 +13,13 @@ build/
 npm-debug.log*
 yarn-error.log*
 
+# Generated native projects. This app is CNG: `android/` and `ios/` are output
+# of prebuild, and EAS silently prefers them over app.config.ts when they exist
+# ("android.package is ignored because an android directory was detected"), so a
+# stale one builds code the config no longer describes. Delete, never commit.
+/apps/mobile/android/
+/apps/mobile/ios/
+
 # Env & secrets — never commit (.claude/rules/004-security.md)
 .env
 .env.*
