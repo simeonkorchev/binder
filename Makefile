@@ -269,8 +269,20 @@ import-images: ## -> Fetch card art into CARD_IMAGES_BUCKET_URL (rate-limited, r
 	DATABASE_URL="$(DB_URL)" go run ./cmd/cardimages
 
 .PHONY: mobile
-mobile: ## -> Run the app on a device or simulator (PLATFORM=ios|android). A dev build, not Expo Go
+mobile: ## -> Run the app on a device or simulator (PLATFORM=ios|android). Compiles natively; needs the SDKs
 	cd apps/mobile && npx expo run:$(PLATFORM)
+
+.PHONY: mobile-build
+mobile-build: ## -> Build the app on EAS instead of locally (PLATFORM=ios|android). See apps/mobile/EAS.md
+	cd apps/mobile && npx eas-cli build --profile development --platform $(PLATFORM)
+
+.PHONY: mobile-start
+mobile-start: ## -> Serve the JS to an already-installed dev build
+	cd apps/mobile && npx expo start --dev-client
+
+.PHONY: mobile-bundle
+mobile-bundle: ## -> Bundle both platforms without Xcode or the Android SDK; catches config-plugin errors
+	cd apps/mobile && npx expo export --platform all --output-dir "$(CURDIR)/.expo-export"
 
 PLATFORM ?= ios
 

@@ -31,3 +31,4 @@ yarn-error.log*
 .idea/
 *.swp
 /.card-images/
+/.expo-export/
