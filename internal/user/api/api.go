@@ -7,7 +7,8 @@
 // reads it back, and is the binder and listing domains' ActorFunc. The context
 // key stays in this package — identity is this domain's business, and a key
 // copied into another domain is two places that have to agree
-// (.claude/memory/decisions.md, 2026-09-16-binder-api-takes-an-actorfunc-until-w7-lands).
+// (002-go-conventions.md section 3a: a cross-domain dependency is a consumer-side
+// interface, never a reach into another domain's package).
 //
 // Handlers here are thin: resolve the actor, map the request to the service's
 // input, call one service method, map what comes back to a DTO of this package's

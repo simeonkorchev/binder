@@ -7,6 +7,7 @@ package api
 import (
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -33,6 +34,14 @@ func TestBatchSchemaMaxItemsMatchesTheServicesBound(t *testing.T) {
 	if declared != strconv.Itoa(model.MaxSlotsPerBatch) {
 		t.Errorf("the schema allows %s cards per batch but the service allows %d; "+
 			"they are one bound and must be one number", declared, model.MaxSlotsPerBatch)
+	}
+
+	// The prose beside the tag is read by every client developer and generated
+	// into the document, so it is the same number or it is a lie
+	// (007-clean-code-checklist.md, "code matches its own OpenAPI description").
+	if doc := field.Tag.Get("doc"); !strings.Contains(doc, strconv.Itoa(model.MaxSlotsPerBatch)) {
+		t.Errorf("the doc string %q does not name the bound %d it describes",
+			doc, model.MaxSlotsPerBatch)
 	}
 }
 

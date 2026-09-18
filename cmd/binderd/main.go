@@ -170,7 +170,7 @@ func newServices(db *sqlx.DB, verifiers *identity.Verifiers, tokens *session.Tok
 	accounts := userservice.NewService(userstore.NewStore(db), verifiers, tokens, nil)
 
 	return services{
-		cards:    cardservice.NewService(cardstore.New(db)),
+		cards:    cardservice.NewService(cardstore.NewStore(db)),
 		binders:  binderservice.NewService(binderstore.NewStore(db)),
 		listings: listingservice.NewService(listingstore.NewStore(db), sellerContacts{accounts: accounts}),
 		accounts: accounts,

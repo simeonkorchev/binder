@@ -25,7 +25,8 @@ import (
 
 // The seam this domain exists to fill: one resolver serves every domain's
 // handlers, so no other domain declares a context key of its own
-// (.claude/memory/decisions.md, 2026-09-16-binder-api-takes-an-actorfunc-until-w7-lands).
+// (002-go-conventions.md section 3a: a cross-domain dependency is a consumer-side
+// interface, never a reach into another domain's package).
 // These fail to compile the day a signature drifts.
 var (
 	_ binderapi.ActorFunc  = api.ActorFromContext

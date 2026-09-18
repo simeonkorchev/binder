@@ -70,9 +70,12 @@ func toSlotBody(slot model.Slot) slotBody {
 		CardID:         slot.CardID,
 		CardPrintingID: slot.CardPrintingID,
 		SetResolution:  setResolution(slot.SetResolution),
-		// BinderID is deliberately not carried across: it is in the path of
-		// every request that can produce a slot, so repeating it in the body
-		// would be one more thing that can disagree with it.
+		// BinderID, CreatedAt and UpdatedAt are deliberately not carried
+		// across. The binder id is in the path of every request that can
+		// produce a slot, so repeating it in the body would be one more thing
+		// that can disagree with it; the timestamps are the row's own
+		// bookkeeping and nothing in the app shows when a card was filed.
+		// mapper_internal_test.go states the same three omissions.
 	}
 }
 

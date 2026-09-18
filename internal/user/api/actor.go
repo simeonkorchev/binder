@@ -28,7 +28,8 @@ var ErrNoActor = errors.New("request has no usable session")
 // It stays in this package. Identity is the user domain's business, and a key
 // copied into the binder or listing domain would be two declarations that have to
 // stay equal — which is why those domains take an ActorFunc instead
-// (.claude/memory/decisions.md, 2026-09-16-binder-api-takes-an-actorfunc-until-w7-lands).
+// (002-go-conventions.md section 3a: a cross-domain dependency is a consumer-side
+// interface, never a reach into another domain's package).
 type actorKey struct{}
 
 // SessionVerifier resolves a session token to the user it was issued to. It is

@@ -4,6 +4,7 @@
 package model
 
 import (
+	"slices"
 	"strings"
 	"time"
 
@@ -33,12 +34,7 @@ func AuthProviders() []AuthProvider {
 // ValidAuthProvider reports whether p is a provider this backend knows. The zero
 // value is not one.
 func ValidAuthProvider(p AuthProvider) bool {
-	for _, known := range AuthProviders() {
-		if p == known {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(AuthProviders(), p)
 }
 
 // Identity is the provider identity a sign-in presents: which provider, and the

@@ -18,9 +18,12 @@ import (
 // entityBinderSlot names a slot in a not-found error.
 const entityBinderSlot = "binder slot"
 
-// slotColumns is the select list every slot read shares, in the order slotRow
-// declares its fields. One constant keeps the reads from drifting apart.
-const slotColumns = `id, binder_id, "position", card_id, card_printing_id, set_resolution`
+// slotColumns is the select list every slot read shares: every column slotRow
+// has a field for, in the order it declares them. One constant keeps the reads
+// from drifting apart, and it is deliberately not slotInsertColumns below —
+// these two are equal only where a written column is also a read one, and the
+// timestamps are neither written nor equal.
+const slotColumns = `id, binder_id, "position", card_id, card_printing_id, set_resolution, created_at, updated_at`
 
 // slotRow is the binder_slots table as it is read.
 //
@@ -87,7 +90,7 @@ func (s *Store) CountSlots(ctx context.Context, binderID uuid.UUID) (int, error)
 }
 
 const listSlotsInRangeQuery = `
-SELECT ` + slotColumns + `, created_at, updated_at
+SELECT ` + slotColumns + `
 FROM binder_slots
 WHERE binder_id = $1 AND "position" BETWEEN $2 AND $3
 ORDER BY "position"`
@@ -109,7 +112,7 @@ func (s *Store) ListSlotsInRange(ctx context.Context, binderID uuid.UUID, from, 
 }
 
 const getSlotByIDQuery = `
-SELECT ` + slotColumns + `, created_at, updated_at
+SELECT ` + slotColumns + `
 FROM binder_slots
 WHERE binder_id = $1 AND id = $2`
 
@@ -147,7 +150,7 @@ const (
 const insertSlotQuery = `
 INSERT INTO binder_slots (` + slotInsertColumns + `)
 VALUES ($1, $2, $3, $4, $5, $6::set_resolution)
-RETURNING ` + slotColumns + `, created_at, updated_at`
+RETURNING ` + slotColumns
 
 // InsertSlot writes one slot and returns it as stored. The position must
 // already be free; opening a gap for it is OpenPositionGap's job.
@@ -175,9 +178,9 @@ WITH inserted AS (
     INSERT INTO binder_slots (` + slotInsertColumns + `)
     VALUES `
 	insertSlotsQueryTail = `
-    RETURNING ` + slotColumns + `, created_at, updated_at
+    RETURNING ` + slotColumns + `
 )
-SELECT ` + slotColumns + `, created_at, updated_at FROM inserted ORDER BY "position"`
+SELECT ` + slotColumns + ` FROM inserted ORDER BY "position"`
 )
 
 // InsertSlots writes every slot in one statement and returns them as stored, in

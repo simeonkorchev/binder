@@ -1,5 +1,7 @@
 package model
 
+import "slices"
+
 // SetResolution says how a slot's *set* was determined. The values are the
 // `set_resolution` enum of db/migrations/003_binders.sql, as amended by
 // 005_manual_set_resolution.sql, spelled identically — a binder slot stores this
@@ -162,12 +164,7 @@ func ScanResolutions() []SetResolution {
 
 // ValidSetResolution reports whether r is a value a binder slot may store.
 func ValidSetResolution(r SetResolution) bool {
-	for _, known := range SetResolutions() {
-		if r == known {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(SetResolutions(), r)
 }
 
 // RequiresPrinting reports whether a scan resolved this way names a card

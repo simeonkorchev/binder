@@ -31,7 +31,7 @@ var _ = Describe("Printing lookups", func() {
 	)
 
 	BeforeEach(func() {
-		subject = store.New(testDB)
+		subject = store.NewStore(testDB)
 
 		seedSet("LOB", "Legend of Blue Eyes White Dragon")
 		seedSet("SDY", "Starter Deck: Yugi")

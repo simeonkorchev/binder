@@ -44,6 +44,8 @@ var (
 )
 
 // Store reads and writes accounts.
+//
+//counterfeiter:generate . Store
 type Store interface {
 	// EnsureUserByIdentity returns the account behind a provider identity,
 	// creating it with newID on the first sign-in. newID is ignored when the
@@ -78,8 +80,6 @@ type IdentityVerifier interface {
 type SessionIssuer interface {
 	Issue(userID uuid.UUID) (session.Token, error)
 }
-
-//counterfeiter:generate . Store
 
 // Service is the user domain's business logic.
 type Service struct {

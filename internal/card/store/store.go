@@ -11,7 +11,9 @@ type Store struct {
 	db *sqlx.DB
 }
 
-// New returns a store reading through db.
-func New(db *sqlx.DB) *Store {
+// NewStore returns a store reading through db. It is NewStore and not New for
+// the same reason the other three domains' is: one name for one thing across
+// the four stores (000-principles.md section 4).
+func NewStore(db *sqlx.DB) *Store {
 	return &Store{db: db}
 }
