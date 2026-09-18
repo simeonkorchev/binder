@@ -69,7 +69,6 @@
       "leftOut": "Cards still unchecked, and so left out: {{undecided}}",
       "nothing": "Every card in this sweep was left out, so nothing will be filed.",
       "sending": "Filing the sweep…",
-      "filed": "Filed. Opening the binder…",
       "failed": "The sweep could not be filed, so nothing was added to the binder. Every decision is still here — pick a binder to send it again.",
       "back": "Back to the cards"
     },

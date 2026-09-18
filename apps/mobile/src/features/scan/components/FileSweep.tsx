@@ -7,25 +7,6 @@ import { useTheme } from '@/theme/useTheme'
 
 import type { SweepCommit } from '../api/useCommitSweep'
 
-/**
- * What takes the picker's place once a binder has been pressed: while the batch
- * is in flight, because a second binder pressed now would file the sweep twice,
- * and after it lands, because the cards are no longer here to send.
- */
-const inFlightKey = (
-  status: SweepCommit['status'],
-): 'scan.commit.sending' | 'scan.commit.filed' | null => {
-  switch (status) {
-    case 'sending':
-      return 'scan.commit.sending'
-    case 'filed':
-      return 'scan.commit.filed'
-    case 'idle':
-    case 'failed':
-      return null
-  }
-}
-
 interface FileSweepProps {
   commit: SweepCommit
   /** How many flagged cards are still unanswered, and so will be left out. */
@@ -56,7 +37,6 @@ export const FileSweep = ({
 }: FileSweepProps): React.JSX.Element => {
   const { t } = useTranslation()
   const { colors } = useTheme()
-  const inFlight = inFlightKey(commit.status)
 
   const file = async (binder: Binder): Promise<void> => {
     const filed = await commit.send(binder.id)
@@ -103,13 +83,17 @@ export const FileSweep = ({
         <Text style={[styles.note, { color: colors.error }]}>{t('scan.commit.failed')}</Text>
       ) : null}
 
-      {inFlight === null ? (
+      {/* The batch in flight takes the picker's place: a second binder pressed
+          now would file the same sweep twice. */}
+      {commit.status === 'sending' ? (
+        <Text style={[styles.note, { color: colors.textSecondary }]}>
+          {t('scan.commit.sending')}
+        </Text>
+      ) : (
         <BinderPicker
           rowLabel={(binder) => t('scan.commit.intoLabel', { name: binder.name })}
           onPick={(binder) => void file(binder)}
         />
-      ) : (
-        <Text style={[styles.note, { color: colors.textSecondary }]}>{t(inFlight)}</Text>
       )}
     </View>
   )

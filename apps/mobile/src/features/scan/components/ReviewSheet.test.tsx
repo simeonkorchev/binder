@@ -395,6 +395,18 @@ describe('ReviewSheet', () => {
       expect(letGo).toHaveBeenCalledTimes(1)
     })
 
+    // Without this the scanner files once and then dead-ends: the second sweep's
+    // file view would still be showing the first one's outcome.
+    it('offers a binder again once a sweep has been filed', async () => {
+      const user = userEvent.setup()
+      await render(<Harness resolved={[settled('LOB-001')]} />)
+
+      await fileInTheBinder(user, 1)
+      await user.press(await screen.findByRole('button', { name: fileButton(1) }))
+
+      expect(await screen.findByRole('button', { name: THE_BINDER })).toBeOnTheScreen()
+    })
+
     it('files a sweep in which every card was left out, as an empty batch', async () => {
       const user = userEvent.setup()
       await render(<Harness resolved={[nothing('SMUDGE')]} />)

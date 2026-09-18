@@ -137,8 +137,10 @@ describe('useCommitSweep', () => {
     })
 
     expect(filed).toBe(true)
-    expect(result.current.status).toBe('filed')
     expect(onFiled).toHaveBeenCalledTimes(1)
+    // Back to idle rather than a state of its own: the sweep is over, and the
+    // next one has to be filable from the same session.
+    expect(result.current.status).toBe('idle')
   })
 
   describe('a commit that did not land', () => {
@@ -175,7 +177,7 @@ describe('useCommitSweep', () => {
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
       expect(requested(1).body).toEqual(requested(0).body)
-      expect(result.current.status).toBe('filed')
+      expect(result.current.status).toBe('idle')
     })
 
     it('reports a refused batch as a failure rather than as a filed sweep', async () => {
@@ -207,6 +209,6 @@ describe('useCommitSweep', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(requested(0).body.cards).toEqual([])
-    expect(result.current.status).toBe('filed')
+    expect(result.current.status).toBe('idle')
   })
 })

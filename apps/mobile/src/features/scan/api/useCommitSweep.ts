@@ -5,14 +5,19 @@ import { writeJson } from '@/lib/apiRequest'
 
 import { toSlotCards, type ReviewedSweep } from './toSlotCards'
 
-/** Where one attempt at filing the sweep has got to. */
+/**
+ * Where one attempt at filing the sweep has got to.
+ *
+ * There is deliberately no `filed`: a landed commit ends the sweep, and the next
+ * one starts from `idle`. A terminal state would be one the session could never
+ * leave — the scanner would offer to file a second sweep and then have nowhere
+ * to put it.
+ */
 type CommitStatus =
-  /** Nothing has been sent yet, or the last attempt was abandoned. */
+  /** Nothing is in flight: no attempt yet, or the last one landed. */
   | 'idle'
   /** The batch is in flight. */
   | 'sending'
-  /** The binder has the whole sweep. */
-  | 'filed'
   /**
    * The batch did not land. The server wrote nothing — the endpoint is one
    * transaction — and nothing here was thrown away either.
@@ -75,7 +80,7 @@ export const useCommitSweep = (sweep: ReviewedSweep, onFiled: () => void): Sweep
         return false
       }
 
-      setStatus('filed')
+      setStatus('idle')
       onFiled()
       return true
     },
