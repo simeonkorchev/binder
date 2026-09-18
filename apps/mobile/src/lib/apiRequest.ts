@@ -10,16 +10,22 @@ import { bearerToken, forgetSession } from './sessionStore'
  * none of them launders a failure into an empty binder or an empty market
  * (003-frontend.md §11).
  *
- * It lives in `lib/` rather than under one feature because every feature calls
- * it: the scanner's queue, the binder's slots, the marketplace's listings and
- * the sign-in exchange speak the same HTTP, and a second copy of it is a second
- * place a header can be wrong (000-principles.md §6).
+ * It lives in `lib/` rather than under one feature because the features share
+ * one HTTP: the binder's slots, the marketplace's listings and the sign-in
+ * exchange all speak it through here, and a second copy of it is a second place
+ * a header can be wrong (000-principles.md §6). The scanner's two requests are
+ * the one exception, and are not meant to be: they build their own `fetch` over
+ * `apiUrl` and so send no credential at all — harmless only for as long as the
+ * card domain takes no actor (`.ai/findings/open/2026-09-18-scan-api-calls-
+ * bypass-the-request-helper.md`).
  *
  * **The bearer token is attached here and nowhere else.** No hook passes one in
  * and no component holds one: they all go through these three functions, which
  * read the session from `sessionStore`. Signed out the header is simply absent,
- * which is a correct request for the one public endpoint — `GET /listings`, the
- * browse feed — and a 401 from every other one.
+ * which is a correct request for the endpoints that need no actor — `GET
+ * /listings`, the browse feed, and the card domain's `GET /cards` and
+ * `POST /scans/resolve`, which `cmd/binderd/routes.go` registers with no
+ * `ActorFunc` — and a 401 from every one that does.
  */
 
 /**

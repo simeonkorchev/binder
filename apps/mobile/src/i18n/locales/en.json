@@ -3,7 +3,6 @@
     "scan": "Scan",
     "binders": "Binders",
     "market": "Market",
-    "binderPage": "Binder",
     "sellerContact": "Seller contact"
   },
   "scan": {
@@ -133,7 +132,6 @@
       "prompt": "Type part of a card name to search.",
       "empty": "No card matches that name.",
       "error": "The card search failed.",
-      "retry": "Try again",
       "note": "A card added by name is filed with no set. Scanning it records the set it was printed in.",
       "close": "Close",
       "addLabel": "Add {{name}} to the binder",

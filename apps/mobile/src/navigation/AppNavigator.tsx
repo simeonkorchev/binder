@@ -113,8 +113,8 @@ const SignedIn = (): React.JSX.Element => {
 /**
  * What a visitor can reach: the way in, and the market.
  *
- * Browse is public by design — `GET /listings` is the one endpoint that takes no
- * actor — so it stays reachable with no account. A seller's details do need one,
+ * Browse is public by design — `GET /listings` takes no actor — so it stays
+ * reachable with no account. A seller's details do need one,
  * which is why `SellerContact` is here too: it is reachable from a listing, and
  * it says that signing in is what it needs rather than failing as a load error.
  */
