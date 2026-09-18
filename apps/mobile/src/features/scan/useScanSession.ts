@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ReadonlyFrameProcessor } from 'react-native-vision-camera'
 
+import { useCommitSweep, type SweepCommit } from './api/useCommitSweep'
 import { useResolveScan } from './api/useResolveScan'
 import { capturedCards, type CapturedCard } from './lib/capturedCards'
 import { captureTick } from './lib/captureTick'
@@ -30,6 +31,12 @@ export interface ScanSession {
    * card with no set stops being a guess.
    */
   review: ScanReview
+  /**
+   * Files the reviewed sweep into one binder, in one request. It is the end of
+   * the loop this hook starts: a card the camera read is not in a collection
+   * until this lands, and the session lets the sweep go only once it has.
+   */
+  commit: SweepCommit
   /** Goes straight to `<Camera frameProcessor={...} />`. */
   frameProcessor: ReadonlyFrameProcessor
 }
@@ -57,6 +64,19 @@ export const useScanSession = (): ScanSession => {
   const review = useScanReview(queue.resolved, queue.rejected)
   const [codes, setCodes] = useState<string[]>([])
 
+  // Filing the sweep is what ends it: the captures, the answers and the
+  // decisions all go at once, so the cards now in a binder cannot be sent a
+  // second time. Nothing is cleared when the commit fails — the whole point of
+  // the batch being one transaction is that a failure leaves the sweep intact.
+  const commit = useCommitSweep(
+    { resolved: queue.resolved, rejected: queue.rejected, reviewed: review.rows },
+    () => {
+      setCodes([])
+      queue.clear()
+      review.clear()
+    },
+  )
+
   const frameProcessor = useTextFrames((text: string | null) => {
     const accepted = reader.observe(text === null ? null : parseCardCode(text))
     if (accepted === null) return
@@ -71,6 +91,7 @@ export const useScanSession = (): ScanSession => {
     isOffline: queue.isOffline,
     retryPending: queue.retryQueued,
     review,
+    commit,
     frameProcessor,
   }
 }

@@ -1,6 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import type { Frame } from 'react-native-vision-camera'
 
+import type { SlotCardBody } from '@/features/binder/types'
+
 import type { ScanMatchBody } from './types'
 import { absentReadsToLeaveFrame, stableReadsRequired } from './lib/useStableRead'
 import { testFrame } from './testFrame'
@@ -226,5 +228,89 @@ describe('useScanSession', () => {
       expect(session.current.captured[0]?.status).toBe('matched')
     })
     expect(session.current.isOffline).toBe(false)
+  })
+
+  describe('filing the sweep', () => {
+    /** The resolver for the scans, and the binder for the one batch that follows. */
+    const resolverAndBinder = async (
+      input: RequestInfo | URL,
+      init?: RequestInit,
+    ): Promise<Response> => {
+      if (String(input).endsWith('/slots/batch')) {
+        return new Response(JSON.stringify({ slots: [] }), { status: 201 })
+      }
+      return resolverAnswers(input, init)
+    }
+
+    const batchBody = (): { cards: SlotCardBody[] } => {
+      const call = mockFetch.mock.calls.find(([input]) => String(input).endsWith('/slots/batch'))
+      const body = call?.[1]?.body
+      if (typeof body !== 'string') throw new Error('no batch was sent')
+
+      const parsed: { cards: SlotCardBody[] } = JSON.parse(body)
+      return parsed
+    }
+
+    const sweptPage = async (): Promise<{ current: ScanSession }> => {
+      mockFetch.mockImplementation(resolverAndBinder)
+      const session = await renderSession()
+
+      await sweep(session, [
+        ...repeat(cardInFrame('LOB-EN001'), stableReadsRequired),
+        ...repeat(cardInFrame('SDK-002'), stableReadsRequired),
+      ])
+      await waitFor(() => {
+        expect(session.current.commit.cardCount).toBe(2)
+      })
+
+      return session
+    }
+
+    it('sends every card the sweep resolved, on the rung the ladder answered with', async () => {
+      const session = await sweptPage()
+
+      await act(async () => {
+        await session.current.commit.send('binder-1')
+      })
+
+      expect(batchBody().cards).toEqual([
+        { cardId: 'card-LOB-EN001', cardPrintingId: 'printing-LOB-EN001', setResolution: 'exact' },
+        { cardId: 'card-SDK-002', cardPrintingId: 'printing-SDK-002', setResolution: 'exact' },
+      ] satisfies SlotCardBody[])
+    })
+
+    // The cards are in a binder now. A sweep left in the session after it was
+    // filed is a sweep the next press files a second time.
+    it('lets the sweep go once the binder has it', async () => {
+      const session = await sweptPage()
+
+      await act(async () => {
+        await session.current.commit.send('binder-1')
+      })
+
+      expect(session.current.captured).toEqual([])
+      expect(session.current.commit.cardCount).toBe(0)
+      expect(session.current.review.rows).toEqual([])
+    })
+
+    it('keeps the sweep when the commit did not land, so nothing is scanned twice', async () => {
+      const session = await sweptPage()
+      mockFetch.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) =>
+        String(input).endsWith('/slots/batch')
+          ? Promise.reject(new Error('the connection dropped'))
+          : resolverAnswers(input, init),
+      )
+
+      await act(async () => {
+        await session.current.commit.send('binder-1')
+      })
+
+      expect(session.current.commit.status).toBe('failed')
+      expect(session.current.commit.cardCount).toBe(2)
+      expect(session.current.captured.map((entry) => entry.code)).toEqual([
+        'SDK-002',
+        'LOB-EN001',
+      ])
+    })
   })
 })

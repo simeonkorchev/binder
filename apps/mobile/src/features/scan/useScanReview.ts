@@ -32,6 +32,12 @@ export interface ScanReview {
   decide: (code: string, decision: ReviewDecision) => void
   /** Puts one settled scan back in question, so a wrong tap is not permanent. */
   reopen: (code: string) => void
+  /**
+   * Forgets every decision. Called when the sweep they answered has been filed —
+   * decisions kept past that would be answers about cards that are already in a
+   * binder.
+   */
+  clear: () => void
 }
 
 /**
@@ -65,5 +71,6 @@ export const useScanReview = (
     reopen: (code: string): void => {
       setDecisions(({ [code]: _reopened, ...rest }) => rest)
     },
+    clear: (): void => setDecisions({}),
   }
 }

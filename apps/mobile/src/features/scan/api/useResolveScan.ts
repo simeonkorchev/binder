@@ -61,6 +61,12 @@ export interface ResolveScanQueue {
    * comes.
    */
   retryQueued: () => void
+  /**
+   * Forgets the whole sweep: its answers, its refusals and anything still
+   * queued. Called once the cards are in a binder — a sweep left behind after it
+   * was filed is a sweep that can be filed twice.
+   */
+  clear: () => void
 }
 
 /**
@@ -133,6 +139,12 @@ export const useResolveScan = (): ResolveScanQueue => {
       startDraining()
     },
     retryQueued: startDraining,
+    clear: (): void => {
+      setQueue([])
+      setResolved([])
+      setRejected([])
+      setIsOffline(false)
+    },
     resolved,
     rejected,
     queuedCount,
