@@ -19,6 +19,21 @@ export type SlotBody = components['schemas']['SlotBody']
 export type PageBody = components['schemas']['PageBody']
 
 /**
+ * One card as a write takes it: which card, which printing if the set is known,
+ * and how that set was determined. It is the entry
+ * `POST /binders/{binderId}/slots/batch` appends one slot from — the server
+ * shares this shape between the single write and the batch, so a reviewed sweep
+ * and a hand-added card cannot disagree about what a slot needs.
+ */
+export type SlotCardBody = components['schemas']['SlotCardBody']
+
+/** `POST /binders/{binderId}/slots/batch`'s request body: a whole sweep, in order. */
+export type AddSlotsBody = components['schemas']['AddSlotsBody']
+
+/** What the batch answers with: one slot per card sent, in the order it was sent. */
+export type AddSlotsResult = components['schemas']['AddSlotsResult']
+
+/**
  * How a card's set was determined when it was scanned — the rungs of the match
  * ladder. `by_name` and `unresolved` are the two that leave the set unknown,
  * which US3 says has to be shown rather than guessed.
