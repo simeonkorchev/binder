@@ -42,9 +42,6 @@ export type ScanCandidate = components['schemas']['ScanCandidate']
 /** `POST /scans/resolve`'s response body. */
 export type ScanMatchBody = components['schemas']['ScanMatch']
 
-/** `GET /cards`'s response body: the cards a name search found. */
-export type SearchCardsBody = components['schemas']['SearchCardsBody']
-
 /** One scanned card, resolved: what the camera read and what the ladder made of it. */
 export interface ResolvedScan {
   /** The printed code the scanner read, as it was sent to the resolver. */

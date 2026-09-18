@@ -1,19 +1,19 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 
-import type { ScannedCard, SearchCardsBody } from '../types'
+import type { Card, SearchCardsBody } from '../types'
 
 import { useCardSearch, type CardSearch } from './useCardSearch'
 
 const apiBaseUrl = 'https://api.binder.test'
 const mockFetch: jest.MockedFunction<typeof fetch> = jest.fn()
 
-const card = (name: string): ScannedCard => ({ id: name, name, imageObjectKey: null })
+const card = (name: string): Card => ({ id: name, name, imageObjectKey: null })
 
 /**
  * A `Response` body reads once, so every answer is built fresh per call rather
  * than handed out from `mockResolvedValue`.
  */
-const found = (...cards: ScannedCard[]): Response =>
+const found = (...cards: Card[]): Response =>
   new Response(JSON.stringify({ cards } satisfies SearchCardsBody), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },

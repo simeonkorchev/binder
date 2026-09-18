@@ -25,9 +25,6 @@ export type PageBody = components['schemas']['PageBody']
  */
 export type SetResolution = SlotBody['setResolution']
 
-/** A card the database knows, as `GET /cards` returns it. */
-export type CardSummary = components['schemas']['ScanCard']
-
 /**
  * One 3x3 page, shaped for the grid: always nine pockets, `null` where the
  * pocket is empty. The server sends nine; the mapper builds nine regardless, so

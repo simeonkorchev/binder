@@ -2,11 +2,11 @@ import { useRef, useState } from 'react'
 
 import { apiUrl } from '@/lib/apiUrl'
 
-import type { ScannedCard, SearchCardsBody } from '../types'
+import type { Card, SearchCardsBody } from '../types'
 
 export interface CardSearch {
   /** What the last finished search found, in the order the server ranked them. */
-  results: ScannedCard[]
+  results: Card[]
   /** True from the moment a search is asked for until its answer lands. */
   isSearching: boolean
   /** True when the last search did not come back. The user can simply ask again. */
@@ -18,7 +18,8 @@ export interface CardSearch {
 }
 
 /**
- * Finds a card by name, for the review sheet's correction step.
+ * Finds a card by name: the scanner's correction step and the binder's add
+ * sheet ask the same question of the same endpoint, and this is the one answer.
  *
  * It searches when it is asked to and not while the user types. A debounce
  * would mean a timer deciding when state changes, and on a phone it would also
@@ -31,7 +32,7 @@ export interface CardSearch {
  */
 export const useCardSearch = (): CardSearch => {
   const latestSearch = useRef(0)
-  const [results, setResults] = useState<ScannedCard[]>([])
+  const [results, setResults] = useState<Card[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [hasFailed, setHasFailed] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)

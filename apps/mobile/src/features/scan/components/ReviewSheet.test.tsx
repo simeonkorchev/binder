@@ -2,7 +2,9 @@ import { render, screen, userEvent } from '@testing-library/react-native'
 
 import '@/i18n/i18n'
 
-import type { RejectedScan, ResolvedScan, ScannedCard, SearchCardsBody } from '../types'
+import type { SearchCardsBody } from '@/features/card/types'
+
+import type { RejectedScan, ResolvedScan, ScannedCard } from '../types'
 import { useScanReview } from '../useScanReview'
 
 import { ReviewSheet } from './ReviewSheet'

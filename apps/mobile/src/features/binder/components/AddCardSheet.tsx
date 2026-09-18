@@ -4,16 +4,12 @@ import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'r
 
 // The card database is neither feature's property — both the scan review and
 // this sheet search it, and one search hook is better than two copies of it.
-// It lives under `features/scan/` because that is where it was first needed;
-// its home is a `features/card/` of its own, which is a move for the session
-// after W9 stops writing to that tree.
-import { useCardSearch } from '@/features/scan/api/useCardSearch'
+import { useCardSearch } from '@/features/card/api/useCardSearch'
+import type { Card } from '@/features/card/types'
 import { useTheme } from '@/theme/useTheme'
 
-import type { CardSummary } from '../types'
-
 interface AddCardSheetProps {
-  onPick: (card: CardSummary) => void
+  onPick: (card: Card) => void
   onClose: () => void
 }
 
@@ -77,11 +73,11 @@ export const AddCardSheet = ({ onPick, onClose }: AddCardSheetProps): React.JSX.
 }
 
 interface SearchResultsProps {
-  cards: CardSummary[]
+  cards: Card[]
   isSearching: boolean
   hasFailed: boolean
   hasSearched: boolean
-  onPick: (card: CardSummary) => void
+  onPick: (card: Card) => void
 }
 
 /**

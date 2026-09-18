@@ -4,7 +4,7 @@ import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 
 import { useTheme } from '@/theme/useTheme'
 
-import { useCardSearch } from '../api/useCardSearch'
+import { useCardSearch } from '@/features/card/api/useCardSearch'
 import type { ScannedCard } from '../types'
 
 interface CardSearchPickerProps {
