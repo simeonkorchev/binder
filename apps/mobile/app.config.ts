@@ -22,10 +22,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   // OS only hands that URL back to an app that has registered the scheme.
   scheme: ['binder', 'com.simeonkorchev.binder'],
   version: '0.0.0',
-  // Written by hand, not by `eas init`: this is a dynamic config (a function),
-  // and the CLI only patches a static app.json — it prints the id and asks you
-  // to add it yourself. It links the repo to one EAS project, and so to one
-  // Expo account; `slug` above must match that project's slug.
+  // Both written by hand, not by `eas init`: this is a dynamic config (a
+  // function), and the CLI only patches a static app.json — it prints the id
+  // and asks you to add it yourself.
+  //
+  // `owner` is the guard rather than decoration. eas-cli keeps one login at a
+  // time in ~/.expo/, shared with every other Expo project on the machine, so
+  // without this a build run under the wrong account creates a stray project
+  // there instead of failing. Naming the owner makes that an error.
+  owner: 'simonadkorchevas-team',
   extra: { eas: { projectId: '1b33e922-b71b-43d7-b9fb-4560c9d3f161' } },
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
