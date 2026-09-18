@@ -34,8 +34,8 @@ const feed = (...listings: ListedCard[]): Response =>
 /**
  * Opens the market the way most buyers do: signed out, from the sign-in screen.
  *
- * Browse is the one public endpoint (W11), so every case below is also a case
- * that it stays reachable with no account.
+ * Browse takes no actor (W11), so every case below is also a case that it stays
+ * reachable with no account.
  */
 const openMarket = async (user: ReturnType<typeof userEvent.setup>): Promise<void> => {
   await render(<App />)
@@ -138,7 +138,7 @@ describe('MarketScreen', () => {
   })
 
   // The header, not just the screen: signed out there is no credential to send,
-  // and the browse feed is the one endpoint that needs none.
+  // and the browse feed needs none.
   it('reads the feed with no Authorization header at all', async () => {
     const user = userEvent.setup()
 

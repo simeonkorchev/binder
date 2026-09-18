@@ -94,7 +94,8 @@ const headers = (hasBody: boolean): Record<string, string> => {
   return {
     ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
     // Absent rather than empty: `Bearer ` with nothing after it is a malformed
-    // credential, and the one endpoint that needs none would start refusing it.
+    // credential, and an endpoint that needs no actor is asked without one
+    // rather than with an empty one.
     ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
   }
 }

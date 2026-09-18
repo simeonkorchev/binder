@@ -61,8 +61,8 @@ describe('App', () => {
       expect(await screen.findByRole('button', { name: APPLE })).toBeOnTheScreen()
     })
 
-    // Browse is public by design: `GET /listings` is the one endpoint that takes
-    // no actor, so the market has to be reachable without an account (W11).
+    // Browse is public by design: `GET /listings` takes no actor, so the market
+    // has to be reachable without an account (W11).
     it('lets a visitor browse what is for sale without signing in', async () => {
       const user = userEvent.setup()
       await render(<App />)

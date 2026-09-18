@@ -11,9 +11,9 @@ import type { AuthProvider } from './types'
  * The way in, and the one screen a signed-out user lands on.
  *
  * It is not a wall. Browsing what other collectors are selling needs no account
- * — `GET /listings` is the one public endpoint, by design — so the market is
- * reachable from here without signing in. Everything else (a binder, a scan, a
- * listing of your own) is somebody's own data and needs the session.
+ * — `GET /listings` takes no actor, by design — so the market is reachable from
+ * here without signing in. Everything else this screen leads to (a binder, a
+ * scan, a listing of your own) is somebody's own data and needs the session.
  *
  * Apple sign-in is offered on iOS only: the native sheet is an iOS API, and
  * offering Google without Apple is what the App Store refuses (D1).
