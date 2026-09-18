@@ -280,6 +280,14 @@ mobile-build: ## -> Build the app on EAS instead of locally (PLATFORM=ios|androi
 mobile-start: ## -> Serve the JS to an already-installed dev build
 	cd apps/mobile && npx expo start --dev-client
 
+.PHONY: mobile-whoami
+mobile-whoami: ## -> Which Expo account eas-cli acts as (EXPO_TOKEN from .env, not ~/.expo)
+	cd apps/mobile && npx eas-cli whoami
+
+.PHONY: mobile-info
+mobile-info: ## -> The EAS project and account this repo is linked to
+	cd apps/mobile && npx eas-cli project:info
+
 .PHONY: mobile-bundle
 mobile-bundle: ## -> Bundle both platforms without Xcode or the Android SDK; catches config-plugin errors
 	cd apps/mobile && npx expo export --platform all --output-dir "$(CURDIR)/.expo-export"
