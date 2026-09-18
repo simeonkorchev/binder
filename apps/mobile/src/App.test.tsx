@@ -1,5 +1,6 @@
 import { render, screen, userEvent } from '@testing-library/react-native'
 
+import { liveSession } from '@/lib/sessionFixture'
 import { forgetSession, rememberSession } from '@/lib/sessionStore'
 
 import App from './App'
@@ -15,11 +16,7 @@ const APPLE = 'Sign in with Apple'
 
 const mockFetch: jest.MockedFunction<typeof fetch> = jest.fn()
 
-const session = {
-  token: 'session.jwt.signature',
-  expiresAt: '2026-09-18T10:00:00.000Z',
-  userId: 'user-1',
-}
+const session = liveSession()
 
 /** A collector who is already signed in when the app starts. */
 const launchSignedIn = async (): Promise<void> => {

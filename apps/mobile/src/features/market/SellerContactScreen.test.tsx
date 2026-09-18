@@ -2,6 +2,7 @@ import * as Clipboard from 'expo-clipboard'
 import { render, screen, userEvent } from '@testing-library/react-native'
 import { Linking } from 'react-native'
 
+import { liveSession } from '@/lib/sessionFixture'
 import { forgetSession, rememberSession } from '@/lib/sessionStore'
 
 import App from '@/App'
@@ -13,11 +14,7 @@ const mockFetch: jest.MockedFunction<typeof fetch> = jest.fn()
 const MARKET_TAB = 'Market, tab, 3 of 3'
 const BROWSE = 'Browse what is for sale'
 
-const session = {
-  token: 'session.jwt.signature',
-  expiresAt: '2026-09-18T10:00:00.000Z',
-  userId: 'user-1',
-}
+const session = liveSession()
 
 const listed: ListedCard = {
   listingId: 'listing-1',
