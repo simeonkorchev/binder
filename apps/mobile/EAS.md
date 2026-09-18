@@ -39,15 +39,29 @@ npx expo start --dev-client
 The build is installed once; the JS reloads from your machine every time you
 change it. You only rebuild when native dependencies change.
 
-## The one thing to get right
+## Where the API address actually comes from
 
-**`EXPO_PUBLIC_*` variables are inlined at build time, not read at runtime.**
-The `env` block in `eas.json` is therefore part of the build, and
-`EXPO_PUBLIC_API_URL` must be an address the *phone* can reach — your machine's
-LAN address, never `localhost`, which on a device means the device itself.
+**`EXPO_PUBLIC_*` is inlined when the JS is bundled, not read at runtime** — and
+which machine bundles it differs by profile. That distinction is the whole
+answer to "why didn't my change take effect".
 
-Change it in `eas.json` to your own address before the first build. The Google
-client ids belong there too once you have them:
+- **`development`** ships no JS bundle: the dev client loads it from Metro on
+  your machine, so the value comes from the environment `expo start` runs in.
+  Restarting Metro is enough — `EXPO_PUBLIC_API_URL=… make mobile-start`, or a
+  line in the repo-root `.env`, which the Makefile exports. **You do not rebuild
+  the APK to change the API address.**
+- **`preview` and `production`** embed a bundle, so their `env` block in
+  `eas.json` is baked in at build time and changing it needs a new build.
+
+Either way the address must be one the *phone* can reach: your machine's LAN
+address, never `localhost`, which on a device means the device itself. An ngrok
+tunnel works too and gives you HTTPS — `ngrok http 8080`, then point
+`EXPO_PUBLIC_API_URL` at the tunnel. Set a real `SESSION_JWT_SECRET` in `.env`
+before you open one: the Makefile's default is committed, so a public URL plus a
+published signing secret lets anyone mint a token for any user id, and binderd
+wires no inbound rate limiting.
+
+The Google client ids belong in the `env` block once you have them:
 
 ```json
 "env": {
