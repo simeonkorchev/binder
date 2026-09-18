@@ -146,7 +146,7 @@ describe('ScanScreen', () => {
     await render(<ScanScreen />)
 
     await user.press(screen.getByRole('button', { name: 'Review flagged cards: 0 still to check' }))
-    await user.press(await screen.findByRole('button', { name: /^File this sweep in a binder/ }))
+    await user.press(await screen.findByRole('button', { name: 'File this sweep in a binder. Cards to file: 0' }))
     await user.press(await screen.findByRole('button', { name: 'File this sweep in Duplicates' }))
 
     expect(mockNavigate).toHaveBeenCalledWith('BinderPage', {

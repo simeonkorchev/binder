@@ -316,12 +316,22 @@ describe('ReviewSheet', () => {
     expect(onClose).toHaveBeenCalled()
   })
   describe('filing the sweep', () => {
-    const FILE_IN_A_BINDER = /^File this sweep in a binder/
     const THE_BINDER = 'File this sweep in Duplicates'
 
+    /**
+     * The footer that leads to a binder. Its accessible name carries the count,
+     * so asking for it by that name is also an assertion about how many cards the
+     * sheet is about to file.
+     */
+    const fileButton = (cards: number): string =>
+      `File this sweep in a binder. Cards to file: ${cards}`
+
     /** The review, then the binder: the loop from a swept card to a filed one. */
-    const fileInTheBinder = async (user: ReturnType<typeof userEvent.setup>): Promise<void> => {
-      await user.press(await screen.findByRole('button', { name: FILE_IN_A_BINDER }))
+    const fileInTheBinder = async (
+      user: ReturnType<typeof userEvent.setup>,
+      cards: number,
+    ): Promise<void> => {
+      await user.press(await screen.findByRole('button', { name: fileButton(cards) }))
       await user.press(await screen.findByRole('button', { name: THE_BINDER }))
     }
 
@@ -330,7 +340,7 @@ describe('ReviewSheet', () => {
       await render(<Harness resolved={[ambiguous('001')]} />)
 
       await user.press(screen.getByRole('button', { name: 'Blue-Eyes White Dragon — SDK-001' }))
-      await fileInTheBinder(user)
+      await fileInTheBinder(user, 1)
 
       expect(batched(0)).toEqual([
         { cardId: 'blue-eyes', cardPrintingId: 'sdk-001', setResolution: 'manual' },
@@ -341,7 +351,7 @@ describe('ReviewSheet', () => {
       const user = userEvent.setup()
       await render(<Harness resolved={[settled('LOB-001')]} />)
 
-      await fileInTheBinder(user)
+      await fileInTheBinder(user, 1)
 
       expect(batched(0)).toEqual([
         { cardId: 'blue-eyes', cardPrintingId: 'lob-001', setResolution: 'exact' },
@@ -355,7 +365,7 @@ describe('ReviewSheet', () => {
       await user.press(
         screen.getByRole('button', { name: 'Keep Blue-Eyes White Dragon, set unknown' }),
       )
-      await fileInTheBinder(user)
+      await fileInTheBinder(user, 1)
 
       expect(batched(0)).toEqual([
         { cardId: 'blue-eyes', cardPrintingId: null, setResolution: 'by_name' },
@@ -369,7 +379,7 @@ describe('ReviewSheet', () => {
       await user.press(
         screen.getByRole('button', { name: 'Keep Blue-Eyes White Dragon, set unknown' }),
       )
-      await fileInTheBinder(user)
+      await fileInTheBinder(user, 3)
 
       expect(batches()).toHaveLength(1)
       expect(batched(0)).toHaveLength(3)
@@ -379,7 +389,7 @@ describe('ReviewSheet', () => {
       const user = userEvent.setup()
       await render(<Harness resolved={[settled('LOB-001')]} />)
 
-      await fileInTheBinder(user)
+      await fileInTheBinder(user, 1)
 
       expect(onFiled).toHaveBeenCalledWith(theBinder)
       expect(letGo).toHaveBeenCalledTimes(1)
@@ -390,7 +400,7 @@ describe('ReviewSheet', () => {
       await render(<Harness resolved={[nothing('SMUDGE')]} />)
 
       await user.press(screen.getByRole('button', { name: 'Leave this card out' }))
-      await user.press(await screen.findByRole('button', { name: FILE_IN_A_BINDER }))
+      await user.press(await screen.findByRole('button', { name: fileButton(0) }))
       expect(
         screen.getByText('Every card in this sweep was left out, so nothing will be filed.'),
       ).toBeOnTheScreen()
@@ -405,10 +415,10 @@ describe('ReviewSheet', () => {
       const user = userEvent.setup()
       await render(<Harness resolved={[byName('LOB-EN002'), nothing('SMUDGE')]} />)
 
-      await user.press(await screen.findByRole('button', { name: FILE_IN_A_BINDER }))
+      await user.press(await screen.findByRole('button', { name: fileButton(0) }))
 
       expect(
-        screen.getByText('2 cards are still unchecked, and unchecked cards are left out.'),
+        screen.getByText('Cards still unchecked, and so left out: 2'),
       ).toBeOnTheScreen()
     })
 
@@ -421,7 +431,7 @@ describe('ReviewSheet', () => {
         const user = userEvent.setup()
         await render(<Harness resolved={[settled('LOB-001')]} />)
 
-        await fileInTheBinder(user)
+        await fileInTheBinder(user, 1)
 
         expect(
           await screen.findByText(
@@ -440,7 +450,7 @@ describe('ReviewSheet', () => {
         await render(<Harness resolved={[ambiguous('001')]} />)
 
         await user.press(screen.getByRole('button', { name: 'Blue-Eyes White Dragon — SDK-001' }))
-        await fileInTheBinder(user)
+        await fileInTheBinder(user, 1)
 
         await user.press(await screen.findByRole('button', { name: 'Back to the cards' }))
         expect(
@@ -448,7 +458,7 @@ describe('ReviewSheet', () => {
         ).toBeOnTheScreen()
 
         mockFetch.mockImplementation(serverWhere(filed))
-        await fileInTheBinder(user)
+        await fileInTheBinder(user, 1)
 
         expect(batches()).toHaveLength(2)
         expect(batched(1)).toEqual(batched(0))
