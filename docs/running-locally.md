@@ -10,66 +10,95 @@ the bottom are real; read them before judging what you see.
 - A device or simulator for the app. **Expo Go will not work** — VisionCamera
   frame processors and Apple sign-in need a dev build.
 
+## The short version
+
+```bash
+cp .env.example .env     # optional; every value has a default
+make dev                 # Postgres up, migrations applied, API listening
+```
+
+Then in another shell:
+
+```bash
+make import-cards        # the card database from YGOPRODeck
+make seed-user && make token
+```
+
+`make` on its own lists every target. The rest of this page is what those do and
+what to check.
+
 ## 1. Database
 
+On a developer machine, Docker is the right answer and is what `make dev` uses:
+
 ```bash
-make bootstrap                       # deps + pinned linters, once
-eval "$(tools/test-db-local.sh)"     # starts Postgres, exports TEST_DATABASE_URL
-tools/migrate.sh "$TEST_DATABASE_URL"
+make db-up               # docker compose up -d postgres
+make migrate             # applies db/migrations to DB_URL
 ```
 
-`tools/test-db-local.sh` prefers a Debian cluster and falls back to `initdb`.
-`docker compose up postgres` also works if your Docker can pull images.
+The compose file creates database **`binder`** (not `binder_test`) with
+user/password `binder`. That is the Makefile's `DB_URL` default.
 
-## 2. Card database — the step nobody has run
+`tools/test-db-local.sh` exists for machines with no usable container runtime —
+it boots a system Postgres and prints the export lines. **It is not the normal
+path**; `make test` calls it by itself when `TEST_DATABASE_URL` is unset.
 
-`ygoprodeck.com` is blocked from the environment this was built in, so the
-importer is proven against committed fixtures and **never against the live API**.
-On your machine it should work:
+> If you run it by hand, do not write
+> `eval "$(tools/test-db-local.sh)" && next-command`. `eval` returns *its own*
+> exit status, so a failure inside the script still runs `next-command` — with
+> an empty URL. Check `[ -n "$TEST_DATABASE_URL" ]` instead.
+
+## 2. Card database
+
+**This is the step that had never run anywhere** — `ygoprodeck.com` is blocked
+from the environment this project was built in, so the importer was proven
+against fixtures only.
 
 ```bash
-DATABASE_URL="$TEST_DATABASE_URL" go run ./cmd/cardimport
+make import-cards
 ```
 
-One request fetches the whole dump; the upsert is idempotent, so re-running is
-safe. **First walk `specs/001-binder-mvp/VERIFY-YGOPRODECK.md`** — it lists the
-six unconfirmed assumptions about the API's shape and rate limit, the exact
-`curl` for each, and which constant to change per outcome. A malformed printed
-code is skipped and *counted*, never silently dropped, so watch the summary.
+It has since run for real: **14,566 cards, 44,533 printings, 10,668 sets from
+one request**, which confirms the response shape and field names the importer
+assumed. 12 printings were skipped as `malformed_set_code` — codes with no
+hyphen at all (`DB49`, `DB14`) — counted and logged rather than silently
+dropped. `specs/001-binder-mvp/VERIFY-YGOPRODECK.md` still holds the
+rate-limit assumption, which nothing has confirmed.
 
-Images are a separate resumable pass (`image_object_key IS NULL` is the work
-set). Locally they go to disk instead of GCS — same code path, different URL:
+Worth checking after an import:
+
+```sql
+-- must be empty: same card, same code, same rarity twice would be a bug
+SELECT set_code, rarity, count(*) FROM card_printings GROUP BY 1,2 HAVING count(*) > 1;
+-- the generated split the whole match ladder rests on
+SELECT set_code, set_prefix, set_number FROM card_printings LIMIT 5;
+```
+
+Card art is a separate, resumable pass — `image_object_key IS NULL` is its whole
+work set, so it can be killed and re-run freely. The app works without it.
 
 ```bash
-DATABASE_URL="$TEST_DATABASE_URL" \
-CARD_IMAGES_BUCKET_URL="file:///tmp/binder-cards?create_dir=true" \
-  go run ./cmd/cardimages
+make import-images       # rate-limited to 5 req/s; ~45 min for 13k images
 ```
 
 ## 3. The server
 
 ```bash
-DATABASE_URL="$TEST_DATABASE_URL" \
-SESSION_JWT_SECRET="local-dev-secret-at-least-32-bytes-long" \
-GOOGLE_CLIENT_IDS="<google client ids, comma separated>" \
-APPLE_CLIENT_IDS="<apple service/bundle ids>" \
-PORT=8080 go run ./cmd/binderd
+make api
 ```
 
-It refuses to start if any is missing, and the secret has a 32-byte floor — an
-empty `SESSION_JWT_SECRET=` is rejected rather than accepted. `GET /health`
-answers `{"status":"ok"}`.
+It refuses to start without `SESSION_JWT_SECRET` (32-byte floor, enforced in
+code — an empty value is rejected, not accepted) and the provider client id
+lists. The Makefile supplies local defaults for all three; put real ones in
+`.env` when you sign in from the app for real.
 
 ## 4. Driving the API without a device
 
 A real sign-in needs a phone. To use `curl`, create a user row and mint a token:
 
 ```bash
-psql "$TEST_DATABASE_URL" -c "INSERT INTO users(id,auth_provider,auth_subject,contact_email)
-  VALUES ('99999999-9999-9999-9999-999999999999','google','local-dev','you@example.com')"
-
-TOKEN=$(SESSION_JWT_SECRET="local-dev-secret-at-least-32-bytes-long" \
-  go run ./cmd/devtoken 99999999-9999-9999-9999-999999999999)
+make seed-user           # creates the development user, if absent
+TOKEN=$(make token)      # mints a session token for it
 ```
 
 `cmd/devtoken` signs through the same loader the server uses, so it grants

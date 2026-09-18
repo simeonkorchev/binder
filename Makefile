@@ -2,9 +2,33 @@
 # whichever target happens to appear first, which a refactor can change silently.
 .DEFAULT_GOAL := help
 
+# Local configuration, if there is any. .env is gitignored and optional: every
+# variable below has a working default, so a fresh clone runs without one. Its
+# purpose is the values that cannot have a default — the Google client ids, a
+# real session secret — so they are not retyped on every command.
+# `export` so recipes and the programs they run both see them.
+-include .env
+export
+
 # Development database. The test database is not here: it comes from
 # TEST_DATABASE_URL, which tools/test-db-local.sh prints (see `make test-db`).
 DB_URL ?= postgres://binder:binder@localhost:5432/binder?sslmode=disable
+
+# What the server and the two pipelines need to run. These defaults are for
+# local development only: a 32-byte floor is enforced in code, and the provider
+# ids are only checked when a real provider token is verified, so placeholders
+# are fine until you sign in from the app for real.
+SESSION_JWT_SECRET ?= local-development-secret-at-least-32-bytes
+GOOGLE_CLIENT_IDS ?= local-dev-google-client-id
+APPLE_CLIENT_IDS ?= local.dev.apple.client.id
+PORT ?= 8080
+
+# Where cmd/cardimages writes. A file:// URL goes through the same
+# gocloud.dev/blob call gs:// does, so a local run rehearses the real one.
+CARD_IMAGES_BUCKET_URL ?= file://$(CURDIR)/.card-images?create_dir=true
+
+# The user cmd/devtoken mints a token for (see `make token`).
+USER_ID ?= 99999999-9999-9999-9999-999999999999
 
 # ── Backend ──────────────────────────────────────────────────────────────────
 
@@ -212,6 +236,43 @@ migrate: ## -> Apply db/migrations to the development database (DB_URL=<url>)
 migrate-test: ## -> Apply db/migrations to the test database (boots one if TEST_DATABASE_URL is unset)
 	@$(ENSURE_TEST_DB); \
 	tools/migrate.sh "$$TEST_DATABASE_URL"
+
+# ── Running it ───────────────────────────────────────────────────────────────
+#
+# These exist so nothing here has to be retyped as a wall of environment
+# variables. Every value has a default above, or comes from .env.
+
+.PHONY: dev
+dev: db-up migrate ## -> Postgres up, migrations applied, then the API. One command from a fresh clone
+	@$(MAKE) --no-print-directory api
+
+.PHONY: api
+api: ## -> Run the API (PORT, DB_URL, SESSION_JWT_SECRET from .env or the defaults)
+	DATABASE_URL="$(DB_URL)" go run ./cmd/binderd
+
+.PHONY: token
+token: ## -> Print a session token for curl (USER_ID=<uuid>); the user row must exist
+	@go run ./cmd/devtoken "$(USER_ID)"
+
+.PHONY: seed-user
+seed-user: ## -> Create the development user `make token` mints for, if absent
+	@psql "$(DB_URL)" -qtAc "INSERT INTO users(id,auth_provider,auth_subject,contact_email) \
+	  VALUES ('$(USER_ID)','google','local-dev','you@example.com') ON CONFLICT DO NOTHING" >/dev/null
+	@echo "user $(USER_ID) is in $(DB_URL)"
+
+.PHONY: import-cards
+import-cards: ## -> Import the card database from YGOPRODeck (one request; idempotent)
+	DATABASE_URL="$(DB_URL)" go run ./cmd/cardimport
+
+.PHONY: import-images
+import-images: ## -> Fetch card art into CARD_IMAGES_BUCKET_URL (rate-limited, resumable, ~45min)
+	DATABASE_URL="$(DB_URL)" go run ./cmd/cardimages
+
+.PHONY: mobile
+mobile: ## -> Run the app on a device or simulator (PLATFORM=ios|android). A dev build, not Expo Go
+	cd apps/mobile && npx expo run:$(PLATFORM)
+
+PLATFORM ?= ios
 
 # ── Gates ────────────────────────────────────────────────────────────────────
 
