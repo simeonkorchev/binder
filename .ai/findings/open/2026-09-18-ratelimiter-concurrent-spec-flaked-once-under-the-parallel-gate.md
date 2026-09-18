@@ -30,7 +30,7 @@ gate has been green on every run since.
 26 attempts, no failure. It only appeared inside the full gate, which runs every
 suite in parallel under `-race`.
 
-## The suspect
+## The suspect (WRONG — see the update below)
 
 The spec starts four goroutines, each calling `limiter.Wait(ctx)`, waits on a
 `sync.WaitGroup`, then asserts:
@@ -74,3 +74,61 @@ that fails roughly once in thirty parallel runs will go red on a pull request
 eventually, and the first time it does, the person looking at it will not know
 it is this. `.claude/rules/006-testing.md` treats a flake as a defect, not
 weather.
+
+---
+
+## Update 2026-09-18: my hypothesis was wrong
+
+I said the fake clock probably lacked a mutex. **It does not.** `pkg/ygoprodeck/ratelimit_test.go`:
+
+```go
+type fakeClock struct { mu sync.Mutex; now time.Time; slept []time.Duration }
+```
+
+`Now`, `Sleep` and `sleeps` all take `mu`, and `sleeps` returns a **copy**. There
+is no unsynchronised append. That lead is dead — do not spend time on it.
+
+`RateLimiter.reserve` is also sound: it holds `l.mu` while it reads the clock and
+advances `l.next`, so four concurrent callers claim four distinct slots. Holding
+the lock across the sleep is deliberately avoided, and the comment says why.
+
+### What I now think, and could still not prove
+
+The fake models a **shared** virtual clock and `Sleep` advances it by the
+sleeper's *full* duration:
+
+```go
+c.slept = append(c.slept, d)
+c.now = c.now.Add(d)
+```
+
+Real concurrent sleeps overlap: three goroutines sleeping 1i, 2i and 3i take 3i
+of wall time. This fake makes them **accumulate** to 6i. Whether the spec's final
+assertion — `clock.Now().Sub(start) == callers * defaultInterval` — holds
+therefore depends on whether each caller's reserve/sleep pair interleaves one at
+a time, which is exactly the scheduling the spec's own comment admits is a race.
+
+So the assertion is only order-independent for the *lucky* interleaving. That
+fits the symptom (rare, load-dependent, count assertion of 3 still satisfiable)
+better than anything else I looked at.
+
+**I could not reproduce it.** I wrote a harness that puts four goroutines behind
+a barrier and releases them at once; the sleeps still came out `[50ms 50ms 50ms]`
+— the interleaved order — and the elapsed time still matched. Reserving is
+unexported, so forcing "all four reserve, then all four sleep" through the public
+`Wait` is not something I found a way to do from outside the package.
+
+### What the next person should try
+
+An in-package test (`package ygoprodeck`, not `ygoprodeck_test`) can call
+`reserve()` directly and construct the unlucky order deterministically: reserve
+four times, *then* sleep the four returned durations. If elapsed comes out
+`6 * interval` rather than `4 * interval`, this is confirmed and the fix is the
+spec's, not the limiter's — assert the order-independent property (four slots
+were consumed) instead of a wall-clock total a shared fake cannot model.
+
+If that comes out right, the cause is still open and the next suspect is
+whatever else in the parallel gate can perturb this suite.
+
+**The limiter itself is not implicated by anything I found.** Nothing here
+suggests production pacing is wrong; the doubt is about what the spec asserts.
