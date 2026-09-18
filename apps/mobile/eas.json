@@ -14,9 +14,6 @@
       },
       "ios": {
         "simulator": false
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.1.10:8080"
       }
     },
     "development-simulator": {

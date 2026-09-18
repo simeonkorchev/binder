@@ -61,15 +61,19 @@ before you open one: the Makefile's default is committed, so a public URL plus a
 published signing secret lets anyone mint a token for any user id, and binderd
 wires no inbound rate limiting.
 
-The Google client ids belong in the `env` block once you have them:
+This is why the `development` profile in `eas.json` carries no `env` block: a
+value there would look like the API address and change nothing, which costs a
+rebuild to discover. Set it where Metro can see it instead — the repo-root
+`.env`, which the Makefile exports:
 
-```json
-"env": {
-  "EXPO_PUBLIC_API_URL": "http://192.168.1.23:8080",
-  "EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID": "…",
-  "EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS": "…"
-}
+```bash
+EXPO_PUBLIC_API_URL=http://192.168.1.23:8080
+EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID=…
+EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS=…
 ```
+
+A `preview` or `production` build is the case that needs them in `eas.json`,
+because those embed the bundle.
 
 ## If you would rather fix the local build
 
