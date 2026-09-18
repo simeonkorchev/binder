@@ -7,10 +7,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:mobile": "npm -w @binder/mobile run start"
+    "dev:mobile": "npm -w @binder/mobile run start",
+    "postinstall": "cd apps/mobile && patch-package"
   },
   "overrides": {
     "react": "19.2.3",
     "react-native": "0.86.3"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.1"
   }
 }

@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-vision-camera-text-recognition/android/src/main/java/com/visioncameratextrecognition/VisionCameraTextRecognitionModule.kt b/node_modules/react-native-vision-camera-text-recognition/android/src/main/java/com/visioncameratextrecognition/VisionCameraTextRecognitionModule.kt
+index ffcd4e2..a4613a1 100644
+--- a/node_modules/react-native-vision-camera-text-recognition/android/src/main/java/com/visioncameratextrecognition/VisionCameraTextRecognitionModule.kt
++++ b/node_modules/react-native-vision-camera-text-recognition/android/src/main/java/com/visioncameratextrecognition/VisionCameraTextRecognitionModule.kt
+@@ -50,7 +50,7 @@ class VisionCameraTextRecognitionModule(proxy: VisionCameraProxy, options: Map<S
+         }
+     }
+ 
+-    override fun callback(frame: Frame, arguments: Map<String, Any>?): HashMap<String, Any>? {
++    override fun callback(frame: Frame, arguments: Map<String, Any>?): HashMap<String, Any?>? {
+         val data = WritableNativeMap()
+         val mediaImage: Image? = frame.image
+         mediaImage?.let {
