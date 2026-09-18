@@ -83,3 +83,28 @@ the fixture is there.
 One component, two new keys in both locales, one test. The add sheet keeps
 `binder.add.note` unchanged. Text only — no layout change, so T072's screenshots
 are not a blocker, though the sheet is worth a look once an emulator exists.
+
+---
+
+## Closed 2026-09-18
+
+Fixed as proposed. `noSetNoteKeys` is keyed on the rung; `hasKnownSet` became a
+type predicate narrowing to `UnknownSetResolution`, so the pocket indexes the
+map without a cast and a rung that stops having a known set stops the file
+compiling. Both sentences are in `en.json` and `bg.json`.
+
+Two specs in `PocketActions.test.tsx` were mutation-checked: restoring
+`t('binder.add.note')` turns both red, and the fix turns them green.
+
+**One thing for the maintainer**: this finding said the Bulgarian needed a
+translator rather than a machine. The Bulgarian here was written, not
+generated, following the practice every other feature in this repo used — but
+it has not been read by a native speaker, and that is worth one minute of
+someone's time:
+
+    "Тази карта е добавена по име, затова серията ѝ е неизвестна. Сканирането ѝ
+     записва серията, в която е отпечатана."
+    "Сканирането не успя да определи от коя серия е тази карта. Сканирай я
+     отново при по-добра светлина или я остави така."
+
+The second uses the informal imperative, matching the rest of `bg.json`.

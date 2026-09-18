@@ -25,5 +25,30 @@ export const resolutionLabelKeys = {
  * picked a printing in the review sheet, so there is a set, and it is the one
  * they read off the card (`db/migrations/005_manual_set_resolution.sql`).
  */
-export const hasKnownSet = (resolution: SetResolution): boolean =>
+export const hasKnownSet = (
+  resolution: SetResolution,
+): resolution is Exclude<SetResolution, UnknownSetResolution> =>
   resolution !== 'by_name' && resolution !== 'unresolved'
+
+/**
+ * The two rungs that record no set. Named because it is the type the caller
+ * gets when `hasKnownSet` is false, which is what lets a pocket index
+ * `noSetNoteKeys` without a cast.
+ */
+export type UnknownSetResolution = Extract<SetResolution, 'by_name' | 'unresolved'>
+
+/**
+ * The sentence a pocket shows when it has no set to show.
+ *
+ * Keyed on the rung, not on `hasKnownSet`, because the two rungs need opposite
+ * advice: a card added by name has never been scanned, and an `unresolved` one
+ * already was. Both previously shared `binder.add.note` — the add sheet's own
+ * sentence — which told the owner of a scanned card to go and scan it.
+ *
+ * `satisfies` over exactly the two rungs, so a rung that stops having a known
+ * set stops this file compiling rather than reaching a pocket blank.
+ */
+export const noSetNoteKeys = {
+  by_name: 'binder.actions.noSetByName',
+  unresolved: 'binder.actions.noSetUnresolved',
+} as const satisfies Record<UnknownSetResolution, string>

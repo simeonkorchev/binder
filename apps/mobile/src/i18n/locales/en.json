@@ -135,7 +135,9 @@
       "previousPage": "To the previous page",
       "nextPage": "To the next page",
       "remove": "Remove from the binder",
-      "close": "Close"
+      "close": "Close",
+      "noSetByName": "This card was added by name, so its set is unknown. Scanning it records the set it was printed in.",
+      "noSetUnresolved": "The scan could not tell which set this card is from. Re-scan it in better light, or leave it as it is."
     },
     "add": {
       "title": "Add a card",

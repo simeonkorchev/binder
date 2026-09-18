@@ -8,7 +8,7 @@ import { SellCardActions } from '@/features/market/components/SellCardActions'
 import { useTheme } from '@/theme/useTheme'
 
 import { moveDestination, pocketOf, type MoveAction, type PageShape } from '../lib/positions'
-import { hasKnownSet, resolutionLabelKeys } from '../lib/setResolution'
+import { hasKnownSet, noSetNoteKeys, resolutionLabelKeys } from '../lib/setResolution'
 import type { SlotBody } from '../types'
 
 /** Every move a drag can express, as a button. Order reads as one step, then one page. */
@@ -62,7 +62,7 @@ export const PocketActions = ({
           </Text>
           {hasKnownSet(slot.setResolution) ? null : (
             <Text style={[styles.unknownSet, { color: colors.textSecondary }]}>
-              {t('binder.add.note')}
+              {t(noSetNoteKeys[slot.setResolution])}
             </Text>
           )}
 

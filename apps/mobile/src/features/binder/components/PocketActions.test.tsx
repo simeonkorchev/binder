@@ -209,4 +209,47 @@ describe('PocketActions, marking the card for sale', () => {
       await screen.findByText('The card could not be put up for sale.'),
     ).toBeOnTheScreen()
   })
+
+  // binder.add.note is the add sheet's sentence, and it was shown for both
+  // rungs that record no set. For `unresolved` — a card that *was* scanned and
+  // whose set the ladder still could not name — both halves of it are false,
+  // and it sends the user to do the thing that produced the row they are
+  // reading.
+  it('does not tell the owner of a scanned card to scan it', async () => {
+    await render(
+      <PocketActions
+        slot={slot({ setResolution: 'unresolved', cardPrintingId: null })}
+        shape={shape()}
+        {...props}
+      />,
+    )
+
+    expect(
+      screen.queryByText(
+        'A card added by name is filed with no set. Scanning it records the set it was printed in.',
+      ),
+    ).toBeNull()
+    expect(
+      await screen.findByText(
+        'The scan could not tell which set this card is from. Re-scan it in better light, or leave it as it is.',
+      ),
+    ).toBeOnTheScreen()
+  })
+
+  it('still tells the owner of a card added by name that scanning it finds the set', async () => {
+    await render(
+      <PocketActions
+        slot={slot({ setResolution: 'by_name', cardPrintingId: null })}
+        shape={shape()}
+        {...props}
+      />,
+    )
+
+    expect(
+      await screen.findByText(
+        'This card was added by name, so its set is unknown. Scanning it records the set it was printed in.',
+      ),
+    ).toBeOnTheScreen()
+  })
+
 })
