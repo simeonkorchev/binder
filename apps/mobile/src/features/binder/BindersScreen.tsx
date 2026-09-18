@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 import { useTheme } from '@/theme/useTheme'
@@ -13,12 +14,14 @@ import { BinderPicker } from './components/BinderPicker'
  * screen adds is where a picked binder goes.
  */
 const BindersScreen = (): React.JSX.Element => {
+  const { t } = useTranslation()
   const { colors } = useTheme()
   const navigation = useNavigation()
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <BinderPicker
+        rowLabel={(binder) => t('binder.list.openLabel', { name: binder.name })}
         onPick={(binder) => {
           navigation.navigate('BinderPage', { binderId: binder.id, binderName: binder.name })
         }}

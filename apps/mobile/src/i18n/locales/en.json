@@ -60,6 +60,19 @@
       "change": "Change",
       "changeAccessible": "Change what happens to {{code}}"
     },
+    "commit": {
+      "open": "File in a binder",
+      "openAccessible": "File this sweep in a binder: {{cards}} cards",
+      "title": "Which binder?",
+      "intoLabel": "File this sweep in {{name}}",
+      "subtitle": "{{cards}} cards go in at once, after the last card already there.",
+      "leftOut": "{{undecided}} cards are still unchecked, and unchecked cards are left out.",
+      "nothing": "Every card in this sweep was left out, so nothing will be filed.",
+      "sending": "Filing the sweep…",
+      "filed": "Filed. Opening the binder…",
+      "failed": "The sweep could not be filed, so nothing was added to the binder. Every decision is still here — pick a binder to send it again.",
+      "back": "Back to the cards"
+    },
     "search": {
       "title": "Find the card by name",
       "label": "Card name",

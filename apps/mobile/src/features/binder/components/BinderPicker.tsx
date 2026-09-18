@@ -11,9 +11,13 @@ import { CreateBinderSheet } from './CreateBinderSheet'
 
 interface BinderPickerProps {
   /**
-   * The binder the collector picked. What happens to it is the caller's: the
-   * binders tab opens it, the scanner's commit files a sweep in it.
+   * One binder's accessible name, which is what pressing it *does* — and only
+   * the caller knows that: the binders tab opens it, the scanner's commit files
+   * a sweep in it. A row that announced "open" and then filed a sweep would be a
+   * label that does not match its control.
    */
+  rowLabel: (binder: Binder) => string
+  /** The binder the collector picked. */
   onPick: (binder: Binder) => void
 }
 
@@ -31,7 +35,7 @@ interface BinderPickerProps {
  * scanner's commit with nowhere to put the cards, and sending them to another tab
  * to make one would be a reviewed sweep abandoned halfway.
  */
-export const BinderPicker = ({ onPick }: BinderPickerProps): React.JSX.Element => {
+export const BinderPicker = ({ rowLabel, onPick }: BinderPickerProps): React.JSX.Element => {
   const { t } = useTranslation()
   const { colors } = useTheme()
   const binders = useBinders()
@@ -94,7 +98,7 @@ export const BinderPicker = ({ onPick }: BinderPickerProps): React.JSX.Element =
             <Pressable
               onPress={() => onPick(item)}
               accessibilityRole="button"
-              accessibilityLabel={t('binder.list.openLabel', { name: item.name })}
+              accessibilityLabel={rowLabel(item)}
               style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}
             >
               <Text style={[styles.rowName, { color: colors.textPrimary }]} numberOfLines={1}>

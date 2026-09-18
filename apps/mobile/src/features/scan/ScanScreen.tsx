@@ -1,4 +1,4 @@
-import { useIsFocused } from '@react-navigation/native'
+import { useIsFocused, useNavigation } from '@react-navigation/native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
@@ -21,6 +21,10 @@ import { useScanSession } from './useScanSession'
  * the permission, `useScanSession` owns the loop from frame to captured card.
  * What is left here is which of the three things the tab can show: a way to
  * get the camera back, a reason there is no camera at all, or the viewfinder.
+ *
+ * The one thing it decides is where a filed sweep leaves the user: in the binder
+ * that now holds it. A sweep that ended back at the viewfinder would leave the
+ * collector with no sign the cards had landed anywhere.
  */
 const ScanScreen = (): React.JSX.Element => {
   const { t } = useTranslation()
@@ -28,6 +32,7 @@ const ScanScreen = (): React.JSX.Element => {
   const { access, request, openSettings } = useCameraAccess()
   const device = useCameraDevice('back')
   const session = useScanSession()
+  const navigation = useNavigation()
   // The tab keeps its screens mounted, so without this the camera would keep
   // reading frames — and draining the battery — while the user is in a binder.
   const isFocused = useIsFocused()
@@ -67,6 +72,13 @@ const ScanScreen = (): React.JSX.Element => {
       <ReviewSheet
         visible={isReviewOpen}
         review={session.review}
+        commit={session.commit}
+        onFiled={(binder) => {
+          // The sheet closes first, and not for tidiness: a `Modal` is a native
+          // overlay above the whole app, so the binder would open underneath it.
+          setIsReviewOpen(false)
+          navigation.navigate('BinderPage', { binderId: binder.id, binderName: binder.name })
+        }}
         onClose={() => setIsReviewOpen(false)}
       />
     </View>

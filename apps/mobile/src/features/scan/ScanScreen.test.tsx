@@ -27,13 +27,36 @@ jest.mock('react-native-vision-camera', () => {
   }
 })
 
-// `useIsFocused` needs a navigator above it, and the screen uses it for one
-// thing: keeping the camera off while the user is on another tab.
-jest.mock('@react-navigation/native', () => ({ useIsFocused: () => true }))
+const mockNavigate = jest.fn<void, [string, object]>()
+
+// Both hooks need a navigator above them, and the screen uses each for one
+// thing: keeping the camera off while the user is on another tab, and opening the
+// binder a filed sweep landed in.
+jest.mock('@react-navigation/native', () => ({
+  useIsFocused: () => true,
+  useNavigation: () => ({ navigate: mockNavigate }),
+}))
 
 const AIMING_HELP = 'Fill the frame with the card and keep the printed code inside the marked strip.'
 const EMPTY_STRIP = 'Nothing captured yet. Sweep the page and cards land here.'
 const NO_CAMERA = 'Binder found no camera on this phone, so there is nothing to scan with.'
+
+const theBinder = {
+  id: 'binder-1',
+  name: 'Duplicates',
+  createdAt: '2026-09-18T10:00:00Z',
+  updatedAt: '2026-09-18T10:00:00Z',
+}
+
+const mockFetch: jest.MockedFunction<typeof fetch> = jest.fn()
+
+/** The collector's binders, and the batch that files a sweep in one of them. */
+const binderServer = (input: RequestInfo | URL): Promise<Response> => {
+  if (String(input).endsWith('/slots/batch')) {
+    return Promise.resolve(new Response(JSON.stringify({ slots: [] }), { status: 201 }))
+  }
+  return Promise.resolve(new Response(JSON.stringify({ binders: [theBinder] }), { status: 200 }))
+}
 
 // The screen forwards the device to `<Camera>` and reads nothing off it, so
 // the fixture carries only what identifies it.
@@ -45,6 +68,15 @@ describe('ScanScreen', () => {
     mockPermissionStatus = 'granted'
     mockRequestResult = 'granted'
     mockDevice = backCamera()
+    mockNavigate.mockReset()
+    mockFetch.mockReset()
+    mockFetch.mockImplementation(binderServer)
+    globalThis.fetch = mockFetch
+    process.env.EXPO_PUBLIC_API_URL = 'https://api.binder.test'
+  })
+
+  afterEach(() => {
+    delete process.env.EXPO_PUBLIC_API_URL
   })
 
   it('shows the aiming help and the empty capture strip on a working camera', async () => {
@@ -104,6 +136,23 @@ describe('ScanScreen', () => {
         'Nothing to check. Every card this sweep captured was matched to a set.',
       ),
     ).toBeOnTheScreen()
+  })
+
+  // The end of the product's loop: a swept card is not in a collection until it
+  // is in a binder, and the collector has to be able to see that it is.
+  it('lands the user in the binder a filed sweep went into', async () => {
+    const user = userEvent.setup()
+
+    await render(<ScanScreen />)
+
+    await user.press(screen.getByRole('button', { name: 'Review flagged cards: 0 still to check' }))
+    await user.press(await screen.findByRole('button', { name: /^File this sweep in a binder/ }))
+    await user.press(await screen.findByRole('button', { name: 'File this sweep in Duplicates' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('BinderPage', {
+      binderId: 'binder-1',
+      binderName: 'Duplicates',
+    })
   })
 
   it('offers another ask when the refusal left the dialog available', async () => {
