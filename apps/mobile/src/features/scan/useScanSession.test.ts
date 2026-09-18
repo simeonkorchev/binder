@@ -99,7 +99,7 @@ describe('useScanSession', () => {
   it('starts with nothing captured', async () => {
     const session = await renderSession()
 
-    expect(session.current.capturedCount).toBe(0)
+    expect(session.current.captured.length).toBe(0)
     expect(session.current.captured).toEqual([])
   })
 
@@ -108,7 +108,7 @@ describe('useScanSession', () => {
 
     await sweep(session, repeat(cardInFrame('LOB-EN001'), stableReadsRequired))
 
-    expect(session.current.capturedCount).toBe(1)
+    expect(session.current.captured.length).toBe(1)
     expect(session.current.captured[0]?.code).toBe('LOB-EN001')
   })
 
@@ -117,7 +117,7 @@ describe('useScanSession', () => {
 
     await sweep(session, repeat(cardInFrame('LOB-EN001'), stableReadsRequired - 1))
 
-    expect(session.current.capturedCount).toBe(0)
+    expect(session.current.captured.length).toBe(0)
   })
 
   it('captures a card held under the lens once, however long it is held there', async () => {
@@ -125,7 +125,7 @@ describe('useScanSession', () => {
 
     await sweep(session, repeat(cardInFrame('LOB-EN001'), stableReadsRequired * 4))
 
-    expect(session.current.capturedCount).toBe(1)
+    expect(session.current.captured.length).toBe(1)
   })
 
   it('captures a second copy met after the first left the frame', async () => {
@@ -138,7 +138,7 @@ describe('useScanSession', () => {
       ...repeat(card, stableReadsRequired),
     ])
 
-    expect(session.current.capturedCount).toBe(2)
+    expect(session.current.captured.length).toBe(2)
     expect(session.current.captured.map((entry) => entry.code)).toEqual([
       'LOB-EN001',
       'LOB-EN001',
@@ -155,7 +155,7 @@ describe('useScanSession', () => {
       ...repeat(card, stableReadsRequired),
     ])
 
-    expect(session.current.capturedCount).toBe(1)
+    expect(session.current.captured.length).toBe(1)
   })
 
   it('captures the next card of a sweep across a page', async () => {
@@ -174,7 +174,7 @@ describe('useScanSession', () => {
 
     await sweep(session, repeat('ATK/2500 DEF/2100', stableReadsRequired * 2))
 
-    expect(session.current.capturedCount).toBe(0)
+    expect(session.current.captured.length).toBe(0)
   })
 
   it('ticks the phone once per captured card', async () => {
@@ -193,7 +193,7 @@ describe('useScanSession', () => {
     await waitFor(() => {
       expect(session.current.captured[0]?.name).toBe('Card LOB-EN001')
     })
-    expect(session.current.pendingCount).toBe(0)
+    expect(session.current.captured[0]?.status).toBe('matched')
   })
 
   it('keeps the card and says so when the resolver could not be reached', async () => {
@@ -205,8 +205,8 @@ describe('useScanSession', () => {
     await waitFor(() => {
       expect(session.current.isOffline).toBe(true)
     })
-    expect(session.current.capturedCount).toBe(1)
-    expect(session.current.pendingCount).toBe(1)
+    expect(session.current.captured.length).toBe(1)
+    expect(session.current.captured[0]?.status).toBe('pending')
   })
 
   it('resolves what was waiting once the connection is retried', async () => {
@@ -223,7 +223,7 @@ describe('useScanSession', () => {
     })
 
     await waitFor(() => {
-      expect(session.current.pendingCount).toBe(0)
+      expect(session.current.captured[0]?.status).toBe('matched')
     })
     expect(session.current.isOffline).toBe(false)
   })

@@ -10,12 +10,13 @@ import { useScanReview, type ScanReview } from './useScanReview'
 import { useTextFrames } from './useTextFrames'
 
 export interface ScanSession {
-  /** The cards this sweep has captured, newest first. */
+  /**
+   * The cards this sweep has captured, newest first. The running count the
+   * strip shows is this list's length, and how many are still waiting is the
+   * captures still reading `pending` — neither is forwarded a second time as a
+   * number of its own.
+   */
   captured: CapturedCard[]
-  /** How many cards the sweep has captured — the running count the screen shows. */
-  capturedCount: number
-  /** How many captures are still waiting for the resolver's answer. */
-  pendingCount: number
   /**
    * True when the resolver could not be reached. Nothing is lost while it
    * holds: the captures are on screen and the queue is paused, not dropped.
@@ -67,8 +68,6 @@ export const useScanSession = (): ScanSession => {
 
   return {
     captured: capturedCards(codes, queue.resolved, queue.rejected),
-    capturedCount: codes.length,
-    pendingCount: queue.queuedCount,
     isOffline: queue.isOffline,
     retryPending: queue.retryQueued,
     review,

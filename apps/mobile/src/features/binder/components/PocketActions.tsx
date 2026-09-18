@@ -3,7 +3,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
 // The marketplace owns what it looks like to sell a card, and this sheet is
 // where a card's actions live — the same arrangement as the add-card sheet
-// reaching for the scan feature's card search.
+// reaching for the card feature's search.
 import { SellCardActions } from '@/features/market/components/SellCardActions'
 import { useTheme } from '@/theme/useTheme'
 
