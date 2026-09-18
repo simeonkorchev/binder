@@ -16,8 +16,8 @@ import { bearerToken, forgetSession } from './sessionStore'
  * a header can be wrong (000-principles.md §6). The scanner's two requests are
  * the one exception, and are not meant to be: they build their own `fetch` over
  * `apiUrl` and so send no credential at all — harmless only for as long as the
- * card domain takes no actor (`.ai/findings/open/2026-09-18-scan-api-calls-
- * bypass-the-request-helper.md`).
+ * card domain takes no actor. The finding that proposes the fix is
+ * `.ai/findings/open/2026-09-18-scan-api-calls-bypass-the-request-helper.md`.
  *
  * **The bearer token is attached here and nowhere else.** No hook passes one in
  * and no component holds one: they all go through these three functions, which
