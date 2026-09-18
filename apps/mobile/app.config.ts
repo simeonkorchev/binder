@@ -48,7 +48,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         // iOS. Set here, once, rather than in a hand-edited android/ or ios/
         // directory — this project stays CNG (no committed native folders).
         android: { minSdkVersion: 26 },
-        ios: { deploymentTarget: '16.0' },
+        // 16.4, not 16.0: expo-build-properties on SDK 57 rejects anything lower
+        // ("ios.deploymentTarget needs to be at least version 16.4") and no test
+        // sees it — the config plugin only runs during prebuild/export/run, so
+        // `npx expo export` is what catches it.
+        ios: { deploymentTarget: '16.4' },
       },
     ],
     [
