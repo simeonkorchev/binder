@@ -28,7 +28,12 @@ PORT ?= 8080
 CARD_IMAGES_BUCKET_URL ?= file://$(CURDIR)/.card-images?create_dir=true
 
 # The user cmd/devtoken mints a token for (see `make token`).
-USER_ID ?= 99999999-9999-9999-9999-999999999999
+#
+# DEV_USER_ID, not USER_ID: make inherits the environment, `?=` yields to
+# anything already set, and macOS exports USER_ID as the numeric uid — so
+# `make seed-user` there tried to insert the user id 501 and Postgres rejected
+# it as a malformed uuid. A name of our own cannot be captured that way.
+DEV_USER_ID ?= 99999999-9999-9999-9999-999999999999
 
 # ── Backend ──────────────────────────────────────────────────────────────────
 
@@ -251,14 +256,14 @@ api: ## -> Run the API (PORT, DB_URL, SESSION_JWT_SECRET from .env or the defaul
 	DATABASE_URL="$(DB_URL)" go run ./cmd/binderd
 
 .PHONY: token
-token: ## -> Print a session token for curl (USER_ID=<uuid>); the user row must exist
-	@go run ./cmd/devtoken "$(USER_ID)"
+token: ## -> Print a session token for curl (DEV_USER_ID=<uuid>); the user row must exist
+	@go run ./cmd/devtoken "$(DEV_USER_ID)"
 
 .PHONY: seed-user
 seed-user: ## -> Create the development user `make token` mints for, if absent
 	@psql "$(DB_URL)" -qtAc "INSERT INTO users(id,auth_provider,auth_subject,contact_email) \
-	  VALUES ('$(USER_ID)','google','local-dev','you@example.com') ON CONFLICT DO NOTHING" >/dev/null
-	@echo "user $(USER_ID) is in $(DB_URL)"
+	  VALUES ('$(DEV_USER_ID)','google','local-dev','you@example.com') ON CONFLICT DO NOTHING" >/dev/null
+	@echo "user $(DEV_USER_ID) is in $(DB_URL)"
 
 .PHONY: import-cards
 import-cards: ## -> Import the card database from YGOPRODeck (one request; idempotent)
