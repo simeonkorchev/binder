@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store'
 
+import { devSession } from './devSession'
 import { isExpired, parseStoredSession, serializeSession, type Session } from './storedSession'
 
 /**
@@ -78,6 +79,15 @@ export const bearerToken = (): string | null =>
  * is a sign-in, not a failure.
  */
 export const restoreSession = (): void => {
+  // A token supplied by the build outranks the keychain, and does not go into
+  // it: it is there to be switched off by deleting a line from `.env`. In a
+  // release build this is dead code — see `devSession`.
+  const supplied = devSession()
+  if (supplied !== null) {
+    publish({ status: 'signed-in', session: supplied })
+    return
+  }
+
   const stored = parseStoredSession(readStored())
   if (stored === null) {
     publish(signedOut)

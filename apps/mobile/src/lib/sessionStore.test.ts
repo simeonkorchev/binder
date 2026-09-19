@@ -77,6 +77,41 @@ describe('sessionStore', () => {
     })
   })
 
+  // `devSession` has its own suite for what it accepts; these two pin what the
+  // store does with one — it wins over the keychain, and it stays out of it.
+  describe('when the build supplies a token', () => {
+    const supplied = [
+      'eyJhbGciOiJIUzI1NiJ9',
+      btoa(JSON.stringify({ sub: session.userId, exp: Date.parse(session.expiresAt) / 1000 }))
+        .replaceAll('+', '-')
+        .replaceAll('/', '_')
+        .replaceAll('=', ''),
+      'signature',
+    ].join('.')
+
+    afterEach(() => {
+      delete process.env.EXPO_PUBLIC_DEV_SESSION_TOKEN
+    })
+
+    it('signs in with it in preference to whatever the keychain holds', async () => {
+      await rememberSession({ ...session, token: 'the-keychain-one' })
+      process.env.EXPO_PUBLIC_DEV_SESSION_TOKEN = supplied
+
+      restoreSession()
+
+      expect(bearerToken()).toBe(supplied)
+    })
+
+    it('does not write it to the keychain, so removing the variable is enough to undo it', async () => {
+      process.env.EXPO_PUBLIC_DEV_SESSION_TOKEN = supplied
+
+      restoreSession()
+
+      expect(bearerToken()).toBe(supplied)
+      await expect(SecureStore.getItemAsync('binder.session')).resolves.toBeNull()
+    })
+  })
+
   it('clears the keychain on sign-out, so the token cannot be restored', async () => {
     await rememberSession(session)
 
