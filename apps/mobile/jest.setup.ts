@@ -28,8 +28,12 @@ jest.mock('react-native-vision-camera', () => {
   }
 })
 
+// The empty map, not `{ resultText: '' }`: that is what the plugin's Kotlin
+// returns when ML Kit found no text, and a fake that is kinder than the real
+// module hides the crash it caused — reading `.length` off the absent field
+// threw on every frame that was not a card. `useTextFrames` has the cases.
 jest.mock('react-native-vision-camera-text-recognition', () => ({
-  useTextRecognition: () => ({ scanText: () => ({ resultText: '' }) }),
+  useTextRecognition: () => ({ scanText: () => ({}) }),
 }))
 
 jest.mock('react-native-worklets-core', () => ({

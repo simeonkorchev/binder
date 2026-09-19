@@ -58,8 +58,15 @@ export const useTextFrames = (
       'worklet'
       runAtTargetFps(scanFramesPerSecond, () => {
         'worklet'
-        const { resultText } = scanText(frame)
-        void forwardText(resultText.length === 0 ? null : resultText)
+        // The cast is the plugin's contract, not ours. It declares
+        // `scanText: (frame: Frame) => Text` with a required `resultText:
+        // string`, and its Kotlin does not honour that: an empty map comes back
+        // when ML Kit found no text, and null when the frame carried no image.
+        // Trusting the declaration read `.length` off undefined on every frame
+        // that was not a card — which is most of them.
+        const read = scanText(frame) as { resultText?: string } | null
+        const text = read === null ? undefined : read.resultText
+        void forwardText(text === undefined || text.length === 0 ? null : text)
       })
     },
     [forwardText, scanText],
