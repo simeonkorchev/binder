@@ -281,9 +281,16 @@ mobile: ## -> Run the app on a device or simulator (PLATFORM=ios|android). Compi
 mobile-build: ## -> Build the app on EAS instead of locally (PLATFORM=ios|android). See apps/mobile/EAS.md
 	cd apps/mobile && npx eas-cli build --profile development --platform $(PLATFORM)
 
+# The `cd` is not incidental. apps/mobile/metro.config.cjs sets projectRoot to
+# itself and the app's `main` is index.ts; run from the repo root instead, Metro
+# takes the root as the project, finds no `main` there and falls back to Expo's
+# legacy expo/AppEntry.js, which imports `../../App` and resolves outside the
+# tree. The app then dies on launch with "Unable to resolve module ../../App".
+# CLEAR=1 exists so that never has to be typed by hand: EXPO_PUBLIC_* is inlined
+# when Metro transforms, and Metro caches transforms, so a changed .env needs it.
 .PHONY: mobile-start
-mobile-start: ## -> Serve the JS to an already-installed dev build
-	cd apps/mobile && npx expo start --dev-client
+mobile-start: ## -> Serve the JS to an already-installed dev build (CLEAR=1 drops Metro's cache)
+	cd apps/mobile && npx expo start --dev-client $(if $(CLEAR),--clear,)
 
 .PHONY: mobile-whoami
 mobile-whoami: ## -> Which Expo account eas-cli acts as (EXPO_TOKEN from .env, not ~/.expo)
